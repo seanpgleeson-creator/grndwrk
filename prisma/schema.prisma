@@ -1,0 +1,171 @@
+datasource db {
+  provider = "sqlite"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+// SQLite does not support native enums — we use String with validation in app code
+
+// ─── Models ───────────────────────────────────────────────────────────────────
+
+model UserProfile {
+  // Fixed id — always "singleton". Use upsert; never create a second row.
+  id                    String   @id @default("singleton")
+  resume_raw            String?
+  resume_parsed         String?  // JSON stored as string: { experience: [], skills: [], education: [] }
+  positioning_statement String?
+  narrative_pillars     String   @default("[]") // JSON array of 3–5 strings
+  target_roles          String   @default("[]") // JSON array e.g. ["Principal PM"]
+  target_stages         String   @default("[]") // JSON array e.g. ["Series B"]
+  geography             String?
+  remote_preference     String?
+  cmf_weights           String   @default("{\"domain\":30,\"stage\":20,\"scope\":20,\"strategic\":20,\"narrative\":10}") // JSON
+  comp_target           String?  // JSON: { base_target, total_target, minimum, level }
+  created_at            DateTime @default(now())
+  updated_at            DateTime @updatedAt
+}
+
+model Company {
+  id                  String    @id @default(cuid())
+  name                String
+  website             String?
+  linkedin_url        String?
+  hq                  String?
+  stage               String?
+  size                String?
+  tier                Int?
+  notes               String?
+  role_alert_criteria String?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  brief        CompanyPositioningBrief?
+  signals      EarningsSignal[]
+  opportunities Opportunity[]
+  contacts     Contact[]
+  benchmarks   CompBenchmark[]
+}
+
+model EarningsSignal {
+  id                     String   @id @default(cuid())
+  company_id             String
+  date                   DateTime
+  transcript             String
+  source_url             String?
+  parsed_signals         String?  // JSON null until /analyze called
+  outreach_trigger_score Int?     // 1–5, null until AI analysis
+  created_at             DateTime @default(now())
+  updated_at             DateTime @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+model CompanyPositioningBrief {
+  id               String    @id @default(cuid())
+  company_id       String    @unique
+  draft            String?
+  edited           String?
+  why_company      String?
+  why_now          String?
+  value_proposition String?
+  proof_points     String    @default("[]") // JSON array
+  the_ask          String?
+  completed_at     DateTime?
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+}
+
+model Opportunity {
+  id               String    @id @default(cuid())
+  company_id       String
+  role_title       String
+  level            String?
+  team             String?
+  jd_text          String?
+  key_requirements String    @default("[]") // JSON array
+  status           String    @default("Watching") // Watching|Preparing|Applied|InProcess|Closed
+  outreach_sent    Boolean   @default(false)
+  cmf_score        Float?
+  cmf_breakdown    String?   // JSON
+  materials        String    @default("{}") // JSON: { cover_letter: { draft, edited } }
+  comp_snapshot    String?   // JSON point-in-time comp data
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  company         Company              @relation(fields: [company_id], references: [id], onDelete: Cascade)
+  brief           RolePositioningBrief?
+  outreach_records OutreachRecord[]
+}
+
+model RolePositioningBrief {
+  id                     String    @id @default(cuid())
+  opportunity_id         String    @unique
+  draft                  String?
+  edited                 String?
+  fit_summary            String?
+  contribution_narrative String?
+  differentiated_value   String?
+  proof_points           String    @default("[]") // JSON array
+  completed_at           DateTime?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+
+  opportunity Opportunity @relation(fields: [opportunity_id], references: [id], onDelete: Cascade)
+}
+
+model Contact {
+  id                String    @id @default(cuid())
+  name              String
+  title             String?
+  company_id        String?
+  linkedin_url      String?
+  connection_degree String    @default("cold") // first|second|cold
+  warmth            String    @default("Cold") // Cold|Warm|Hot
+  source            String?
+  notes             String?
+  last_contact      DateTime?
+  created_at        DateTime  @default(now())
+  updated_at        DateTime  @updatedAt
+
+  company  Company?        @relation(fields: [company_id], references: [id], onDelete: SetNull)
+  outreach OutreachRecord[]
+}
+
+model OutreachRecord {
+  id              String   @id @default(cuid())
+  contact_id      String
+  opportunity_id  String?
+  date            DateTime
+  channel         String   // linkedin|email|other
+  message_summary String?
+  response        String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  contact     Contact     @relation(fields: [contact_id], references: [id], onDelete: Cascade)
+  opportunity Opportunity? @relation(fields: [opportunity_id], references: [id], onDelete: SetNull)
+}
+
+model CompBenchmark {
+  id          String   @id @default(cuid())
+  company_id  String
+  role_family String
+  level       String?
+  base_low    Int?
+  base_high   Int?
+  total_low   Int?
+  total_high  Int?
+  source      String   // levels_fyi_embed|levels_fyi_markdown|manual
+  fetched_at  DateTime @default(now())
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  company Company @relation(fields: [company_id], references: [id], onDelete: Cascade)
+
+  @@unique([company_id, role_family, level])
+}
