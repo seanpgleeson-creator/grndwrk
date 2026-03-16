@@ -4,16 +4,73 @@ MVP: Prioritize simple and functional. Ship core flows first; defer nice-to-have
 
 ---
 
-## Current Phase: Phase 1 — Foundation
+## Current Phase: Phase 1 — COMPLETE (pending Vercel deployment)
 
-Build in this order:
-- **Module 1** — Profile & Positioning Hub (core profile, target companies, CMF weights, comp targets, narrative pillars)
-- **Module 2** — Company list with basic profiles and Company Positioning Brief template (no AI generation yet)
-- **Module 3** — Opportunity tracker with **manual** CMF scoring and status tracking (no AI scoring yet)
-- **Module 4** — Basic compensation embed from Levels.fyi (Option A iframes only)
-- **Module 6** — Basic dashboard (static or simple metrics)
+All Phase 1 modules have been built and committed to GitHub (`main` branch). The app is ready to deploy; it just needs a live Postgres database URL wired into Vercel.
 
 Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 adds outreach/contacts. Phase 4 = council/multi-user.
+
+---
+
+## What Has Been Built (Phase 1)
+
+### Infrastructure
+- Next.js 14 App Router project scaffolded with Tailwind CSS, Radix UI, Zod, `clsx`, `tailwind-merge`
+- Prisma 7 schema with all data models (see Data Model section below), provider = `postgresql`
+- `@prisma/adapter-pg` driver adapter — no SQLite in production; Postgres everywhere
+- `lib/prisma.ts` — singleton PrismaClient safe for Next.js hot reload, using `PrismaPg` with `PoolConfig`
+- `prisma/seed.ts` — upserts singleton `UserProfile` on first deploy
+- `next.config.ts` — CSP headers allowing `frame-src https://www.levels.fyi`
+- `vercel.json` — tells Vercel to run `npm run vercel-build` (which runs `prisma migrate deploy && next build`)
+- `package.json` scripts: `build` (local, no migrations), `vercel-build` (Vercel: migrate + build), `db:migrate`, `db:seed`
+
+### Modules Built
+- **Module 1 — Profile & Positioning Hub**: 4-step onboarding wizard at `/profile/setup`, profile editor at `/profile`, CMF weight sliders, server actions for all profile mutations
+- **Module 2 — Company Intelligence Center**: `/companies` list, `/companies/new`, `/companies/[id]` detail with tabs (Overview, Earnings Signals, Positioning Brief)
+- **Module 3 — Opportunity Tracker**: `/opportunities` list, `/opportunities/new`, `/opportunities/[id]` detail with tabs (Overview, CMF Scoring, Role Brief, Comp Snapshot), status funnel stepper
+- **Module 4 — Compensation Intelligence**: `/comp` page with Levels.fyi embed, benchmarking panel, negotiation reference card; comp snapshot on opportunity detail
+- **Module 6 — Activity Dashboard**: `/dashboard` with funnel metrics and priority action queue
+
+### API Routes (all implemented, AI stubs return 501)
+- `GET/PATCH /api/profile`
+- `GET/POST /api/companies`, `GET/PATCH/DELETE /api/companies/[id]`
+- `GET/POST /api/companies/[id]/signals`, `DELETE /api/companies/[id]/signals/[signalId]`
+- `POST /api/companies/[id]/brief`, `POST /api/companies/[id]/brief/reset` (AI stub)
+- `GET/POST /api/opportunities`, `GET/PATCH/DELETE /api/opportunities/[id]`
+- `POST /api/opportunities/[id]/cmf` (manual scoring; AI stub)
+- `POST /api/opportunities/[id]/brief`, `POST /api/opportunities/[id]/brief/reset` (AI stub)
+- `GET/POST /api/benchmarks`, `DELETE /api/benchmarks/[id]`
+- `GET/POST /api/contacts`, `GET/PATCH/DELETE /api/contacts/[id]` (Phase 3 ready)
+- `GET /api/dashboard`
+
+### Shared UI Components (`components/ui/`)
+`Card`, `Badge`, `Button`, `Input`, `Textarea`, `Select`, `Skeleton`, `ErrorMessage`, `Modal`, `Tabs`, `PageHeader`, `CmfScore`, `DraftEditor`, `ConsistencyBanner`
+
+---
+
+## Next Steps to Deploy
+
+### Step 1 — Get a free Postgres database
+Go to [neon.tech](https://neon.tech), sign up, create a project, copy the connection string.
+It looks like: `postgresql://user:password@host/dbname?sslmode=require`
+
+### Step 2 — Connect repo to Vercel
+1. Go to [vercel.com](https://vercel.com) → New Project → import `grndwrk` from GitHub
+2. In Environment Variables, add:
+   - `DATABASE_URL` = your Neon connection string (set for Production, Preview, and Development)
+3. Deploy — Vercel will run `prisma migrate deploy` (creates all tables) then `next build`
+
+### Step 3 — Seed the database
+After first deploy, run locally (with `DATABASE_URL` set in `.env.local`):
+```
+npm run db:seed
+```
+Or trigger it from the Vercel dashboard via a one-off command.
+
+### Step 4 — Smoke test
+- Visit the Vercel URL → should redirect to `/profile/setup`
+- Complete the 4-step onboarding wizard
+- Create a company, add an opportunity, check the dashboard
 
 ---
 
@@ -21,13 +78,13 @@ Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 
 
 | Layer | Choice |
 |-------|--------|
-| Frontend | Next.js (React), Tailwind CSS |
-| Backend | Next.js API routes |
-| Database | SQLite (local/dev), PostgreSQL (production) via Prisma ORM |
-| AI | Anthropic Claude API (claude-sonnet); abstract behind a service layer |
-| Salary data | Levels.fyi embed iframes only in V1. CSP: `frame-src https://www.levels.fyi` in `next.config.js`. |
-| Auth (V1) | None. Single-user; `UserProfile` is a singleton, seeded on first launch. All data scoped to one implicit user. |
-| Hosting | Vercel + Railway or Supabase (later) |
+| Frontend | Next.js 16 (App Router), Tailwind CSS v4 |
+| Backend | Next.js API routes + Server Actions |
+| Database | PostgreSQL (Neon) via Prisma 7 + `@prisma/adapter-pg` |
+| AI | Anthropic Claude API (Phase 2+); all AI routes stubbed with 501 |
+| Salary data | Levels.fyi iframe embeds only (V1). CSP: `frame-src https://www.levels.fyi` |
+| Auth (V1) | None. Single-user; `UserProfile` is a singleton (`id = "singleton"`), seeded on first launch. |
+| Hosting | Vercel (frontend + API) + Neon (Postgres) |
 
 ---
 
@@ -68,6 +125,8 @@ Resume parsing at upload: Claude returns structured `experience[]` (company, tit
 - **Errors:** AI failure → inline error + Retry; preserve form state. Levels.fyi failure → "Data unavailable" + manual entry fallback. Long AI calls (5–15s) → loading state, no timeout discard.
 - **AI context:** Every AI call gets `positioning_statement` and `narrative_pillars` as system context. Abstract Claude behind a service; env vars for API keys.
 - **Levels.fyi:** Option A (iframe) only for Phase 1. Add CSP `frame-src https://www.levels.fyi` in Next.js config.
+- **Prisma migrations:** Never edit migration files manually. Run `npm run db:migrate` locally to generate new migrations. Vercel runs `prisma migrate deploy` automatically on every deploy via `vercel-build` script.
+- **Environment variables:** `DATABASE_URL` must be set in `.env.local` for local dev and in Vercel project settings for all environments. `ANTHROPIC_API_KEY` needed for Phase 2.
 
 ---
 
