@@ -1,19 +1,15 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
-import path from "path";
+import { PrismaPg } from "@prisma/adapter-pg";
 
-function createPrismaClient() {
-  const dbUrl = process.env.DATABASE_URL ?? "file:./dev.db";
-  // Strip the "file:" prefix for better-sqlite3
-  const dbPath = dbUrl.startsWith("file:")
-    ? dbUrl.slice(5)
-    : dbUrl;
-  // Resolve relative paths from project root
-  const resolvedPath = path.isAbsolute(dbPath)
-    ? dbPath
-    : path.resolve(process.cwd(), dbPath);
-
-  const adapter = new PrismaBetterSqlite3({ url: `file:${resolvedPath}` });
+function createPrismaClient(): PrismaClient {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    throw new Error(
+      "DATABASE_URL is not set. Add it to .env.local — get a free Postgres URL from https://neon.tech",
+    );
+  }
+  // Pass PoolConfig directly to avoid @types/pg version conflicts
+  const adapter = new PrismaPg({ connectionString: dbUrl });
   return new PrismaClient({ adapter });
 }
 
