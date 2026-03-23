@@ -2,6 +2,9 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Sidebar } from "@/components/nav/Sidebar";
 
+/** Avoid DB access during `next build` static generation when DATABASE_URL is offline locally. */
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: {

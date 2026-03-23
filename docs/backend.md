@@ -39,6 +39,7 @@ NODE_ENV=              # Set by Next.js / platform (development | production)
 
 ### Deployment (Vercel + Neon)
 
+- **App shell:** `app/(app)/layout.tsx` sets `export const dynamic = "force-dynamic"` so authenticated routes are not statically prerendered at build time (avoids Prisma errors when `DATABASE_URL` is unreachable during local `npm run build`).
 - **Build:** `vercel.json` runs `npm run vercel-build` → `prisma migrate deploy && next build`.
 - **If you see P3019** (datasource provider does not match `migration_lock.toml`): the migration history was created for a different DB engine. Remove `prisma/migrations/`, run `prisma migrate dev` against a Postgres database to regenerate, commit the new folder. If the Neon database already has unrelated tables from another project, reset that database (or use a fresh Neon database) before applying grndwrk migrations.
 - **Do not** commit real secrets; only `DATABASE_URL` in Vercel env vars.

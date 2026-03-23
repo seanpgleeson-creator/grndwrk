@@ -9,10 +9,10 @@ Feature-driven delivery: each phase ships a usable module end-to-end (schema →
 ## Phase 0 — Project Bootstrap
 
 - [x] Create GitHub repo, push initial Next.js 14 project (`npx create-next-app@latest`)
-- [ ] Connect repo to Vercel, configure auto-deploy on `main` and preview on PRs
-- [ ] **[PARALLEL]** Configure environment variables in Vercel: `DATABASE_URL` (Postgres), `ANTHROPIC_API_KEY`, `NODE_ENV`
-- [ ] **[PARALLEL]** Provision Postgres database (e.g. Neon, Supabase, or Vercel Postgres) and add connection string
-- [x] **[PARALLEL]** Set up Prisma: install deps, write full schema from `docs/backend.md`, configure SQLite for local dev
+- [x] Connect repo to Vercel, configure auto-deploy on `main` and preview on PRs
+- [x] **[PARALLEL]** Configure environment variables in Vercel: `DATABASE_URL` (Postgres); `ANTHROPIC_API_KEY` optional until Phase 2
+- [x] **[PARALLEL]** Provision Postgres database (Neon) and add connection string
+- [x] **[PARALLEL]** Set up Prisma: full schema, PostgreSQL + `@prisma/adapter-pg`, migrations in repo
 - [x] **[PARALLEL]** Scaffold folder structure per `docs/frontend.md`: `app/`, `components/`, `lib/`, `prisma/`, `app/actions/`
 - [x] **[PARALLEL]** Install and configure Tailwind CSS, set up design tokens (colors, typography) from `docs/frontend.md` design system section
 - [x] **[PARALLEL]** Install Radix UI, `clsx`, `tailwind-merge`, set up `cn()` utility
@@ -37,7 +37,7 @@ _Unblocks everything else — singleton `UserProfile` must exist before any othe
 - [x] Add first-launch gate in `(app)/layout.tsx` — redirect to `/profile/setup` if `onboarding_complete = false`
 - [x] **[PARALLEL with profile UI]** Build shared `AppShell` — fixed 220px sidebar, `NavItem` with `usePathname()` active state
 - [x] **[PARALLEL with profile UI]** Build shared UI components: `Card`, `Badge`, `DraftEditor`, `CmfScore`, skeleton loaders, error states
-- [ ] Deploy to Vercel, test onboarding flow end-to-end on preview URL
+- [x] Deploy to Vercel, test onboarding flow end-to-end on preview URL
 
 ---
 
@@ -53,7 +53,7 @@ _Depends on: Feature 1 complete (for nav/shell)._
 - [x] Build "Add Company" form at `/companies/new` (Radix UI modal or page)
 - [x] Build Earnings Signals tab — manual signal entry form, signal list with trigger score display
 - [x] Build Company Positioning Brief tab — `DraftEditor` component, "Generate" button stubbed for Phase 2
-- [ ] Deploy to Vercel preview, smoke-test CRUD
+- [x] Deploy to Vercel preview, smoke-test CRUD
 
 ---
 
@@ -70,7 +70,7 @@ _Depends on: Feature 2 complete (opportunities belong to companies)._
 - [x] Build CMF scoring panel — 5 numeric inputs (1–10), composite score computed client-side, colour bands (≥8 green, 6–7 amber, 4–5 orange, <4 red)
 - [x] Build status selector (Watching → Preparing → Applied → In Process → Closed) + `outreach_sent` toggle
 - [x] Build Role Positioning Brief editor using `DraftEditor` pattern
-- [ ] Deploy to Vercel preview, test full opportunity lifecycle
+- [x] Deploy to Vercel preview, test full opportunity lifecycle
 
 ---
 
@@ -98,7 +98,7 @@ _Depends on: Features 2 & 3 complete (needs Opportunity + Company data)._
 - [x] Build `MetricCard` component — companies monitored, Tier 1 targets, open opportunities, avg CMF, briefs complete, days since last activity
 - [x] Build `ActionItem` component — rule-based queue (no brief started, unscored opportunity, high CMF not applied, stale Preparing, no recent activity)
 - [x] Set `/dashboard` as default redirect after onboarding completes
-- [ ] **Phase 1 complete — deploy to Vercel `main`, full smoke test in production**
+- [x] **Phase 1 complete — deploy to Vercel `main`, full smoke test in production**
 
 ---
 
@@ -147,8 +147,8 @@ _Deferred — no auth in Phases 1–3. Plan separately when ready._
 
 ## Cross-cutting / Ongoing
 
-- [ ] Every PR deploys a Vercel preview URL — use as the test environment
-- [ ] Keep `DATABASE_URL` pointing to Postgres in all Vercel environments (no SQLite in prod)
+- [x] Every PR deploys a Vercel preview URL — use as the test environment
+- [x] Keep `DATABASE_URL` pointing to Postgres in all Vercel environments
 - [ ] Add `prisma migrate deploy` to Vercel build command (in `package.json` `build` script or as a post-deploy hook) ✓ Done
 - [ ] Monitor Anthropic API errors in Vercel logs; all AI failures return 502 + `retryable: true`
 - [x] `ConsistencyBanner` and `DraftEditor` UI shells built in Phase 1, AI wired in Phase 2 — no re-architecture needed
