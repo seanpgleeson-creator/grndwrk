@@ -4,49 +4,76 @@ MVP: Prioritize simple and functional. Ship core flows first; defer nice-to-have
 
 ---
 
-## Current Phase: Phase 2 — AI Intelligence Layer (in progress)
+## Current status (pick up here)
 
-Phase 1 is deployed on **Vercel** + **Neon**. **Phase 2** wires **Anthropic Claude** for resume parsing, CMF AI scoring, company/role briefs, earnings analysis, cover letters, and optional narrative consistency checks.
+- **Phase 1:** Shipped — Vercel + Neon, full app shell and CRUD.
+- **Phase 2 (AI):** **Core work is done** — Anthropic is wired end-to-end for resume parse, CMF (AI), company brief, role brief, earnings signal analysis, and cover letter generation. Env: `ANTHROPIC_API_KEY` (required for AI). Optional: `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-20250514`).
+- **In parallel:** UI polish / design work may proceed in a separate session; this doc describes backend + AI behavior so you can align UI with real API responses.
 
-**Required env (Vercel + local):** `ANTHROPIC_API_KEY`. Optional: `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-20250514`).
+**Remaining before calling Phase 2 “complete” (product-wise):** wire `ConsistencyBanner` to `narrative_check` from API responses, richer dashboard priority queue (optional), `outreachDraft` prompt (Phase 3 prep), production smoke test with a real API key.
 
-Phase 3 adds outreach/contacts UI. Phase 4 = council/multi-user.
+**Next product phase:** Phase 3 — Outreach & contacts UI (routes largely exist; needs pages and wiring).
 
 ---
 
-## What Has Been Built (Phase 1)
+## Phase 2 — What was finished (AI layer)
+
+### Libraries
+- [`lib/ai/claude.ts`](../lib/ai/claude.ts) — `callClaude`, `callClaudeWithProfile` (injects `UserProfile` positioning + narrative pillars), 3-attempt retry.
+- [`lib/ai/extractJson.ts`](../lib/ai/extractJson.ts) — Strip markdown JSON fences, `parseWithSchema` (Zod).
+- [`lib/ai/narrative.ts`](../lib/ai/narrative.ts) — `runNarrativeCheck` after generations (optional; failures ignored).
+- [`lib/ai/prompts/`](../lib/ai/prompts/) — `resumeParse`, `cmf`, `companyBrief`, `roleBrief`, `earnings`, `narrativeCheck`, `coverLetter` (Zod schemas + prompt builders).
+
+### API behavior
+- No key → **503** `ai_not_configured` on AI routes.
+- AI / parse failure → **502** `ai_failure`, `retryable: true` (monitor in Vercel logs).
+- `export const maxDuration = 60` on long-running AI routes.
+
+### Endpoints (implemented)
+| Route | Purpose |
+|-------|---------|
+| `POST /api/profile/resume` | Parse `resume_raw` → `resume_parsed` JSON on `UserProfile` |
+| `POST /api/opportunities/[id]/cmf` | Body `{ generate: true }` → AI CMF; else manual 5 dimension scores |
+| `POST /api/companies/[id]/brief` | Body `{ generate: true }` → company positioning brief fields + draft |
+| `POST /api/opportunities/[id]/brief` | Body `{ generate: true }` → role brief fields + draft |
+| `POST /api/companies/[id]/signals/[signalId]/analyze` | Analyze transcript → `parsed_signals`, `outreach_trigger_score` |
+| `POST /api/opportunities/[id]/cover-letter` | Generate cover letter → `materials.cover_letter.draft` |
+| `POST /api/benchmarks/fetch` | Returns `{ data: null, fallback: true }` (no scraper yet) |
+
+Successful AI generations may include **`narrative_check`** in the JSON body (optional) — not yet consumed by UI for `ConsistencyBanner`.
+
+### UI hooks (current)
+- **Profile → Resume:** “Parse with AI” + parsed JSON preview.
+- **Company → Brief:** “Generate with AI”.
+- **Company → Signals:** “Analyze with AI” per signal.
+- **Opportunity → CMF:** “Generate with AI” + short AI rationale / recommendation when `cmf_breakdown.ai` is present.
+- **Opportunity → Role brief / Materials:** “Generate with AI” / “Generate cover letter”.
+
+### Data note
+- CMF `cmf_breakdown` JSON may include **flat scores** (manual) or **flat scores + `ai`** (AI: rationale, gaps, recommendation). [`normalizeCmfBreakdownForSliders`](../lib/utils.ts) keeps sliders working for both.
+
+---
+
+## What Has Been Built (Phase 1) — summary
 
 ### Infrastructure
-- Next.js 16 App Router project scaffolded with Tailwind CSS v4, Radix UI, Zod, `clsx`, `tailwind-merge`
-- Prisma 7 schema with all data models (see Data Model section below), provider = `postgresql`
-- `@prisma/adapter-pg` driver adapter — no SQLite in production; Postgres everywhere
-- `lib/prisma.ts` — singleton PrismaClient safe for Next.js hot reload, using `PrismaPg` with `PoolConfig`
-- `prisma/seed.ts` — upserts singleton `UserProfile` on first deploy
-- `next.config.ts` — CSP headers allowing `frame-src https://www.levels.fyi`
-- `vercel.json` — `framework: nextjs` + `npm run vercel-build` (`prisma generate && prisma migrate deploy && next build`)
-- `package.json` scripts: `build` (local, no migrations), `vercel-build` (Vercel: migrate + build), `db:migrate`, `db:seed`
+- Next.js 16 App Router, Tailwind CSS v4, Radix UI, Zod, `clsx`, `tailwind-merge`
+- Prisma 7 + PostgreSQL + `@prisma/adapter-pg`
+- `vercel.json`: `framework: nextjs`, `vercel-build` = `prisma generate && prisma migrate deploy && next build`
+- CSP: `frame-src https://www.levels.fyi`
 
-### Modules Built
-- **Module 1 — Profile & Positioning Hub**: 4-step onboarding wizard at `/profile/setup`, profile editor at `/profile`, CMF weight sliders, server actions for all profile mutations
-- **Module 2 — Company Intelligence Center**: `/companies` list, `/companies/new`, `/companies/[id]` detail with tabs (Overview, Earnings Signals, Positioning Brief)
-- **Module 3 — Opportunity Tracker**: `/opportunities` list, `/opportunities/new`, `/opportunities/[id]` detail with tabs (Overview, CMF Scoring, Role Brief, Comp Snapshot), status funnel stepper
-- **Module 4 — Compensation Intelligence**: `/comp` page with Levels.fyi embed, benchmarking panel, negotiation reference card; comp snapshot on opportunity detail
-- **Module 6 — Activity Dashboard**: `/dashboard` with funnel metrics and priority action queue
+### Modules
+- **Module 1** — `/profile/setup`, `/profile`, CMF sliders, comp targets
+- **Module 2** — Company list/detail, signals, company brief tabs
+- **Module 3** — Opportunities, CMF tab, role brief, materials, comp snapshot
+- **Module 4** — `/comp`, Levels.fyi embeds
+- **Module 6** — `/dashboard` funnel + priority queue (rule-based)
 
-### API Routes (AI routes active when `ANTHROPIC_API_KEY` is set)
-- `GET/PATCH /api/profile`
-- `GET/POST /api/companies`, `GET/PATCH/DELETE /api/companies/[id]`
-- `GET/POST /api/companies/[id]/signals`, `DELETE /api/companies/[id]/signals/[signalId]`
-- `POST /api/companies/[id]/brief`, `POST /api/companies/[id]/brief/reset` (AI stub)
-- `GET/POST /api/opportunities`, `GET/PATCH/DELETE /api/opportunities/[id]`
-- `POST /api/opportunities/[id]/cmf` (manual scoring; AI stub)
-- `POST /api/opportunities/[id]/brief`, `POST /api/opportunities/[id]/brief/reset` (AI stub)
-- `GET/POST /api/benchmarks`, `DELETE /api/benchmarks/[id]`
-- `GET/POST /api/contacts`, `GET/PATCH/DELETE /api/contacts/[id]` (Phase 3 ready)
-- `GET /api/dashboard`
+### API surface (non-exhaustive; see `app/api/`)
+- Profile, companies, opportunities, benchmarks, contacts, dashboard — as in Phase 1; AI-specific routes listed in the Phase 2 table above.
 
-### Shared UI Components (`components/ui/`)
-`Card`, `Badge`, `Button`, `Input`, `Textarea`, `Select`, `Skeleton`, `ErrorMessage`, `Modal`, `Tabs`, `PageHeader`, `CmfScore`, `DraftEditor`, `ConsistencyBanner`
+### Shared UI (`components/ui/`)
+`Card`, `Badge`, `Button`, `Input`, `Textarea`, `Select`, `Skeleton`, `ErrorMessage`, `Modal`, `Tabs`, `PageHeader`, `CmfScore`, `DraftEditor`, `ConsistencyBanner` (banner not yet wired to AI `narrative_check`)
 
 ---
 
@@ -54,25 +81,24 @@ Phase 3 adds outreach/contacts UI. Phase 4 = council/multi-user.
 
 ### Vercel dashboard (critical)
 
-If you see **"Configuration Settings in the current Production deployment differ from your current Project Settings"** or **404** on preview/production URLs while builds succeed:
+If builds succeed but you see **404** or **configuration mismatch**:
 
-1. Open the project on Vercel → **Settings** → **Build and Deployment**.
-2. Set **Framework Preset** to **Next.js** (not **Other**). A preset of "Other" tells Vercel to treat the output like a static site, which breaks Next.js routing and often yields **404 NOT_FOUND** even when the build log lists routes.
-3. **Save**, then trigger a **Redeploy** (Deployments → … → Redeploy) so the new preset applies.
-
-The repo’s [`vercel.json`](../vercel.json) sets `"framework": "nextjs"` and `buildCommand`; the dashboard preset should still match **Next.js** so project defaults and previews stay aligned.
-
-Optional: enable **Build Command** override and set `npm run vercel-build` if you want it explicit in the UI (otherwise `vercel.json` is enough).
+1. **Settings → Build and Deployment** → **Framework Preset** = **Next.js** (not “Other”). Save and redeploy.
 
 ### Database and TypeScript
 
-- **P3019 (provider mismatch):** Old migrations were SQLite while the schema is PostgreSQL. Fix: reset migration history for Postgres-only (`prisma/migrations` regenerated with `prisma migrate dev` against Neon), commit, redeploy. If Neon already had tables from another app, reset that database or use a fresh Neon project before applying grndwrk migrations.
-- **TypeScript `noImplicitAny` on Vercel:** Local `next dev` can be looser than `next build`; fix all `tsc` errors locally with `npx tsc --noEmit` before pushing.
+- **P3019:** Migration provider mismatch — regenerate Postgres migrations; see past notes in git history if needed.
+- **`next build` stricter than `next dev`:** Run `npx tsc --noEmit` and `npm run build` before pushing.
 
-## Next steps (ongoing)
+---
 
-- **Smoke test AI in production:** set `ANTHROPIC_API_KEY` on Vercel → profile resume parse → opportunity CMF generate → briefs → cover letter.
-- **Remaining Phase 2 polish:** `ConsistencyBanner` wired from `narrative_check` responses; dashboard priority queue tiers; optional `outreachDraft` prompt for Phase 3.
+## Next steps (ordered suggestions)
+
+1. **Your UI session:** Align components with AI flows (loading, errors from 502/503, retry, empty states). API responses: `{ data }` on success; `{ error, message, retryable }` on failure; some routes return `{ data, narrative_check }`.
+2. **ConsistencyBanner:** Read `narrative_check` from CMF/brief/cover-letter responses (or pass from server components after fetch); show yellow when `consistency_score < 3`, dismissible.
+3. **Dashboard:** Extend `GET /api/dashboard` priority queue with urgency tiers using contacts + earnings signals (per `todo.md`).
+4. **Production:** Confirm `ANTHROPIC_API_KEY` (and optional `ANTHROPIC_MODEL`) on Vercel; smoke-test all AI buttons.
+5. **Phase 3:** Outreach page, contact CRUD UX, `outreachDraft` prompt when ready.
 
 ---
 
@@ -83,62 +109,43 @@ Optional: enable **Build Command** override and set `npm run vercel-build` if yo
 | Frontend | Next.js 16 (App Router), Tailwind CSS v4 |
 | Backend | Next.js API routes + Server Actions |
 | Database | PostgreSQL (Neon) via Prisma 7 + `@prisma/adapter-pg` |
-| AI | Anthropic Claude API (Phase 2+); all AI routes stubbed with 501 |
-| Salary data | Levels.fyi iframe embeds only (V1). CSP: `frame-src https://www.levels.fyi` |
-| Auth (V1) | None. Single-user; `UserProfile` is a singleton (`id = "singleton"`), seeded on first launch. |
-| Hosting | Vercel (frontend + API) + Neon (Postgres) |
+| AI | Anthropic Claude (`@anthropic-ai/sdk`); `ANTHROPIC_API_KEY` required for AI features |
+| Salary data | Levels.fyi iframe embeds; CSP `frame-src https://www.levels.fyi` |
+| Auth (V1) | None. Single-user; `UserProfile` singleton `id = "singleton"`. |
+| Hosting | Vercel + Neon |
 
 ---
 
 ## Module Structure (6 modules)
 
-1. **Profile & Positioning Hub** — Resume (raw + parsed), positioning statement, target roles/stages/geography, CMF weight sliders (sum to 100), comp targets, narrative pillars (3–5). Powers all other modules.
-2. **Company Intelligence Center** — Company profiles (name, website, LinkedIn, HQ, stage, size, tier, notes), earnings/signal analysis (Phase 2), Company Positioning Brief (draft/edited).
-3. **Opportunity Tracker** — Job submission, CMF score (manual in Phase 1), status (Watching | Preparing | Applied | In process | Closed), outreach_sent (boolean tag), Role Positioning Brief, cover letter (Phase 2).
-4. **Compensation Intelligence** — Levels.fyi embeds in company/opportunity views; optional markdown fetch later. Comp tab per company; comp snapshot per opportunity; benchmarking panel; negotiation card when in process.
-5. **Outreach & Relationship Pipeline** — Contacts (name, title, company, warmth, last_contact), priority queue, templates, outreach tracking. Phase 3.
-6. **Activity Dashboard** — Search health metrics, priority action queue (3–5 items), funnel view (Monitoring → Positioned → Applied/Outreach Sent → In Process → Outcome). Map funnel to Module 3 statuses.
+1. **Profile & Positioning Hub** — Resume (raw + parsed), positioning, pillars, CMF weights, comp targets.
+2. **Company Intelligence Center** — Company profiles, earnings signals, company positioning brief.
+3. **Opportunity Tracker** — Job pipeline, CMF (manual + AI), role brief, materials, comp snapshot.
+4. **Compensation Intelligence** — Levels.fyi embeds, benchmarking, negotiation context.
+5. **Outreach & Relationship Pipeline** — Phase 3.
+6. **Activity Dashboard** — Funnel, metrics, priority queue.
 
 ---
 
 ## Data Model (authoritative schema)
 
-| Entity | Key Fields |
-|--------|------------|
-| `UserProfile` | resume_raw, resume_parsed (experience[], skills[], education[]), positioning_statement, narrative_pillars[], target_roles[], target_stages[], geography, remote_preference, cmf_weights (e.g. domain, stage, scope, strategic, narrative — ints summing to 100), comp_target |
-| `Company` | name, website, linkedin_url, hq, stage, size, tier, warmth (derived from contacts), notes, positioning_brief_id, signals[] |
-| `EarningsSignal` | company_id, date, transcript, source_url?, parsed_signals[], outreach_trigger_score (1–5) |
-| `CompanyPositioningBrief` | company_id, draft, edited, why_company, why_now, value_proposition, proof_points[], the_ask, completed_at |
-| `Opportunity` | company_id, role_title, level, team, jd_text, key_requirements[], status, outreach_sent (boolean), cmf_score, cmf_breakdown, materials{}, comp_snapshot |
-| `RolePositioningBrief` | opportunity_id, draft, edited, fit_summary, contribution_narrative, differentiated_value, proof_points[] |
-| `Contact` | name, title, company_id, linkedin_url, connection_degree, warmth, source, notes, last_contact, outreach[] |
-| `OutreachRecord` | contact_id, opportunity_id?, date, channel, message_summary, response |
-| `CompBenchmark` | company_id, role_family, level, base_range, total_comp_range, source, fetched_at |
-
-Resume parsing at upload: Claude returns structured `experience[]` (company, title, dates, bullets), `skills[]`, `education[]`. CMF composite: `sum(dimension_score * weight/100)`; each dimension 1–10.
+See `prisma/schema.prisma` and table in earlier docs; `resume_parsed` and `cmf_breakdown` store JSON strings.
 
 ---
 
 ## Build Conventions
 
-- **First launch:** Redirect to profile setup wizard. Steps: (1) Core Profile + resume, (2) Narrative Pillars — required. (3) CMF Weights, (4) Compensation Targets — pre-filled defaults. Completing unlocks app.
-- **AI-generated content:** Store in `draft`; user edits in `edited`. UI shows `edited` when present, else `draft`. Always offer "Reset to AI draft." No version history in V1.
-- **Positioning brief "complete":** User explicitly marks/saves complete. Sections need not all be filled.
-- **Errors:** AI failure → inline error + Retry; preserve form state. Levels.fyi failure → "Data unavailable" + manual entry fallback. Long AI calls (5–15s) → loading state, no timeout discard.
-- **AI context:** Every AI call gets `positioning_statement` and `narrative_pillars` as system context. Abstract Claude behind a service; env vars for API keys.
-- **Levels.fyi:** Option A (iframe) only for Phase 1. Add CSP `frame-src https://www.levels.fyi` in Next.js config.
-- **Prisma migrations:** Never edit migration files manually. Run `npm run db:migrate` locally to generate new migrations. Vercel runs `prisma migrate deploy` automatically on every deploy via `vercel-build` script.
-- **Environment variables:** `DATABASE_URL` must be set in `.env.local` for local dev and in Vercel project settings for all environments. `ANTHROPIC_API_KEY` needed for Phase 2.
+- **First launch:** `/profile/setup` until onboarding complete.
+- **AI content:** Draft vs edited; reset-to-draft pattern for briefs.
+- **Errors:** AI failures should surface **retry** in UI when `retryable: true`.
+- **Prisma:** `npm run db:migrate` locally; Vercel runs migrate via `vercel-build`.
+- **Env:** `DATABASE_URL` everywhere; `ANTHROPIC_API_KEY` for AI.
 
 ---
 
-## AI Prompt Contracts (Phase 2+)
+## AI Prompt Contracts
 
-**CMF generation:** System: positioning_statement, narrative_pillars, cmf_weights. User: JD + parsed resume + company research. Return JSON: per-dimension `{ score, rationale }`, plus resume_gap_analysis, recommended_tweaks, application_recommendation ("prioritize"|"proceed"|"marginal"|"skip").
-
-**Earnings analysis:** System: positioning_statement, narrative_pillars. User: transcript text. Return JSON: hiring_signals[], strategic_priorities[], problem_areas[], outreach_trigger_score (1–5), suggested_follow_ups[]. Score ≥ 4 → Priority Action Queue.
-
-**Narrative consistency:** System: narrative_pillars. User: generated content. Return JSON: consistency_score (1–5), assessments[], explanation. If score < 3 → yellow warning banner; never block.
+See `lib/ai/prompts/*` and [prd.md](prd.md) for full product intent. CMF, earnings, and narrative-check shapes match the Zod schemas in code.
 
 ---
 
@@ -146,8 +153,8 @@ Resume parsing at upload: Claude returns structured `experience[]` (company, tit
 
 - **Monitoring** = Watching or Preparing  
 - **Positioned** = Brief ready, not yet applied / outreach_sent  
-- **Applied/Outreach Sent** = status Applied and/or outreach_sent true  
+- **Applied/Outreach Sent** = Applied and/or outreach_sent  
 - **In Process** = In process  
 - **Outcome** = Closed  
 
-Reference: [prd.md](prd.md) for full product spec, vision, and open questions.
+Reference: [prd.md](prd.md) for full product spec.
