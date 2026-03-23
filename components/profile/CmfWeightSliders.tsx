@@ -39,7 +39,7 @@ export function CmfWeightSliders({ value, onChange }: CmfWeightSlidersProps) {
     const delta = clamped - value[key];
     if (delta === 0) return;
 
-    const others = DIMENSIONS.map((d) => d.key).filter((k) => k !== key);
+    const others = DIMENSIONS.map((d: (typeof DIMENSIONS)[number]) => d.key).filter((k) => k !== key);
     const othersTotal = others.reduce((s, k) => s + value[k], 0);
 
     const newWeights = { ...value, [key]: clamped };

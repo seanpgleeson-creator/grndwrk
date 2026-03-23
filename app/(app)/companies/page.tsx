@@ -20,7 +20,7 @@ export default async function CompaniesPage() {
     },
   });
 
-  const data = companies.map((c) => ({
+  const data = companies.map((c: (typeof companies)[number]) => ({
     id: c.id,
     name: c.name,
     website: c.website,

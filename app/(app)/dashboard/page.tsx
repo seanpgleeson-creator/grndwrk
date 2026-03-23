@@ -227,7 +227,7 @@ export default async function DashboardPage() {
         {/* Right: Metrics */}
         <div className="space-y-3">
           <h2 className="text-base font-semibold text-[var(--foreground)]">Search Health</h2>
-          {metricCards.map((m) => (
+          {metricCards.map((m: { label: string; value: string | number }) => (
             <Card key={m.label} className="p-4">
               <p className="text-xs text-[var(--muted)] mb-1">{m.label}</p>
               <p className="text-2xl font-semibold text-[var(--foreground)]">{m.value}</p>

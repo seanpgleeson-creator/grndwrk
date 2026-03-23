@@ -453,7 +453,7 @@ function CompTab({ companyName }: { companyName: string }) {
       <div className="flex items-center gap-3">
         <span className="text-sm text-[var(--muted)]">Role family:</span>
         <div className="flex gap-2">
-          {tracks.map((t) => (
+          {tracks.map((t: string) => (
             <button
               key={t}
               onClick={() => setTrack(t)}

@@ -59,7 +59,7 @@ export function CompanyList({ companies }: CompanyListProps) {
       <div className="flex items-center gap-3 flex-wrap">
         <div className="flex items-center gap-1">
           <span className="text-xs text-[var(--muted)]">Tier:</span>
-          {["all", "1", "2", "3", "none"].map((t) => (
+          {["all", "1", "2", "3", "none"].map((t: string) => (
             <button
               key={t}
               onClick={() => setTierFilter(t)}
@@ -76,7 +76,7 @@ export function CompanyList({ companies }: CompanyListProps) {
         </div>
         <div className="flex items-center gap-1">
           <span className="text-xs text-[var(--muted)]">Brief:</span>
-          {["all", "none", "in-progress", "complete"].map((s) => (
+          {["all", "none", "in-progress", "complete"].map((s: string) => (
             <button
               key={s}
               onClick={() => setBriefFilter(s)}

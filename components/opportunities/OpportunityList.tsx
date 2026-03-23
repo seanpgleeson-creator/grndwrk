@@ -64,7 +64,7 @@ export function OpportunityList({ opportunities }: OpportunityListProps) {
           {[
             { value: "active", label: "Active" },
             { value: "all", label: "All" },
-            ...STATUS_OPTIONS.map((s) => ({ value: s, label: s === "InProcess" ? "In Process" : s })),
+            ...STATUS_OPTIONS.map((s: string) => ({ value: s, label: s === "InProcess" ? "In Process" : s })),
           ].map((opt) => (
             <button
               key={opt.value}
