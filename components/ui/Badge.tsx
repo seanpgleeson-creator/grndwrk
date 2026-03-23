@@ -21,25 +21,25 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  watching: "bg-slate-700/50 text-slate-300 border-slate-600/50",
-  preparing: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-  applied: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  "in-process": "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  closed: "bg-slate-600/30 text-slate-400 border-slate-600/30",
-  "tier-1": "bg-indigo-500/30 text-indigo-200 border-indigo-500/40 font-semibold",
-  "tier-2": "bg-indigo-500/15 text-indigo-400 border-indigo-500/20",
-  "tier-3": "bg-slate-700/30 text-slate-400 border-slate-600/30",
+  watching: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
+  preparing: "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20",
+  applied: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+  "in-process": "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  closed: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
+  "tier-1": "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/25 font-semibold",
+  "tier-2": "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/15",
+  "tier-3": "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
   default: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
-  success: "bg-green-500/20 text-green-300 border-green-500/30",
-  warning: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-  danger: "bg-red-500/20 text-red-300 border-red-500/30",
+  success: "bg-green-500/10 text-green-600 border-green-500/20",
+  warning: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+  danger: "bg-red-500/10 text-red-600 border-red-500/20",
 };
 
 export function Badge({ variant = "default", children, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded text-xs border",
+        "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border transition-colors duration-150",
         variantStyles[variant],
         className,
       )}

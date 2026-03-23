@@ -26,7 +26,7 @@ export function Tabs({ tabs, defaultTab, children, className }: TabsProps) {
             key={tab.id}
             onClick={() => setActive(tab.id)}
             className={cn(
-              "px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px",
+              "px-4 py-2.5 text-[13px] font-semibold uppercase tracking-[0.08em] transition-colors duration-150 border-b-2 -mb-px",
               active === tab.id
                 ? "border-[var(--accent)] text-[var(--accent)]"
                 : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]",

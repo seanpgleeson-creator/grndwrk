@@ -1,17 +1,33 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f1117;
-  --surface: #1a1d27;
-  --surface-raised: #222535;
-  --border: #2e3147;
-  --foreground: #e8eaf2;
-  --muted: #6b7280;
-  --accent: #6366f1;
-  --accent-hover: #4f46e5;
+  --background: #0F0F0F;
+  --sidebar: #161616;
+  --surface: #1A1A1A;
+  --surface-raised: #1F1F1F;
+  --border: #2A2A2A;
+  --foreground: #E5E5E5;
+  --muted: #6B6B6B;
+  --accent: #4B7BEC;
+  --accent-hover: #3A6AD4;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
+}
+
+.light {
+  --background: #FAFAF8;
+  --sidebar: #F4F4F2;
+  --surface: #FFFFFF;
+  --surface-raised: #F4F4F2;
+  --border: #E5E5E5;
+  --foreground: #1A1A1A;
+  --muted: #6B6B6B;
+  --accent: #4B7BEC;
+  --accent-hover: #3A6AD4;
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger: #dc2626;
 }
 
 * {
@@ -26,7 +42,8 @@ body {
   overflow-x: hidden;
   background-color: var(--background);
   color: var(--foreground);
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body), system-ui, -apple-system, sans-serif;
+  transition: background-color 150ms ease, color 150ms ease;
 }
 
 a {
@@ -34,7 +51,6 @@ a {
   text-decoration: none;
 }
 
-/* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
