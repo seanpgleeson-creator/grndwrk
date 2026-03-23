@@ -6,6 +6,13 @@
 
 ---
 
+## Current status (as of March 2026)
+
+- **Phase 1 is shipped:** Hosted on **Vercel** with **PostgreSQL (Neon)**. Core flows work: onboarding, profile, companies, opportunities, compensation page, dashboard. AI-powered features (CMF generation, briefs, resume parsing, earnings analysis) are **not** implemented yet — API stubs return HTTP 501 where applicable.
+- **Next:** **Phase 2** — add `lib/ai/claude.ts`, wire Anthropic (`ANTHROPIC_API_KEY` in Vercel), replace 501 stubs with real generation and validation.
+
+---
+
 ## Vision
 
 Most job searches are reactive. A role gets posted, dozens of candidates apply, and the hiring team picks from whoever showed up. Hiring managers also often have a candidate in mind, or at least a short list, before the job is posted.  The candidate has no leverage, no relationship, and no differentiation beyond a resume that looks like everyone else's.

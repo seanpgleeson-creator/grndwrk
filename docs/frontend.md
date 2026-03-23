@@ -1,6 +1,6 @@
 # grndwrk — Frontend Specification
 
-> **Phase 1 scope:** Modules 1, 2, 3, 4, 6. Module 5 (Outreach) deferred to Phase 3.
+> **Status:** Phase 1 is **implemented and deployed** (Vercel + Neon). Modules 1, 2, 3, 4, and 6 are live. Module 5 (Outreach) is deferred to Phase 3. AI-driven UI (resume parse, generate briefs, CMF AI, etc.) is Phase 2.
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### Framework & Tooling
 
-- **Next.js 14+ (App Router)** — all pages use the `app/` directory with React Server Components (RSC) by default
+- **Next.js 16+ (App Router)** — all pages use the `app/` directory with React Server Components (RSC) by default
 - **Tailwind CSS** — utility-first styling with a custom design token configuration
 - **Prisma ORM** — database access via server actions and API routes
 - **No global state library** — React Server Components handle most data fetching; minimal `useState`/`useReducer` for local UI state; React context only where needed (e.g. onboarding wizard step state)
@@ -26,7 +26,7 @@
 
 1. Server components fetch data directly via Prisma (no fetch/REST overhead)
 2. Mutations go through server actions — `revalidatePath` or `revalidateTag` refreshes the server component tree
-3. AI calls go through `/api/ai/*` routes to avoid edge/serverless timeout issues and to support streaming
+3. AI calls (Phase 2) will go through `app/api/...` route handlers (e.g. `/api/opportunities/[id]/cmf`); use `export const maxDuration` where needed for long calls
 4. Client components receive data as props from their RSC parent; they own only ephemeral UI state
 
 ---
@@ -41,16 +41,15 @@
 /profile                    → Profile & Positioning Hub (Module 1)
 /companies                  → Company list (Module 2)
 /companies/new              → Add company form
-/companies/[id]             → Company profile detail
-/companies/[id]/brief       → Company Positioning Brief editor
-/companies/[id]/comp        → Compensation tab (Levels.fyi embed)
+/companies/[id]             → Company profile detail (tabs: Overview, Earnings Signals, Positioning Brief)
 /opportunities              → Opportunity list (Module 3)
 /opportunities/new          → Add opportunity form
-/opportunities/[id]         → Opportunity detail
-/opportunities/[id]/brief   → Role Positioning Brief editor
+/opportunities/[id]         → Opportunity detail (tabs: Overview, CMF, Role Brief, Comp snapshot)
 /comp                       → Compensation benchmarking panel (Module 4)
 /dashboard                  → Activity Dashboard (Module 6)
 ```
+
+**Note:** Company brief, earnings, and comp content live **on** `/companies/[id]` as tabs, not as separate top-level routes. Role brief and CMF live **on** `/opportunities/[id]` as tabs. Global comp benchmarking is `/comp` only.
 
 ### Route Groups & Layout Nesting
 
@@ -63,7 +62,7 @@ app/
         page.tsx             ← Wizard; no sidebar
     layout.tsx               ← Minimal layout (no sidebar/nav)
   (app)/
-    layout.tsx               ← App shell layout: sidebar + topbar + <main>
+    layout.tsx               ← App shell layout: sidebar + <main>
     dashboard/
       page.tsx
     profile/
@@ -73,30 +72,26 @@ app/
       new/
         page.tsx
       [id]/
-        page.tsx
-        brief/
-          page.tsx
-        comp/
-          page.tsx
+        page.tsx             ← detail + tabs (no /brief or /comp child routes)
     opportunities/
       page.tsx
       new/
         page.tsx
       [id]/
-        page.tsx
-        brief/
-          page.tsx
+        page.tsx             ← detail + tabs (no /brief child route)
     comp/
       page.tsx
+  actions/
+    profile.ts
+    companies.ts
+    opportunities.ts
   api/
-    ai/
-      cmf/
-        route.ts
-      brief/
-        route.ts
-      consistency/
-        route.ts
-    profile/
+    profile/...
+    companies/...
+    opportunities/...
+    contacts/...
+    benchmarks/...
+    dashboard/
       route.ts
 ```
 

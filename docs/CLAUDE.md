@@ -4,9 +4,9 @@ MVP: Prioritize simple and functional. Ship core flows first; defer nice-to-have
 
 ---
 
-## Current Phase: Phase 1 — COMPLETE (pending Vercel deployment)
+## Current Phase: Phase 1 — COMPLETE (deployed)
 
-All Phase 1 modules have been built and committed to GitHub (`main` branch). The app is ready to deploy; it just needs a live Postgres database URL wired into Vercel.
+Phase 1 is built, uses **PostgreSQL only** (Neon) with Prisma 7 + `@prisma/adapter-pg`, and is deployed on **Vercel** with `DATABASE_URL` in project settings. Migrations run on each deploy via `vercel-build` (`prisma migrate deploy && next build`).
 
 Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 adds outreach/contacts. Phase 4 = council/multi-user.
 
@@ -15,7 +15,7 @@ Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 
 ## What Has Been Built (Phase 1)
 
 ### Infrastructure
-- Next.js 14 App Router project scaffolded with Tailwind CSS, Radix UI, Zod, `clsx`, `tailwind-merge`
+- Next.js 16 App Router project scaffolded with Tailwind CSS v4, Radix UI, Zod, `clsx`, `tailwind-merge`
 - Prisma 7 schema with all data models (see Data Model section below), provider = `postgresql`
 - `@prisma/adapter-pg` driver adapter — no SQLite in production; Postgres everywhere
 - `lib/prisma.ts` — singleton PrismaClient safe for Next.js hot reload, using `PrismaPg` with `PoolConfig`
@@ -48,29 +48,15 @@ Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 
 
 ---
 
-## Next Steps to Deploy
+## Deployment troubleshooting
 
-### Step 1 — Get a free Postgres database
-Go to [neon.tech](https://neon.tech), sign up, create a project, copy the connection string.
-It looks like: `postgresql://user:password@host/dbname?sslmode=require`
+- **P3019 (provider mismatch):** Old migrations were SQLite while the schema is PostgreSQL. Fix: reset migration history for Postgres-only (`prisma/migrations` regenerated with `prisma migrate dev` against Neon), commit, redeploy. If Neon already had tables from another app, reset that database or use a fresh Neon project before applying grndwrk migrations.
+- **TypeScript `noImplicitAny` on Vercel:** Local `next dev` can be looser than `next build`; fix all `tsc` errors locally with `npx tsc --noEmit` before pushing.
 
-### Step 2 — Connect repo to Vercel
-1. Go to [vercel.com](https://vercel.com) → New Project → import `grndwrk` from GitHub
-2. In Environment Variables, add:
-   - `DATABASE_URL` = your Neon connection string (set for Production, Preview, and Development)
-3. Deploy — Vercel will run `prisma migrate deploy` (creates all tables) then `next build`
+## Next steps (ongoing)
 
-### Step 3 — Seed the database
-After first deploy, run locally (with `DATABASE_URL` set in `.env.local`):
-```
-npm run db:seed
-```
-Or trigger it from the Vercel dashboard via a one-off command.
-
-### Step 4 — Smoke test
-- Visit the Vercel URL → should redirect to `/profile/setup`
-- Complete the 4-step onboarding wizard
-- Create a company, add an opportunity, check the dashboard
+- **Smoke test production:** onboarding → company → opportunity → dashboard.
+- **Phase 2:** Add `ANTHROPIC_API_KEY` in Vercel, implement `lib/ai/claude.ts`, replace AI route stubs (501) with real calls.
 
 ---
 
