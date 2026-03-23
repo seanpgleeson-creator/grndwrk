@@ -21,7 +21,7 @@ Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 
 - `lib/prisma.ts` — singleton PrismaClient safe for Next.js hot reload, using `PrismaPg` with `PoolConfig`
 - `prisma/seed.ts` — upserts singleton `UserProfile` on first deploy
 - `next.config.ts` — CSP headers allowing `frame-src https://www.levels.fyi`
-- `vercel.json` — tells Vercel to run `npm run vercel-build` (which runs `prisma migrate deploy && next build`)
+- `vercel.json` — `framework: nextjs` + `npm run vercel-build` (`prisma generate && prisma migrate deploy && next build`)
 - `package.json` scripts: `build` (local, no migrations), `vercel-build` (Vercel: migrate + build), `db:migrate`, `db:seed`
 
 ### Modules Built
@@ -49,6 +49,20 @@ Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 
 ---
 
 ## Deployment troubleshooting
+
+### Vercel dashboard (critical)
+
+If you see **"Configuration Settings in the current Production deployment differ from your current Project Settings"** or **404** on preview/production URLs while builds succeed:
+
+1. Open the project on Vercel → **Settings** → **Build and Deployment**.
+2. Set **Framework Preset** to **Next.js** (not **Other**). A preset of "Other" tells Vercel to treat the output like a static site, which breaks Next.js routing and often yields **404 NOT_FOUND** even when the build log lists routes.
+3. **Save**, then trigger a **Redeploy** (Deployments → … → Redeploy) so the new preset applies.
+
+The repo’s [`vercel.json`](../vercel.json) sets `"framework": "nextjs"` and `buildCommand`; the dashboard preset should still match **Next.js** so project defaults and previews stay aligned.
+
+Optional: enable **Build Command** override and set `npm run vercel-build` if you want it explicit in the UI (otherwise `vercel.json` is enough).
+
+### Database and TypeScript
 
 - **P3019 (provider mismatch):** Old migrations were SQLite while the schema is PostgreSQL. Fix: reset migration history for Postgres-only (`prisma/migrations` regenerated with `prisma migrate dev` against Neon), commit, redeploy. If Neon already had tables from another app, reset that database or use a fresh Neon project before applying grndwrk migrations.
 - **TypeScript `noImplicitAny` on Vercel:** Local `next dev` can be looser than `next build`; fix all `tsc` errors locally with `npx tsc --noEmit` before pushing.
