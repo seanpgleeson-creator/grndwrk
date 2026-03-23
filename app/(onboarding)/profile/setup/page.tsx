@@ -176,6 +176,7 @@ export default function SetupPage() {
             }
             placeholder="e.g. Product leader with 8+ years building marketplace products at Series B–D companies, known for turning ambiguous problems into scalable systems..."
             rows={4}
+            className="min-h-[140px]"
             hint="Describe who you are, what you do, and what makes you distinctive. This is your north star."
           />
           <Input
@@ -212,6 +213,7 @@ export default function SetupPage() {
             }
             placeholder="Paste your resume text here. AI parsing will be available in Phase 2."
             rows={6}
+            className="min-h-[180px]"
           />
         </>
       )}
@@ -222,9 +224,10 @@ export default function SetupPage() {
             Enter 2–5 narrative pillars. These are the recurring themes that define your professional identity.
           </p>
           {state.narrative_pillars.map((pillar, i) => (
-            <div key={i} className="flex items-center gap-2">
+            <div key={i} className="flex items-start gap-2">
               <div className="flex-1">
                 <Input
+                  label={`Pillar ${i + 1}`}
                   value={pillar}
                   onChange={(e) =>
                     dispatch({ type: "SET_PILLAR", index: i, value: e.target.value })
@@ -235,7 +238,7 @@ export default function SetupPage() {
               {state.narrative_pillars.length > 2 && (
                 <button
                   onClick={() => dispatch({ type: "REMOVE_PILLAR", index: i })}
-                  className="text-[var(--muted)] hover:text-red-400 transition-colors mt-1"
+                  className="mt-8 text-[var(--muted)] hover:text-red-600 transition-colors"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -264,26 +267,24 @@ export default function SetupPage() {
 
       {state.step === 4 && (
         <>
-          <div className="grid grid-cols-2 gap-4">
-            <Input
-              label="Base salary target ($)"
-              type="number"
-              value={state.base_target}
-              onChange={(e) =>
-                dispatch({ type: "SET_FIELD", field: "base_target", value: e.target.value })
-              }
-              placeholder="200000"
-            />
-            <Input
-              label="Total comp target ($)"
-              type="number"
-              value={state.total_target}
-              onChange={(e) =>
-                dispatch({ type: "SET_FIELD", field: "total_target", value: e.target.value })
-              }
-              placeholder="300000"
-            />
-          </div>
+          <Input
+            label="Base salary target ($)"
+            type="number"
+            value={state.base_target}
+            onChange={(e) =>
+              dispatch({ type: "SET_FIELD", field: "base_target", value: e.target.value })
+            }
+            placeholder="200000"
+          />
+          <Input
+            label="Total comp target ($)"
+            type="number"
+            value={state.total_target}
+            onChange={(e) =>
+              dispatch({ type: "SET_FIELD", field: "total_target", value: e.target.value })
+            }
+            placeholder="300000"
+          />
           <Input
             label="Minimum acceptable total comp ($)"
             type="number"
@@ -302,7 +303,7 @@ export default function SetupPage() {
             placeholder="L6, Staff, Director"
           />
           {error && (
-            <p className="text-sm text-red-400">{error}</p>
+            <p className="text-sm text-red-600">{error}</p>
           )}
         </>
       )}
