@@ -1,5 +1,9 @@
 "use client";
 
+import { Check } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/nav/ThemeToggle";
+
 interface WizardShellProps {
   currentStep: number;
   totalSteps: number;
@@ -14,6 +18,13 @@ interface WizardShellProps {
   submitting?: boolean;
 }
 
+const STEP_LABELS = [
+  "Core Profile",
+  "Narrative Pillars",
+  "CMF Weights",
+  "Comp Targets",
+];
+
 export function WizardShell({
   currentStep,
   totalSteps,
@@ -27,76 +38,102 @@ export function WizardShell({
   isLastStep,
   submitting,
 }: WizardShellProps) {
-  const progressPct = (currentStep / totalSteps) * 100;
-
   return (
-    <div className="w-full">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="mb-3">
-          <span className="font-medium text-[var(--foreground)] text-lg tracking-tight [font-family:var(--font-heading),serif]">
+    <div className="flex min-h-screen">
+      {/* Sidebar */}
+      <aside className="fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col z-30 transition-colors duration-150">
+        <div className="px-5 py-5">
+          <span className="text-lg tracking-tight text-[var(--foreground)] [font-family:var(--font-heading),serif]">
             grndwrk
           </span>
         </div>
-        <p className="text-xs uppercase tracking-[0.08em] text-[var(--muted)]">
-          Step {currentStep} of {totalSteps}
-        </p>
-      </div>
 
-      {/* Step indicators */}
-      <div className="mb-8">
-        <div className="h-px w-full bg-[var(--border)]">
-          <div
-            className="h-px bg-[var(--accent)] transition-all"
-            style={{ width: `${progressPct}%` }}
-          />
+        <nav className="flex-1 px-4 py-2 space-y-1">
+          {STEP_LABELS.slice(0, totalSteps).map((label, i) => {
+            const stepNum = i + 1;
+            const isActive = stepNum === currentStep;
+            const isComplete = stepNum < currentStep;
+
+            return (
+              <div
+                key={label}
+                className={cn(
+                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150",
+                  isActive && "bg-[var(--surface-raised)] text-[var(--accent)]",
+                  isComplete && "text-[var(--foreground)]",
+                  !isActive && !isComplete && "text-[var(--muted)]",
+                )}
+              >
+                <span
+                  className={cn(
+                    "flex items-center justify-center h-5 w-5 rounded-full text-[11px] font-medium shrink-0 border transition-colors duration-150",
+                    isActive && "border-[var(--accent)] text-[var(--accent)]",
+                    isComplete && "border-[var(--accent)] bg-[var(--accent)] text-white",
+                    !isActive && !isComplete && "border-[var(--border)] text-[var(--muted)]",
+                  )}
+                >
+                  {isComplete ? <Check className="h-3 w-3" /> : stepNum}
+                </span>
+                <span>{label}</span>
+              </div>
+            );
+          })}
+        </nav>
+
+        <div className="px-3 py-3 border-t border-[var(--border)]">
+          <ThemeToggle />
         </div>
-      </div>
+      </aside>
 
-      <div className="mb-8">
-        <h2 className="text-[2rem] leading-tight text-[var(--foreground)] [font-family:var(--font-heading),serif]">
-          {title}
-        </h2>
-        {description && (
-          <p className="mt-3 text-[15px] leading-6 text-[var(--muted)]">{description}</p>
-        )}
-      </div>
-
-      <div className="space-y-7">{children}</div>
-
-      <div className="flex items-center justify-between mt-10 pt-6 border-t border-[var(--border)]">
-        <button
-          onClick={onBack}
-          disabled={currentStep === 1}
-          className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          ← Back
-        </button>
-
-        {isLastStep ? (
-          <button
-            onClick={onSubmit}
-            disabled={submitting || nextDisabled}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {submitting && (
-              <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-              </svg>
+      {/* Main content */}
+      <main className="flex-1 ml-[220px] px-12 py-10">
+        <div className="max-w-[680px]">
+          <div className="mb-8">
+            <h2 className="text-[28px] leading-tight font-normal text-[var(--foreground)] [font-family:var(--font-heading),serif]">
+              {title}
+            </h2>
+            {description && (
+              <p className="mt-3 text-[14px] leading-6 text-[var(--muted)]">{description}</p>
             )}
-            Launch grndwrk →
-          </button>
-        ) : (
-          <button
-            onClick={onNext}
-            disabled={nextDisabled}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Continue →
-          </button>
-        )}
-      </div>
+          </div>
+
+          <div className="space-y-7">{children}</div>
+
+          <div className="flex items-center justify-between mt-10 pt-6 border-t border-[var(--border)]">
+            <button
+              onClick={onBack}
+              disabled={currentStep === 1}
+              className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
+            >
+              ← Back
+            </button>
+
+            {isLastStep ? (
+              <button
+                onClick={onSubmit}
+                disabled={submitting || nextDisabled}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+              >
+                {submitting && (
+                  <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                )}
+                Launch grndwrk →
+              </button>
+            ) : (
+              <button
+                onClick={onNext}
+                disabled={nextDisabled}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+              >
+                Continue →
+              </button>
+            )}
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
