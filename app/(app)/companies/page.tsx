@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import type { CompaniesApiRow } from "@/lib/prisma-types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { CompanyList } from "@/components/companies/CompanyList";
 import Link from "next/link";
@@ -20,7 +21,7 @@ export default async function CompaniesPage() {
     },
   });
 
-  const data = companies.map((c: (typeof companies)[number]) => ({
+  const data = companies.map((c: CompaniesApiRow) => ({
     id: c.id,
     name: c.name,
     website: c.website,

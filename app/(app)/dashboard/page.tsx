@@ -1,4 +1,9 @@
 import { prisma } from "@/lib/prisma";
+import type {
+  BriefCompletedRow,
+  DashboardCompanyRow,
+  DashboardOpportunityRow,
+} from "@/lib/prisma-types";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -28,40 +33,43 @@ async function getDashboardData() {
     prisma.companyPositioningBrief.findMany({ select: { completed_at: true } }),
   ]);
 
-  const monitoring = opportunities.filter((o) =>
+  const monitoring = opportunities.filter((o: DashboardOpportunityRow) =>
     ["Watching", "Preparing"].includes(o.status),
   ).length;
 
   const positioned = opportunities.filter(
-    (o) =>
+    (o: DashboardOpportunityRow) =>
       ["Watching", "Preparing"].includes(o.status) &&
       o.brief?.completed_at != null &&
       !o.outreach_sent,
   ).length;
 
   const appliedOutreach = opportunities.filter(
-    (o) => o.status === "Applied" || o.outreach_sent,
+    (o: DashboardOpportunityRow) => o.status === "Applied" || o.outreach_sent,
   ).length;
 
-  const inProcess = opportunities.filter((o) => o.status === "InProcess").length;
-  const outcome = opportunities.filter((o) => o.status === "Closed").length;
+  const inProcess = opportunities.filter((o: DashboardOpportunityRow) => o.status === "InProcess").length;
+  const outcome = opportunities.filter((o: DashboardOpportunityRow) => o.status === "Closed").length;
 
-  const openOpps = opportunities.filter((o) => o.status !== "Closed");
-  const scoredOpps = openOpps.filter((o) => o.cmf_score != null);
+  const openOpps = opportunities.filter((o: DashboardOpportunityRow) => o.status !== "Closed");
+  const scoredOpps = openOpps.filter((o: DashboardOpportunityRow) => o.cmf_score != null);
   const avgCmf =
     scoredOpps.length > 0
       ? Math.round(
-          (scoredOpps.reduce((sum, o) => sum + (o.cmf_score ?? 0), 0) /
+          (scoredOpps.reduce(
+            (sum: number, o: DashboardOpportunityRow) => sum + (o.cmf_score ?? 0),
+            0,
+          ) /
             scoredOpps.length) *
             10,
         ) / 10
       : null;
 
-  const brifsComplete = briefs.filter((b) => b.completed_at != null).length;
+  const brifsComplete = briefs.filter((b: BriefCompletedRow) => b.completed_at != null).length;
 
   const actions: ActionItem[] = [];
 
-  for (const company of companies.filter((c) => !c.brief).slice(0, 5)) {
+  for (const company of companies.filter((c: DashboardCompanyRow) => !c.brief).slice(0, 5)) {
     actions.push({
       type: "company_no_brief",
       label: `Start positioning brief for ${company.name}`,
@@ -72,7 +80,7 @@ async function getDashboardData() {
     });
   }
 
-  for (const opp of openOpps.filter((o) => o.cmf_score == null).slice(0, 3)) {
+  for (const opp of openOpps.filter((o: DashboardOpportunityRow) => o.cmf_score == null).slice(0, 3)) {
     actions.push({
       type: "unscored_opportunity",
       label: `Score CMF for ${opp.role_title} at ${opp.company.name}`,
@@ -84,7 +92,7 @@ async function getDashboardData() {
   }
 
   for (const opp of openOpps
-    .filter((o) => (o.cmf_score ?? 0) >= 8 && o.status === "Watching")
+    .filter((o: DashboardOpportunityRow) => (o.cmf_score ?? 0) >= 8 && o.status === "Watching")
     .slice(0, 2)) {
     actions.push({
       type: "high_cmf_not_applied",
@@ -98,7 +106,7 @@ async function getDashboardData() {
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   for (const opp of openOpps
-    .filter((o) => o.status === "Preparing" && o.updated_at < sevenDaysAgo)
+    .filter((o: DashboardOpportunityRow) => o.status === "Preparing" && o.updated_at < sevenDaysAgo)
     .slice(0, 2)) {
     actions.push({
       type: "stale_preparing",
@@ -119,7 +127,7 @@ async function getDashboardData() {
     funnel: { monitoring, positioned, appliedOutreach, inProcess, outcome },
     metrics: {
       companies_monitored: companies.length,
-      tier1_targets: companies.filter((c) => c.tier === 1).length,
+      tier1_targets: companies.filter((c: DashboardCompanyRow) => c.tier === 1).length,
       open_opportunities: openOpps.length,
       avg_cmf_score: avgCmf,
       briefs_complete: brifsComplete,

@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type {
+  BriefCompletedRow,
+  DashboardCompanyRow,
+  DashboardOpportunityRow,
+} from "@/lib/prisma-types";
 
 export async function GET() {
   const [opportunities, companies, briefs] = await Promise.all([
@@ -20,34 +25,36 @@ export async function GET() {
   ]);
 
   // Funnel counts
-  const monitoring = opportunities.filter((o) =>
+  const monitoring = opportunities.filter((o: DashboardOpportunityRow) =>
     ["Watching", "Preparing"].includes(o.status),
   ).length;
 
   const positioned = opportunities.filter(
-    (o) =>
+    (o: DashboardOpportunityRow) =>
       ["Watching", "Preparing"].includes(o.status) &&
       o.brief?.completed_at != null &&
       !o.outreach_sent,
   ).length;
 
   const appliedOutreach = opportunities.filter(
-    (o) => o.status === "Applied" || o.outreach_sent,
+    (o: DashboardOpportunityRow) => o.status === "Applied" || o.outreach_sent,
   ).length;
 
-  const inProcess = opportunities.filter((o) => o.status === "InProcess").length;
-  const outcome = opportunities.filter((o) => o.status === "Closed").length;
+  const inProcess = opportunities.filter((o: DashboardOpportunityRow) => o.status === "InProcess").length;
+  const outcome = opportunities.filter((o: DashboardOpportunityRow) => o.status === "Closed").length;
 
   // Health metrics
-  const openOpps = opportunities.filter((o) => o.status !== "Closed");
-  const scoredOpps = openOpps.filter((o) => o.cmf_score != null);
+  const openOpps = opportunities.filter((o: DashboardOpportunityRow) => o.status !== "Closed");
+  const scoredOpps = openOpps.filter((o: DashboardOpportunityRow) => o.cmf_score != null);
   const avgCmf =
     scoredOpps.length > 0
-      ? scoredOpps.reduce((sum, o) => sum + (o.cmf_score ?? 0), 0) /
-        scoredOpps.length
+      ? scoredOpps.reduce(
+          (sum: number, o: DashboardOpportunityRow) => sum + (o.cmf_score ?? 0),
+          0,
+        ) / scoredOpps.length
       : null;
 
-  const brifsComplete = briefs.filter((b) => b.completed_at != null).length;
+  const brifsComplete = briefs.filter((b: BriefCompletedRow) => b.completed_at != null).length;
 
   // Rule-based priority action queue (Phase 1)
   const actions: {
@@ -74,7 +81,7 @@ export async function GET() {
   }
 
   // Unscored open opportunities
-  for (const opp of openOpps.filter((o) => o.cmf_score == null).slice(0, 5)) {
+  for (const opp of openOpps.filter((o: DashboardOpportunityRow) => o.cmf_score == null).slice(0, 5)) {
     actions.push({
       type: "unscored_opportunity",
       label: `Score CMF for ${opp.role_title} at ${opp.company.name}`,
@@ -87,7 +94,7 @@ export async function GET() {
 
   // High CMF not applied
   for (const opp of openOpps
-    .filter((o) => (o.cmf_score ?? 0) >= 8 && o.status === "Watching")
+    .filter((o: DashboardOpportunityRow) => (o.cmf_score ?? 0) >= 8 && o.status === "Watching")
     .slice(0, 3)) {
     actions.push({
       type: "high_cmf_not_applied",
@@ -102,7 +109,7 @@ export async function GET() {
   // Stale Preparing (> 7 days)
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   for (const opp of openOpps
-    .filter((o) => o.status === "Preparing" && o.updated_at < sevenDaysAgo)
+    .filter((o: DashboardOpportunityRow) => o.status === "Preparing" && o.updated_at < sevenDaysAgo)
     .slice(0, 3)) {
     actions.push({
       type: "stale_preparing",
@@ -125,7 +132,7 @@ export async function GET() {
       funnel: { monitoring, positioned, appliedOutreach, inProcess, outcome },
       metrics: {
         companies_monitored: companies.length,
-        tier1_targets: companies.filter((c) => c.tier === 1).length,
+        tier1_targets: companies.filter((c: DashboardCompanyRow) => c.tier === 1).length,
         open_opportunities: openOpps.length,
         avg_cmf_score: avgCmf ? Math.round(avgCmf * 10) / 10 : null,
         briefs_complete: brifsComplete,

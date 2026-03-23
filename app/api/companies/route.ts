@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import type { CompaniesApiRow } from "@/lib/prisma-types";
 
 function deriveWarmth(contacts: { warmth: string }[]): string | null {
   if (contacts.length === 0) return null;
@@ -18,7 +19,7 @@ export async function GET() {
     },
   });
 
-  const data = companies.map((c) => ({
+  const data = companies.map((c: CompaniesApiRow) => ({
     ...c,
     warmth: deriveWarmth(c.contacts),
     brief_status: !c.brief
