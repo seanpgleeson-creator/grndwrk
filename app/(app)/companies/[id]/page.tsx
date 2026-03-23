@@ -83,7 +83,7 @@ export default async function CompanyDetailPage({
           role_alert_criteria: company.role_alert_criteria,
         }}
         brief={briefData}
-        signals={company.signals.map((s) => ({
+        signals={company.signals.map((s: (typeof company.signals)[number]) => ({
           ...s,
           parsed_signals: parseJsonField(s.parsed_signals, null),
         }))}
