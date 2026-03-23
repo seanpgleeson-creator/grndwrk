@@ -467,7 +467,7 @@ All routes are Next.js App Router route handlers (`app/api/.../route.ts`). No au
 
 ## 4. AI Service Layer
 
-**Status:** Phase 2. The repository does not yet include `lib/ai/` or Anthropic SDK wiring. Phase 1 API routes that call AI return HTTP **501** with a not-implemented message.
+**Status:** Phase 2 implemented. `lib/ai/claude.ts`, `lib/ai/prompts/*`, and `lib/ai/narrative.ts` call Anthropic when `ANTHROPIC_API_KEY` is set. Without the key, AI routes return **503** `ai_not_configured`. AI failures return **502** `ai_failure` with `retryable: true`. `POST /api/benchmarks/fetch` returns `{ data: null, fallback: true }` (no scraper yet).
 
 ### 4.1 `lib/ai/claude.ts` — single entry point (Phase 2)
 

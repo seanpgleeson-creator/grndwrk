@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/Tabs";
 import { Card } from "@/components/ui/Card";
 import { Badge, statusToBadgeVariant } from "@/components/ui/Badge";
@@ -24,6 +25,7 @@ interface Opportunity {
   outreach_sent: boolean;
   cmf_score: number | null;
   cmf_breakdown: { domain: number; stage: number; scope: number; strategic: number; narrative: number };
+  cmf_ai?: unknown;
   materials: { cover_letter?: { draft?: string; edited?: string } };
   comp_snapshot: { base_low?: number; base_high?: number; total_low?: number; total_high?: number; stale?: boolean; meets_target?: boolean | null };
   company: { id: string; name: string };
@@ -67,7 +69,9 @@ export function OpportunityDetailTabs({ opportunity, brief, cmfWeights, compTarg
       {(activeTab) => (
         <>
           {activeTab === "overview" && <OverviewTab opportunity={opportunity} />}
-          {activeTab === "cmf" && <CmfTab opportunity={opportunity} cmfWeights={cmfWeights} />}
+          {activeTab === "cmf" && (
+            <CmfTab opportunity={opportunity} cmfWeights={cmfWeights} />
+          )}
           {activeTab === "brief" && <BriefTab opportunityId={opportunity.id} brief={brief} />}
           {activeTab === "materials" && <MaterialsTab opportunity={opportunity} />}
           {activeTab === "comp" && <CompTab opportunity={opportunity} compTarget={compTarget} />}
@@ -160,6 +164,8 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
 }
 
 function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeights: CmfWeights }) {
+  const router = useRouter();
+  const [genLoading, setGenLoading] = useState(false);
   const [scores, setScores] = useState(
     opportunity.cmf_breakdown.domain > 0
       ? opportunity.cmf_breakdown
@@ -168,8 +174,35 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    const b = opportunity.cmf_breakdown;
+    setScores(
+      b.domain > 0 || b.stage > 0
+        ? b
+        : { domain: 5, stage: 5, scope: 5, strategic: 5, narrative: 5 },
+    );
+  }, [opportunity.cmf_breakdown]);
+
   const computedScore = calcCmfScore(scores, cmfWeights);
   const recommendation = cmfRecommendation(computedScore);
+
+  async function handleGenerateAi() {
+    setGenLoading(true);
+    try {
+      const res = await fetch(`/api/opportunities/${opportunity.id}/cmf`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ generate: true }),
+      });
+      const json = (await res.json()) as { message?: string };
+      if (!res.ok) throw new Error(json.message || "Generation failed");
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setGenLoading(false);
+    }
+  }
 
   const DIMS = [
     { key: "domain" as const, label: "Domain Fit" },
@@ -189,11 +222,36 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
 
   return (
     <div className="space-y-6 max-w-xl">
-      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3">
+      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-[var(--muted)]">
-          AI CMF scoring (Phase 2) — score each dimension manually below (1–10).
+          Score each dimension (1–10), or generate with AI using your profile + JD.
         </p>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          loading={genLoading}
+          onClick={handleGenerateAi}
+        >
+          Generate with AI
+        </Button>
       </div>
+
+      {typeof opportunity.cmf_ai === "object" && opportunity.cmf_ai !== null ? (
+        <Card className="p-4 space-y-2">
+          <p className="text-xs font-medium text-[var(--foreground)]">AI rationale</p>
+          {"resume_gap_analysis" in opportunity.cmf_ai && (
+            <p className="text-xs text-[var(--muted)] whitespace-pre-wrap">
+              {String((opportunity.cmf_ai as { resume_gap_analysis?: string }).resume_gap_analysis ?? "")}
+            </p>
+          )}
+          {"application_recommendation" in opportunity.cmf_ai && (
+            <Badge variant="default" className="capitalize">
+              {String((opportunity.cmf_ai as { application_recommendation?: string }).application_recommendation ?? "")}
+            </Badge>
+          )}
+        </Card>
+      ) : null}
 
       <div className="space-y-4">
         {DIMS.map(({ key, label }) => (
@@ -259,6 +317,8 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
 }
 
 function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brief | null }) {
+  const router = useRouter();
+  const [genLoading, setGenLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState({
     fit_summary: brief?.fit_summary ?? "",
@@ -267,6 +327,34 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
     proof_points: brief?.proof_points ?? [""],
   });
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!brief) return;
+    setForm({
+      fit_summary: brief.fit_summary ?? "",
+      contribution_narrative: brief.contribution_narrative ?? "",
+      differentiated_value: brief.differentiated_value ?? "",
+      proof_points: brief.proof_points.length ? brief.proof_points : [""],
+    });
+  }, [brief]);
+
+  async function handleGenerateAi() {
+    setGenLoading(true);
+    try {
+      const res = await fetch(`/api/opportunities/${opportunityId}/brief`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ generate: true }),
+      });
+      const json = (await res.json()) as { message?: string };
+      if (!res.ok) throw new Error(json.message || "Generation failed");
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setGenLoading(false);
+    }
+  }
 
   function handleSave(completed?: boolean) {
     startTransition(async () => {
@@ -291,8 +379,19 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
         </div>
       )}
 
-      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3">
-        <p className="text-xs text-[var(--muted)]">AI role brief generation (Phase 2) — fill in sections manually below.</p>
+      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-[var(--muted)]">
+          Generate a role brief with AI, or edit sections manually.
+        </p>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          loading={genLoading}
+          onClick={handleGenerateAi}
+        >
+          Generate with AI
+        </Button>
       </div>
 
       {[
@@ -333,10 +432,33 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
 }
 
 function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
+  const router = useRouter();
   const coverLetter = opportunity.materials.cover_letter;
   const [text, setText] = useState(coverLetter?.edited ?? coverLetter?.draft ?? "");
   const [isPending, startTransition] = useTransition();
+  const [genLoading, setGenLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    const cl = opportunity.materials.cover_letter;
+    setText(cl?.edited ?? cl?.draft ?? "");
+  }, [opportunity.materials]);
+
+  async function handleGenerateCoverLetter() {
+    setGenLoading(true);
+    try {
+      const res = await fetch(`/api/opportunities/${opportunity.id}/cover-letter`, {
+        method: "POST",
+      });
+      const json = (await res.json()) as { message?: string };
+      if (!res.ok) throw new Error(json.message || "Generation failed");
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setGenLoading(false);
+    }
+  }
 
   function handleSave() {
     startTransition(async () => {
@@ -349,8 +471,19 @@ function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
 
   return (
     <div className="space-y-4 max-w-2xl">
-      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3">
-        <p className="text-xs text-[var(--muted)]">AI cover letter generation (Phase 2) — write your cover letter below.</p>
+      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+        <p className="text-xs text-[var(--muted)]">
+          Generate a draft with AI, then edit and save.
+        </p>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          loading={genLoading}
+          onClick={handleGenerateCoverLetter}
+        >
+          Generate cover letter
+        </Button>
       </div>
       <Textarea label="Cover letter" value={text} onChange={(e) => setText(e.target.value)} rows={16} placeholder="Write your cover letter here..." />
       <div className="flex items-center gap-3">

@@ -106,16 +106,16 @@ _Depends on: Features 2 & 3 complete (needs Opportunity + Company data)._
 
 _Activate AI endpoints one at a time. Each follows: implement prompt file → wire API route → update UI._
 
-- [ ] Implement `lib/ai/claude.ts` — `callClaude()` and `callClaudeWithProfile()` with 3-attempt retry, Zod validation
-- [ ] **[PARALLEL]** Implement `resumeParse` prompt + activate `POST /api/profile/resume`; update `ResumeUpload` component to show parsed preview
-- [ ] **[PARALLEL]** Implement `earnings` prompt + activate `POST /api/companies/[id]/signals/[signalId]/analyze`; update Earnings Signals tab
-- [ ] **[PARALLEL]** Implement `companyBrief` prompt + activate `POST /api/companies/[id]/brief` with `generate: true`; wire "Generate" button
-- [ ] **[PARALLEL]** Implement `cmf` prompt + activate `POST /api/opportunities/[id]/cmf`; add "Generate with AI" button to CMF panel
-- [ ] **[PARALLEL]** Implement `roleBrief` prompt + activate `POST /api/opportunities/[id]/brief` with `generate: true`; wire "Generate" button
-- [ ] **[PARALLEL]** Implement `coverLetter` prompt + activate cover letter generation; wire to Materials tab
-- [ ] Implement `narrativeCheck` prompt — run as secondary call after any content generation; wire `ConsistencyBanner` component (yellow, dismissible, shown when score < 3)
+- [x] Implement `lib/ai/claude.ts` — `callClaude()` and `callClaudeWithProfile()` with 3-attempt retry, Zod validation
+- [x] **[PARALLEL]** Implement `resumeParse` prompt + activate `POST /api/profile/resume`; Profile resume tab + parsed JSON preview
+- [x] **[PARALLEL]** Implement `earnings` prompt + activate `POST /api/companies/[id]/signals/[signalId]/analyze`; Earnings Signals tab "Analyze with AI"
+- [x] **[PARALLEL]** Implement `companyBrief` prompt + activate `POST /api/companies/[id]/brief` with `generate: true`; "Generate with AI" on company Brief tab
+- [x] **[PARALLEL]** Implement `cmf` prompt + activate `POST /api/opportunities/[id]/cmf`; "Generate with AI" on CMF tab
+- [x] **[PARALLEL]** Implement `roleBrief` prompt + activate `POST /api/opportunities/[id]/brief` with `generate: true`; "Generate with AI" on Role Brief tab
+- [x] **[PARALLEL]** Implement `coverLetter` via `POST /api/opportunities/[id]/cover-letter`; Materials tab "Generate cover letter"
+- [ ] Implement `narrativeCheck` — runs after generation (API returns `narrative_check`); **TODO:** wire `ConsistencyBanner` to show when score < 3
 - [ ] Implement `outreachDraft` prompt (prep for Phase 3)
-- [ ] Set `export const maxDuration = 60` on all long-running AI routes
+- [x] Set `export const maxDuration = 60` on long-running AI routes
 - [ ] Activate Priority Action Queue full logic in `GET /api/dashboard` (6 urgency tiers using real Contact + EarningsSignal data)
 - [ ] Test all AI routes via Vercel prod (real Anthropic API key)
 

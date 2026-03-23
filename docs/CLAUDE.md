@@ -4,11 +4,13 @@ MVP: Prioritize simple and functional. Ship core flows first; defer nice-to-have
 
 ---
 
-## Current Phase: Phase 1 — COMPLETE (deployed)
+## Current Phase: Phase 2 — AI Intelligence Layer (in progress)
 
-Phase 1 is built, uses **PostgreSQL only** (Neon) with Prisma 7 + `@prisma/adapter-pg`, and is deployed on **Vercel** with `DATABASE_URL` in project settings. Migrations run on each deploy via `vercel-build` (`prisma migrate deploy && next build`).
+Phase 1 is deployed on **Vercel** + **Neon**. **Phase 2** wires **Anthropic Claude** for resume parsing, CMF AI scoring, company/role briefs, earnings analysis, cover letters, and optional narrative consistency checks.
 
-Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 adds outreach/contacts. Phase 4 = council/multi-user.
+**Required env (Vercel + local):** `ANTHROPIC_API_KEY`. Optional: `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-20250514`).
+
+Phase 3 adds outreach/contacts UI. Phase 4 = council/multi-user.
 
 ---
 
@@ -31,7 +33,7 @@ Phase 2 adds AI (CMF scoring, briefs, cover letters, earnings parsing). Phase 3 
 - **Module 4 — Compensation Intelligence**: `/comp` page with Levels.fyi embed, benchmarking panel, negotiation reference card; comp snapshot on opportunity detail
 - **Module 6 — Activity Dashboard**: `/dashboard` with funnel metrics and priority action queue
 
-### API Routes (all implemented, AI stubs return 501)
+### API Routes (AI routes active when `ANTHROPIC_API_KEY` is set)
 - `GET/PATCH /api/profile`
 - `GET/POST /api/companies`, `GET/PATCH/DELETE /api/companies/[id]`
 - `GET/POST /api/companies/[id]/signals`, `DELETE /api/companies/[id]/signals/[signalId]`
@@ -69,8 +71,8 @@ Optional: enable **Build Command** override and set `npm run vercel-build` if yo
 
 ## Next steps (ongoing)
 
-- **Smoke test production:** onboarding → company → opportunity → dashboard.
-- **Phase 2:** Add `ANTHROPIC_API_KEY` in Vercel, implement `lib/ai/claude.ts`, replace AI route stubs (501) with real calls.
+- **Smoke test AI in production:** set `ANTHROPIC_API_KEY` on Vercel → profile resume parse → opportunity CMF generate → briefs → cover letter.
+- **Remaining Phase 2 polish:** `ConsistencyBanner` wired from `narrative_check` responses; dashboard priority queue tiers; optional `outreachDraft` prompt for Phase 3.
 
 ---
 

@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
 
-// Phase 2: Levels.fyi markdown fetch
+export const maxDuration = 60;
+
+/** Phase 2 placeholder: Levels.fyi does not expose a stable public API for markdown. */
 export async function POST() {
-  return NextResponse.json(
-    { error: "not_implemented", message: "Levels.fyi fetch available in Phase 2" },
-    { status: 501 },
-  );
+  return NextResponse.json({
+    data: null,
+    fallback: true,
+    message: "Automated Levels.fyi fetch is not implemented; use manual benchmarks or iframe embed.",
+  });
 }

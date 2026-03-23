@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
@@ -16,6 +17,7 @@ interface ProfileData {
   geography: string;
   remote_preference: string;
   resume_raw: string;
+  resume_parsed: string | null;
   cmf_weights: CmfWeights;
   comp_target: {
     base_target?: number;
@@ -111,8 +113,10 @@ function CoreProfileTab({ data }: { data: ProfileData }) {
 }
 
 function ResumeTab({ data }: { data: ProfileData }) {
+  const router = useRouter();
   const [resume, setResume] = useState(data.resume_raw);
   const [isPending, startTransition] = useTransition();
+  const [parseLoading, setParseLoading] = useState(false);
   const [saved, setSaved] = useState(false);
 
   function handleSave() {
@@ -123,11 +127,38 @@ function ResumeTab({ data }: { data: ProfileData }) {
     });
   }
 
+  async function handleParse() {
+    setParseLoading(true);
+    try {
+      const res = await fetch("/api/profile/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resume_raw: resume ?? "" }),
+      });
+      const json = (await res.json()) as { message?: string };
+      if (!res.ok) throw new Error(json.message || "Parse failed");
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setParseLoading(false);
+    }
+  }
+
+  let parsedPreview: unknown = null;
+  if (data.resume_parsed) {
+    try {
+      parsedPreview = JSON.parse(data.resume_parsed);
+    } catch {
+      parsedPreview = null;
+    }
+  }
+
   return (
     <div className="space-y-4 max-w-2xl">
       <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3">
-        <p className="text-xs text-amber-400">
-          AI resume parsing (Phase 2) — paste your resume below to store it. Structured parsing will be available soon.
+        <p className="text-xs text-[var(--muted)]">
+          Paste your resume, save, then run <strong className="text-[var(--foreground)]">Parse with AI</strong> to extract experience, skills, and education for CMF scoring.
         </p>
       </div>
       <Textarea
@@ -137,12 +168,23 @@ function ResumeTab({ data }: { data: ProfileData }) {
         rows={20}
         placeholder="Paste your full resume here..."
       />
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" onClick={handleSave} loading={isPending}>
           Save resume
         </Button>
+        <Button variant="secondary" onClick={handleParse} loading={parseLoading}>
+          Parse with AI
+        </Button>
         {saved && <span className="text-sm text-green-400">Saved</span>}
       </div>
+      {parsedPreview != null && (
+        <div className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-4">
+          <p className="text-xs font-medium text-[var(--foreground)] mb-2">Parsed structure (preview)</p>
+          <pre className="text-xs text-[var(--muted)] overflow-x-auto whitespace-pre-wrap font-mono max-h-64 overflow-y-auto">
+            {JSON.stringify(parsedPreview, null, 2)}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

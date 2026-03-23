@@ -41,6 +41,34 @@ export type CmfBreakdown = {
   narrative: number;
 };
 
+const CMF_KEYS = ["domain", "stage", "scope", "strategic", "narrative"] as const;
+
+/** Supports flat numbers (manual entry) or AI shape `{ domain: { score, rationale }, ... }`. */
+export function normalizeCmfBreakdownForSliders(
+  raw: unknown,
+): CmfBreakdown {
+  const empty: CmfBreakdown = {
+    domain: 0,
+    stage: 0,
+    scope: 0,
+    strategic: 0,
+    narrative: 0,
+  };
+  if (!raw || typeof raw !== "object") return empty;
+  const o = raw as Record<string, unknown>;
+  const out = { ...empty };
+  for (const k of CMF_KEYS) {
+    const v = o[k];
+    if (typeof v === "number" && !Number.isNaN(v)) {
+      out[k] = v;
+    } else if (v && typeof v === "object" && "score" in v) {
+      const s = (v as { score: unknown }).score;
+      if (typeof s === "number" && !Number.isNaN(s)) out[k] = s;
+    }
+  }
+  return out;
+}
+
 export function calcCmfScore(
   breakdown: CmfBreakdown,
   weights: CmfWeights,

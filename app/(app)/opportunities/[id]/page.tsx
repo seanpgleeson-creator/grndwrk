@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { parseJsonField } from "@/lib/utils";
+import { normalizeCmfBreakdownForSliders, parseJsonField } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Badge, statusToBadgeVariant } from "@/components/ui/Badge";
 import { CmfScore } from "@/components/ui/CmfScore";
@@ -50,9 +50,15 @@ export default async function OpportunityDetailPage({
       }
     : null;
 
-  const cmfBreakdown = parseJsonField<{
-    domain: number; stage: number; scope: number; strategic: number; narrative: number;
-  }>(opportunity.cmf_breakdown, { domain: 0, stage: 0, scope: 0, strategic: 0, narrative: 0 });
+  const rawCmf = parseJsonField<Record<string, unknown> | null>(
+    opportunity.cmf_breakdown,
+    null,
+  );
+  const cmfBreakdown = normalizeCmfBreakdownForSliders(rawCmf);
+  const cmfAi =
+    rawCmf && typeof rawCmf === "object" && "ai" in rawCmf
+      ? (rawCmf as { ai: unknown }).ai
+      : null;
 
   const materials = parseJsonField<{
     cover_letter?: { draft?: string; edited?: string };
@@ -91,6 +97,7 @@ export default async function OpportunityDetailPage({
           outreach_sent: opportunity.outreach_sent,
           cmf_score: opportunity.cmf_score,
           cmf_breakdown: cmfBreakdown,
+          cmf_ai: cmfAi,
           materials,
           comp_snapshot: compSnapshot,
           company: {

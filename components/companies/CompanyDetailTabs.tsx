@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/Tabs";
 import { Card } from "@/components/ui/Card";
@@ -219,6 +219,8 @@ function OverviewTab({ company }: { company: Company }) {
 }
 
 function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null }) {
+  const router = useRouter();
+  const [genLoading, setGenLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState({
     why_company: brief?.why_company ?? "",
@@ -228,6 +230,35 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
     proof_points: brief?.proof_points ?? [""],
   });
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!brief) return;
+    setForm({
+      why_company: brief.why_company ?? "",
+      why_now: brief.why_now ?? "",
+      value_proposition: brief.value_proposition ?? "",
+      the_ask: brief.the_ask ?? "",
+      proof_points: brief.proof_points.length ? brief.proof_points : [""],
+    });
+  }, [brief]);
+
+  async function handleGenerateAi() {
+    setGenLoading(true);
+    try {
+      const res = await fetch(`/api/companies/${companyId}/brief`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ generate: true }),
+      });
+      const json = (await res.json()) as { message?: string };
+      if (!res.ok) throw new Error(json.message || "Generation failed");
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setGenLoading(false);
+    }
+  }
 
   function handleSave(completed?: boolean) {
     startTransition(async () => {
@@ -252,10 +283,19 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
         </div>
       )}
 
-      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3">
+      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-[var(--muted)]">
-          AI brief generation (Phase 2) — fill in sections manually below.
+          Draft a positioning brief with AI, or edit sections manually.
         </p>
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          loading={genLoading}
+          onClick={handleGenerateAi}
+        >
+          Generate with AI
+        </Button>
       </div>
 
       {[
@@ -330,8 +370,10 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
 }
 
 function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal[] }) {
+  const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [form, setForm] = useState({ transcript: "", source_url: "", date: new Date().toISOString().split("T")[0] });
 
   function handleAdd() {
@@ -339,13 +381,32 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
       await createEarningsSignal(companyId, form);
       setForm({ transcript: "", source_url: "", date: new Date().toISOString().split("T")[0] });
       setShowForm(false);
+      router.refresh();
     });
   }
 
   function handleDelete(id: string) {
     startTransition(async () => {
       await deleteEarningsSignal(id, companyId);
+      router.refresh();
     });
+  }
+
+  async function handleAnalyze(signalId: string) {
+    setAnalyzingId(signalId);
+    try {
+      const res = await fetch(
+        `/api/companies/${companyId}/signals/${signalId}/analyze`,
+        { method: "POST" },
+      );
+      const json = (await res.json()) as { message?: string };
+      if (!res.ok) throw new Error(json.message || "Analysis failed");
+      router.refresh();
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setAnalyzingId(null);
+    }
   }
 
   return (
@@ -392,6 +453,16 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
                     Trigger: {signal.outreach_trigger_score}/5
                   </Badge>
                 )}
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  loading={analyzingId === signal.id}
+                  disabled={analyzingId !== null && analyzingId !== signal.id}
+                  onClick={() => handleAnalyze(signal.id)}
+                >
+                  Analyze with AI
+                </Button>
                 <button onClick={() => handleDelete(signal.id)} className="text-[var(--muted)] hover:text-red-400">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

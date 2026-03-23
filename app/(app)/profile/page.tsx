@@ -17,6 +17,7 @@ export default async function ProfilePage() {
     geography: profile?.geography ?? "",
     remote_preference: profile?.remote_preference ?? "",
     resume_raw: profile?.resume_raw ?? "",
+    resume_parsed: profile?.resume_parsed ?? null,
     cmf_weights: parseJsonField(profile?.cmf_weights, {
       domain: 30, stage: 20, scope: 20, strategic: 20, narrative: 10,
     }),
