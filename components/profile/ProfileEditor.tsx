@@ -106,7 +106,7 @@ function CoreProfileTab({ data }: { data: ProfileData }) {
         <Button variant="primary" onClick={handleSave} loading={isPending}>
           Save changes
         </Button>
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
     </div>
   );
@@ -175,7 +175,7 @@ function ResumeTab({ data }: { data: ProfileData }) {
         <Button variant="secondary" onClick={handleParse} loading={parseLoading}>
           Parse with AI
         </Button>
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
       {parsedPreview != null && (
         <div className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-4">
@@ -225,7 +225,7 @@ function PillarsTab({ data }: { data: ProfileData }) {
           {pillars.length > 2 && (
             <button
               onClick={() => setPillars(pillars.filter((_, idx) => idx !== i))}
-              className="text-[var(--muted)] hover:text-red-400 mt-1"
+              className="text-[var(--muted)] hover:text-[var(--danger)] mt-1"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -246,7 +246,7 @@ function PillarsTab({ data }: { data: ProfileData }) {
         <Button variant="primary" onClick={handleSave} loading={isPending}>
           Save pillars
         </Button>
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
     </div>
   );
@@ -282,7 +282,7 @@ function CmfTab({ data }: { data: ProfileData }) {
         <Button variant="primary" onClick={handleSave} loading={isPending}>
           Save weights
         </Button>
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
     </div>
   );
@@ -344,7 +344,7 @@ function CompTab({ data }: { data: ProfileData }) {
         <Button variant="primary" onClick={handleSave} loading={isPending}>
           Save targets
         </Button>
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
     </div>
   );

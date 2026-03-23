@@ -19,11 +19,11 @@ const DIMENSIONS = [
 ];
 
 const DIM_COLORS = {
-  domain: "bg-[#0D7377]",
-  stage: "bg-[#2C7A7D]",
-  scope: "bg-[#3F8A8D]",
-  strategic: "bg-[#5A9B9D]",
-  narrative: "bg-[#79B1B3]",
+  domain: "bg-[var(--accent)]",
+  stage: "bg-[var(--accent)]/80",
+  scope: "bg-[var(--accent)]/60",
+  strategic: "bg-[var(--accent)]/40",
+  narrative: "bg-[var(--accent)]/25",
 };
 
 interface CmfWeightSlidersProps {
@@ -117,7 +117,7 @@ export function CmfWeightSliders({ value, onChange }: CmfWeightSlidersProps) {
           <span
             className={cn(
               "text-xs font-medium",
-              sum === 100 ? "text-green-700" : "text-red-600",
+              sum === 100 ? "text-[var(--success)]" : "text-[var(--danger)]",
             )}
           >
             Total: {sum} / 100

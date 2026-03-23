@@ -275,7 +275,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
   return (
     <div className="space-y-6 max-w-2xl">
       {brief?.completed_at && (
-        <div className="flex items-center gap-2 text-sm text-green-400">
+        <div className="flex items-center gap-2 text-sm text-[var(--success)]">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -332,7 +332,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
             {form.proof_points.length > 1 && (
               <button
                 onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })}
-                className="text-[var(--muted)] hover:text-red-400"
+                className="text-[var(--muted)] hover:text-[var(--danger)]"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -363,7 +363,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
             Reopen
           </Button>
         )}
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
     </div>
   );
@@ -463,7 +463,7 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
                 >
                   Analyze with AI
                 </Button>
-                <button onClick={() => handleDelete(signal.id)} className="text-[var(--muted)] hover:text-red-400">
+                <button onClick={() => handleDelete(signal.id)} className="text-[var(--muted)] hover:text-[var(--danger)]">
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>

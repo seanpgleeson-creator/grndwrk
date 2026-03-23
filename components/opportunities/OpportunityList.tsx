@@ -133,7 +133,7 @@ export function OpportunityList({ opportunities }: OpportunityListProps) {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {opp.outreach_sent && (
-                    <span className="text-xs text-indigo-400">Outreach sent</span>
+                    <span className="text-xs text-[var(--accent)]">Outreach sent</span>
                   )}
                   <CmfScore score={opp.cmf_score} size="sm" />
                   <Badge variant={statusToBadgeVariant(opp.status)}>

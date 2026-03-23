@@ -310,7 +310,7 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
         <Button variant="primary" onClick={handleSave} loading={isPending}>
           Save CMF score
         </Button>
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
     </div>
   );
@@ -371,7 +371,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
   return (
     <div className="space-y-5 max-w-2xl">
       {brief?.completed_at && (
-        <div className="flex items-center gap-2 text-sm text-green-400">
+        <div className="flex items-center gap-2 text-sm text-[var(--success)]">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -410,7 +410,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
               <Input value={point} onChange={(e) => { const u = [...form.proof_points]; u[i] = e.target.value; setForm({ ...form, proof_points: u }); }} placeholder={`Proof point ${i + 1}`} />
             </div>
             {form.proof_points.length > 1 && (
-              <button onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })} className="text-[var(--muted)] hover:text-red-400">
+              <button onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })} className="text-[var(--muted)] hover:text-[var(--danger)]">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             )}
@@ -425,7 +425,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
         <Button variant="primary" onClick={() => handleSave()} loading={isPending}>Save</Button>
         {!brief?.completed_at && <Button variant="secondary" onClick={() => handleSave(true)} loading={isPending}>Mark complete</Button>}
         {brief?.completed_at && <Button variant="ghost" onClick={() => handleSave(false)} loading={isPending}>Reopen</Button>}
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
     </div>
   );
@@ -488,7 +488,7 @@ function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
       <Textarea label="Cover letter" value={text} onChange={(e) => setText(e.target.value)} rows={16} placeholder="Write your cover letter here..." />
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={handleSave} loading={isPending}>Save</Button>
-        {saved && <span className="text-sm text-green-400">Saved</span>}
+        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
       </div>
     </div>
   );
@@ -529,7 +529,7 @@ function CompTab({ opportunity, compTarget }: { opportunity: Opportunity; compTa
             </div>
           )}
           {snap.stale && (
-            <p className="mt-2 text-xs text-amber-400">Data may be outdated (180+ days)</p>
+            <p className="mt-2 text-xs text-[var(--warning)]">Data may be outdated (180+ days)</p>
           )}
         </Card>
       )}

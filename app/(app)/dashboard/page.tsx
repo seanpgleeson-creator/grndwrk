@@ -142,8 +142,8 @@ export default async function DashboardPage() {
   const { funnel, metrics, priority_queue } = data;
 
   const funnelStages = [
-    { label: "Monitoring", count: funnel.monitoring, href: "/opportunities?status=active", color: "bg-slate-500" },
-    { label: "Positioned", count: funnel.positioned, href: "/opportunities", color: "bg-indigo-500" },
+    { label: "Monitoring", count: funnel.monitoring, href: "/opportunities?status=active", color: "bg-[var(--muted)]" },
+    { label: "Positioned", count: funnel.positioned, href: "/opportunities", color: "bg-[var(--accent)]" },
     { label: "Applied / Outreach", count: funnel.appliedOutreach, href: "/opportunities?status=Applied", color: "bg-blue-500" },
     { label: "In Process", count: funnel.inProcess, href: "/opportunities?status=InProcess", color: "bg-amber-500" },
     { label: "Outcome", count: funnel.outcome, href: "/opportunities?status=Closed", color: "bg-green-500" },
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
         <div className="col-span-2 space-y-6">
           {/* Priority Action Queue */}
           <Card className="p-5">
-            <h2 className="text-base font-semibold text-[var(--foreground)] mb-4">Priority Actions</h2>
+            <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] mb-4">Priority Actions</h2>
             {priority_queue.length === 0 ? (
               <p className="text-sm text-[var(--muted)]">
                 No actions needed right now. Add companies and opportunities to get started.
@@ -202,7 +202,7 @@ export default async function DashboardPage() {
 
           {/* Funnel View */}
           <Card className="p-5">
-            <h2 className="text-base font-semibold text-[var(--foreground)] mb-4">Search Funnel</h2>
+            <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] mb-4">Search Funnel</h2>
             <div className="space-y-2">
               {funnelStages.map((stage) => (
                 <Link key={stage.label} href={stage.href}>
@@ -234,7 +234,7 @@ export default async function DashboardPage() {
 
         {/* Right: Metrics */}
         <div className="space-y-3">
-          <h2 className="text-base font-semibold text-[var(--foreground)]">Search Health</h2>
+          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Search Health</h2>
           {metricCards.map((m: { label: string; value: string | number }) => (
             <Card key={m.label} className="p-4">
               <p className="text-xs text-[var(--muted)] mb-1">{m.label}</p>

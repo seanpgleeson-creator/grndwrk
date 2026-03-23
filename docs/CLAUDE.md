@@ -136,13 +136,13 @@ See `prisma/schema.prisma` and table in earlier docs; `resume_parsed` and `cmf_b
 ## Build Conventions
 
 - **First launch:** `/profile/setup` until onboarding complete.
-- **Onboarding visual direction (`/profile/setup`):**
-  - Light mode with warm base (`#FAFAF8`), ink text (`#1A1A1A`), subtle borders (`#E5E5E5`).
-  - Accent color is deep teal (`#0D7377`), used for focus states/progress/primary actions (no purple).
-  - Layout is full-width single-column with left-aligned content and `max-width: 680px`; no centered modal card.
-  - Progress UI is minimal: thin line + "Step X of Y"; no tab-style step bar.
-  - Typography uses Fraunces for headings and DM Sans for body/UI in the onboarding flow.
-  - Inputs are full-width with labels above fields; textareas should be comfortably tall for long-form input.
+- **UI design system:** Linear-inspired dual dark/light mode. See [ui.md](ui.md) for full spec.
+  - Dark mode default; light mode via `.light` class on `<html>`, toggled in sidebar footer.
+  - Accent: `#4B7BEC` (clean blue). Fonts: DM Sans (body) + Fraunces (headings) via `next/font/google`.
+  - Icons: `lucide-react`. No inline SVGs in nav components.
+  - Sidebar: 220px fixed left, `var(--sidebar)` bg, lowercase `grndwrk` wordmark in Fraunces.
+  - Onboarding: sidebar-step layout with step list replacing module nav during `/profile/setup`.
+  - All colors via CSS variables; never hardcode hex in components.
 - **AI content:** Draft vs edited; reset-to-draft pattern for briefs.
 - **Errors:** AI failures should surface **retry** in UI when `retryable: true`.
 - **Prisma:** `npm run db:migrate` locally; Vercel runs migrate via `vercel-build`.

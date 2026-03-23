@@ -161,9 +161,9 @@ function CompanyCard({ company }: { company: Company }) {
             className={cn(
               "capitalize",
               company.brief_status === "complete"
-                ? "text-green-400"
+                ? "text-[var(--success)]"
                 : company.brief_status === "in-progress"
-                  ? "text-amber-400"
+                  ? "text-[var(--warning)]"
                   : "",
             )}
           >
