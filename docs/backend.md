@@ -24,18 +24,24 @@ This document is the authoritative backend reference for grndwrk. Read alongside
 | Layer | Choice | Notes |
 |-------|--------|-------|
 | Framework | Next.js (App Router) | API routes in `app/api/` |
-| ORM | Prisma | SQLite in dev, PostgreSQL in prod |
-| AI | Anthropic Claude API | Abstracted behind `lib/ai/claude.ts` — never import the SDK directly in route files |
+| ORM | Prisma 7 + PostgreSQL | `@prisma/adapter-pg` (`PrismaPg`); `DATABASE_URL` in `prisma.config.ts` + runtime env |
+| AI | Anthropic Claude API | **Phase 2.** Abstract behind `lib/ai/claude.ts` — not present in Phase 1 |
 | Validation | Zod | All AI responses and request bodies |
-| Env vars | `.env.local` | See below |
+| Env vars | `.env.local` (local), Vercel project settings (prod) | See below |
 
 ### Required environment variables
 
 ```
-DATABASE_URL=          # SQLite: "file:./dev.db" | Postgres: postgresql://...
-ANTHROPIC_API_KEY=     # sk-ant-...
-NODE_ENV=              # development | production
+DATABASE_URL=          # Required. PostgreSQL URL, e.g. postgresql://user:pass@host/db?sslmode=require (Neon)
+ANTHROPIC_API_KEY=     # Phase 2 — sk-ant-...
+NODE_ENV=              # Set by Next.js / platform (development | production)
 ```
+
+### Deployment (Vercel + Neon)
+
+- **Build:** `vercel.json` runs `npm run vercel-build` → `prisma migrate deploy && next build`.
+- **If you see P3019** (datasource provider does not match `migration_lock.toml`): the migration history was created for a different DB engine. Remove `prisma/migrations/`, run `prisma migrate dev` against a Postgres database to regenerate, commit the new folder. If the Neon database already has unrelated tables from another project, reset that database (or use a fresh Neon database) before applying grndwrk migrations.
+- **Do not** commit real secrets; only `DATABASE_URL` in Vercel env vars.
 
 ### Directory layout (backend-relevant paths)
 
@@ -46,18 +52,9 @@ prisma/
   seed.ts               # seeds singleton UserProfile on first run
 
 lib/
-  prisma.ts             # PrismaClient singleton (safe for Next.js hot reload)
-  ai/
-    claude.ts           # callClaude() — single entry point to Anthropic SDK
-    prompts/
-      resumeParse.ts
-      cmf.ts
-      earnings.ts
-      narrativeCheck.ts
-      companyBrief.ts
-      roleBrief.ts
-      coverLetter.ts
-      outreachDraft.ts
+  prisma.ts             # PrismaClient singleton + PrismaPg adapter (see below)
+  utils.ts              # Shared helpers (cn, parseJsonField, CMF helpers, etc.)
+  ai/                   # Phase 2 — add callClaude() + prompts here
 
 app/api/
   profile/
@@ -99,13 +96,22 @@ app/api/
 
 ### PrismaClient singleton (`lib/prisma.ts`)
 
+Prisma 7 uses a driver adapter for PostgreSQL:
+
 ```typescript
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+
+function createPrismaClient(): PrismaClient {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) throw new Error("DATABASE_URL is not set.");
+  const adapter = new PrismaPg({ connectionString: dbUrl });
+  return new PrismaClient({ adapter });
+}
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-export const prisma =
-  globalForPrisma.prisma ?? new PrismaClient({ log: ["error"] });
+export const prisma = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
 ```
@@ -118,14 +124,17 @@ Full `prisma/schema.prisma`. This is the source of truth for all DB shapes.
 
 ```prisma
 datasource db {
-  provider = "sqlite"  // swap to "postgresql" for production
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 generator client {
   provider = "prisma-client-js"
 }
+```
 
+Connection URL is **not** in `schema.prisma` (Prisma 7). It is configured in `prisma.config.ts` for CLI commands (`migrate`, `generate`) and via `process.env.DATABASE_URL` at runtime.
+
+```prisma
 // ─── Enums ────────────────────────────────────────────────────────────────────
 
 enum OpportunityStatus {
@@ -457,7 +466,9 @@ All routes are Next.js App Router route handlers (`app/api/.../route.ts`). No au
 
 ## 4. AI Service Layer
 
-### 4.1 `lib/ai/claude.ts` — single entry point
+**Status:** Phase 2. The repository does not yet include `lib/ai/` or Anthropic SDK wiring. Phase 1 API routes that call AI return HTTP **501** with a not-implemented message.
+
+### 4.1 `lib/ai/claude.ts` — single entry point (Phase 2)
 
 ```typescript
 import Anthropic from "@anthropic-ai/sdk";
@@ -746,15 +757,15 @@ export const maxDuration = 60; // seconds — required for long AI calls
 
 ## 10. Phase Build Order
 
-### Phase 1 — Foundation (build now)
+### Phase 1 — Foundation (**shipped**)
 
 **Goal:** All CRUD works. A user can set up their profile, add companies, add opportunities, track status manually, and see a basic dashboard.
 
-Routes to implement:
+Implemented routes:
 - All Profile routes (`GET`, `POST /api/profile`, `POST /api/profile/resume` → Phase 2, `PATCH /api/profile/cmf-weights`)
 - All Company CRUD routes
 - Opportunity CRUD routes (no AI — `key_requirements` entered manually or left empty)
-- Dashboard `GET` with funnel counts and basic health metrics (no priority queue yet)
+- Dashboard `GET` with funnel counts, health metrics, and priority action queue
 - CompBenchmark `GET` and `POST` (manual entry only)
 
 AI routes: **none in Phase 1** — stub them to return `{ error: "not_implemented", message: "AI features available in Phase 2" }` with HTTP 501.
