@@ -149,12 +149,12 @@ function OverviewTab({ company }: { company: Company }) {
     return (
       <div className="space-y-4 max-w-xl">
         <Input label="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input label="Website" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
           <Input label="LinkedIn" value={form.linkedin_url} onChange={(e) => setForm({ ...form, linkedin_url: e.target.value })} />
         </div>
         <Input label="HQ" value={form.hq} onChange={(e) => setForm({ ...form, hq: e.target.value })} />
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Select label="Stage" value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} options={STAGE_OPTIONS} placeholder="Stage" />
           <Select label="Tier" value={form.tier} onChange={(e) => setForm({ ...form, tier: e.target.value })} options={TIER_OPTIONS} placeholder="Tier" />
         </div>
@@ -170,7 +170,7 @@ function OverviewTab({ company }: { company: Company }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-2 gap-6 max-w-xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-xl">
         {[
           { label: "Website", value: company.website, href: company.website },
           { label: "LinkedIn", value: company.linkedin_url ? "View profile" : null, href: company.linkedin_url },
@@ -180,7 +180,7 @@ function OverviewTab({ company }: { company: Company }) {
           { label: "Tier", value: company.tier ? `Tier ${company.tier}` : null },
         ].map(({ label, value, href }) => (
           <div key={label}>
-            <p className="text-xs text-[var(--muted)] mb-0.5">{label}</p>
+            <p className="text-[13px] text-[var(--muted)] mb-0.5">{label}</p>
             {value ? (
               href ? (
                 <a href={href} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--accent)] hover:underline">
@@ -332,6 +332,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
             {form.proof_points.length > 1 && (
               <button
                 onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })}
+                aria-label={`Remove proof point ${i + 1}`}
                 className="text-[var(--muted)] hover:text-[var(--danger)]"
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -463,7 +464,11 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
                 >
                   Analyze with AI
                 </Button>
-                <button onClick={() => handleDelete(signal.id)} className="text-[var(--muted)] hover:text-[var(--danger)]">
+                <button
+                  onClick={() => handleDelete(signal.id)}
+                  aria-label="Delete signal"
+                  className="text-[var(--muted)] hover:text-[var(--danger)]"
+                >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>

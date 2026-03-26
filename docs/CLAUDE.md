@@ -3,6 +3,38 @@
 MVP: Prioritize simple and functional. Ship core flows first; defer nice-to-haves. Single user through main workflow with minimal complexity.
 
 ---
+## Design Context
+
+### Users
+Single-candidate users using grndwrk to run a deliberate, proactive job search campaign focused on important career decisions.
+
+### Brand Personality
+Premium, focused, editorial, and a little serious — closer to Linear or Notion than a generic SaaS dashboard. Emotional target: calm confidence and trustworthiness.
+
+### Aesthetic Direction (Linear-inspired)
+- Fixed left sidebar (~220px) with a lowercase `grndwrk` wordmark in Fraunces.
+- **Light mode is the default**; dark mode is opt-in via toggle in the sidebar footer.
+- Full-width main content with generous padding; no centered modal cards as primary content areas.
+- Onboarding/profile setup uses a left sidebar step list (number + label; muted when incomplete, accent when active, checkmark when complete), temporarily replacing the module nav pattern.
+
+### Typography (canonical)
+- Body/UI font: DM Sans
+- Display/headings: Fraunces
+
+### Color System
+- Light defaults (primary): background `#FAFAF8`, sidebar `#F4F4F2`, surface `#FFFFFF`, text `#1A1A1A`, muted `#6B6B6B`, border `#E5E5E5`
+- Dark defaults: background `#0F0F0F`, sidebar `#161616`, surface `#1A1A1A`, text `#E5E5E5`, muted `#6B6B6B`, border `#2A2A2A`
+- Accent: `#3B4F7C` (slate blue) used for active states, CTAs, and focus rings only. No gradients on primary backgrounds.
+- Status/semantic tokens (success/warning/danger) must adapt per mode.
+
+### Design Principles
+1. Confident, not flashy: predictable UI patterns and minimal decorative chrome.
+2. Focused, not feature-heavy looking: fewer, larger content regions; generous whitespace but not empty.
+3. Trustworthy for serious decisions: typography hierarchy and restraint signal credibility.
+4. Consistency: use semantic tokens and avoid hardcoded hex colors in UI components.
+5. Calm interaction feedback: ~150ms transitions for hover + mode toggle; respect reduced motion preferences.
+
+---
 
 ## Current status (pick up here)
 
@@ -136,9 +168,9 @@ See `prisma/schema.prisma` and table in earlier docs; `resume_parsed` and `cmf_b
 ## Build Conventions
 
 - **First launch:** `/profile/setup` until onboarding complete.
-- **UI design system:** Linear-inspired dual dark/light mode. See [ui.md](ui.md) for full spec.
-  - Dark mode default; light mode via `.light` class on `<html>`, toggled in sidebar footer.
-  - Accent: `#4B7BEC` (clean blue). Fonts: DM Sans (body) + Fraunces (headings) via `next/font/google`.
+- **UI design system:** Linear-inspired, light mode default. See [ui.md](ui.md) for full spec.
+  - Light mode default; dark mode via `.dark` class on `<html>`, toggled in sidebar footer.
+  - Accent: `#3B4F7C` (slate blue). Fonts: DM Sans (body) + Fraunces (headings) via `next/font/google`.
   - Icons: `lucide-react`. No inline SVGs in nav components.
   - Sidebar: 220px fixed left, `var(--sidebar)` bg, lowercase `grndwrk` wordmark in Fraunces.
   - Onboarding: sidebar-step layout with step list replacing module nav during `/profile/setup`.

@@ -225,6 +225,7 @@ function PillarsTab({ data }: { data: ProfileData }) {
           {pillars.length > 2 && (
             <button
               onClick={() => setPillars(pillars.filter((_, idx) => idx !== i))}
+              aria-label={`Remove pillar ${i + 1}`}
               className="text-[var(--muted)] hover:text-[var(--danger)] mt-1"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -277,7 +278,7 @@ function CmfTab({ data }: { data: ProfileData }) {
         Adjust how much each dimension matters in your CMF score calculations.
       </p>
       <CmfWeightSliders value={weights} onChange={setWeights} />
-      {error && <p className="text-sm text-red-400">{error}</p>}
+      {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={handleSave} loading={isPending}>
           Save weights
@@ -311,7 +312,7 @@ function CompTab({ data }: { data: ProfileData }) {
 
   return (
     <div className="space-y-4 max-w-md">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input
           label="Base salary target ($)"
           type="number"

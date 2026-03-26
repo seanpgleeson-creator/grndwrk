@@ -104,9 +104,9 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div>
-          <p className="text-xs text-[var(--muted)] mb-1">Status</p>
+          <p className="text-[13px] text-[var(--muted)] mb-1">Status</p>
           <Select
             value={status}
             onChange={(e) => handleStatusChange(e.target.value)}
@@ -114,17 +114,17 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
           />
         </div>
         <div>
-          <p className="text-xs text-[var(--muted)] mb-1">Outreach sent</p>
+          <p className="text-[13px] text-[var(--muted)] mb-1">Outreach sent</p>
           <button
             onClick={handleOutreachToggle}
             disabled={isPending}
             className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors ${
               outreachSent
-                ? "bg-indigo-500/20 border-indigo-500/30 text-indigo-300"
+                ? "bg-[var(--accent)]/15 border-[var(--accent)]/25 text-[var(--accent)]"
                 : "bg-[var(--surface-raised)] border-[var(--border)] text-[var(--muted)]"
             }`}
           >
-            <div className={`h-3 w-3 rounded-full ${outreachSent ? "bg-indigo-400" : "bg-[var(--border)]"}`} />
+            <div className={`h-3 w-3 rounded-full ${outreachSent ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`} />
             {outreachSent ? "Yes" : "No"}
           </button>
         </div>
@@ -266,7 +266,8 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
               max={10}
               value={scores[key]}
               onChange={(e) => setScores({ ...scores, [key]: Number(e.target.value) })}
-              className="flex-1 h-1.5 rounded-full appearance-none bg-[var(--surface-raised)] accent-indigo-500 cursor-pointer"
+              className="flex-1 h-1.5 rounded-full appearance-none bg-[var(--surface-raised)] cursor-pointer"
+              style={{ accentColor: "var(--accent)" }}
             />
             <Input
               type="number"
@@ -410,7 +411,11 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
               <Input value={point} onChange={(e) => { const u = [...form.proof_points]; u[i] = e.target.value; setForm({ ...form, proof_points: u }); }} placeholder={`Proof point ${i + 1}`} />
             </div>
             {form.proof_points.length > 1 && (
-              <button onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })} className="text-[var(--muted)] hover:text-[var(--danger)]">
+              <button
+                onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })}
+                aria-label={`Remove proof point ${i + 1}`}
+                className="text-[var(--muted)] hover:text-[var(--danger)]"
+              >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
               </button>
             )}
@@ -503,7 +508,7 @@ function CompTab({ opportunity, compTarget }: { opportunity: Opportunity; compTa
       {hasSnap && (
         <Card className="p-4">
           <p className="text-xs text-[var(--muted)] mb-3">Comp snapshot</p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {snap.base_low != null && (
               <div>
                 <p className="text-xs text-[var(--muted)]">Base range</p>

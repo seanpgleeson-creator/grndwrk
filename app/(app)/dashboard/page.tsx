@@ -144,9 +144,9 @@ export default async function DashboardPage() {
   const funnelStages = [
     { label: "Monitoring", count: funnel.monitoring, href: "/opportunities?status=active", color: "bg-[var(--muted)]" },
     { label: "Positioned", count: funnel.positioned, href: "/opportunities", color: "bg-[var(--accent)]" },
-    { label: "Applied / Outreach", count: funnel.appliedOutreach, href: "/opportunities?status=Applied", color: "bg-blue-500" },
-    { label: "In Process", count: funnel.inProcess, href: "/opportunities?status=InProcess", color: "bg-amber-500" },
-    { label: "Outcome", count: funnel.outcome, href: "/opportunities?status=Closed", color: "bg-green-500" },
+    { label: "Applied / Outreach", count: funnel.appliedOutreach, href: "/opportunities?status=Applied", color: "bg-[var(--accent)]/70" },
+    { label: "In Process", count: funnel.inProcess, href: "/opportunities?status=InProcess", color: "bg-[var(--warning)]" },
+    { label: "Outcome", count: funnel.outcome, href: "/opportunities?status=Closed", color: "bg-[var(--success)]" },
   ];
 
   const metricCards = [
@@ -183,10 +183,10 @@ export default async function DashboardPage() {
                         className={cn(
                           "h-2 w-2 rounded-full shrink-0",
                           item.urgency === "high"
-                            ? "bg-red-400"
+                            ? "bg-[var(--danger)]"
                             : item.urgency === "medium"
-                              ? "bg-amber-400"
-                              : "bg-slate-400",
+                              ? "bg-[var(--warning)]"
+                              : "bg-[var(--muted)]",
                         )}
                       />
                       <p className="flex-1 text-sm text-[var(--foreground)]">{item.label}</p>
@@ -211,7 +211,7 @@ export default async function DashboardPage() {
                     <div className="flex-1 h-6 bg-[var(--surface-raised)] rounded overflow-hidden">
                       <div
                         className={cn(
-                          "h-full rounded transition-all",
+                          "h-full rounded transition-[width] duration-300",
                           stage.color,
                           stage.count === 0 ? "opacity-20" : "opacity-80",
                         )}

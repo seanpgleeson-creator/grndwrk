@@ -100,7 +100,7 @@ export function CmfWeightSliders({ value, onChange }: CmfWeightSlidersProps) {
           {DIMENSIONS.map((dim) => (
             <div
               key={dim.key}
-              className={cn("transition-all", DIM_COLORS[dim.key])}
+              className={cn("transition-[width] duration-200", DIM_COLORS[dim.key])}
               style={{ width: `${value[dim.key]}%` }}
             />
           ))}

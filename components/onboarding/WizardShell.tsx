@@ -40,8 +40,8 @@ export function WizardShell({
 }: WizardShellProps) {
   return (
     <div className="flex min-h-screen">
-      {/* Sidebar */}
-      <aside className="fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col z-30 transition-colors duration-150">
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex-col z-30 transition-colors duration-150">
         <div className="px-5 py-5">
           <span className="text-lg tracking-tight text-[var(--foreground)] [font-family:var(--font-heading),serif]">
             grndwrk
@@ -58,7 +58,7 @@ export function WizardShell({
               <div
                 key={label}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-all duration-150",
+                  "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors duration-150",
                   isActive && "bg-[var(--surface-raised)] text-[var(--accent)]",
                   isComplete && "text-[var(--foreground)]",
                   !isActive && !isComplete && "text-[var(--muted)]",
@@ -85,8 +85,26 @@ export function WizardShell({
         </div>
       </aside>
 
+      {/* Mobile: step progress bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-[var(--sidebar)] border-b border-[var(--border)] px-4 py-3">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm tracking-tight text-[var(--foreground)] [font-family:var(--font-heading),serif]">
+            grndwrk
+          </span>
+          <span className="text-xs text-[var(--muted)]">
+            Step {currentStep} of {totalSteps}
+          </span>
+        </div>
+        <div className="h-0.5 w-full bg-[var(--border)] rounded-full">
+          <div
+            className="h-0.5 bg-[var(--accent)] rounded-full transition-[width] duration-300"
+            style={{ width: `${(currentStep / totalSteps) * 100}%` }}
+          />
+        </div>
+      </div>
+
       {/* Main content */}
-      <main className="flex-1 ml-[220px] px-12 py-10">
+      <main className="flex-1 md:ml-[220px] px-6 py-6 md:px-12 md:py-10 pt-[72px] md:pt-10">
         <div className="max-w-[680px]">
           <div className="mb-8">
             <h2 className="text-[28px] leading-tight font-normal text-[var(--foreground)] [font-family:var(--font-heading),serif]">
@@ -103,7 +121,7 @@ export function WizardShell({
             <button
               onClick={onBack}
               disabled={currentStep === 1}
-              className="text-sm text-[var(--muted)] hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
+              className="min-h-[44px] px-3 text-sm text-[var(--muted)] hover:text-[var(--foreground)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors duration-150"
             >
               ← Back
             </button>
@@ -112,7 +130,7 @@ export function WizardShell({
               <button
                 onClick={onSubmit}
                 disabled={submitting || nextDisabled}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+                className="inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
               >
                 {submitting && (
                   <svg className="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24">
@@ -126,7 +144,7 @@ export function WizardShell({
               <button
                 onClick={onNext}
                 disabled={nextDisabled}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-150"
+                className="inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-150"
               >
                 Continue →
               </button>

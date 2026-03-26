@@ -23,16 +23,16 @@ interface BadgeProps {
 const variantStyles: Record<BadgeVariant, string> = {
   watching: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
   preparing: "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20",
-  applied: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  "in-process": "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  applied: "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/25",
+  "in-process": "bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20",
   closed: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
   "tier-1": "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/25 font-semibold",
   "tier-2": "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/15",
   "tier-3": "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
   default: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
-  success: "bg-green-500/10 text-green-600 border-green-500/20",
-  warning: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  danger: "bg-red-500/10 text-red-600 border-red-500/20",
+  success: "bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20",
+  warning: "bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20",
+  danger: "bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/20",
 };
 
 export function Badge({ variant = "default", children, className }: BadgeProps) {

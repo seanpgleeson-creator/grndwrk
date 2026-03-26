@@ -22,6 +22,7 @@ export function ConsistencyBanner({ score, explanation }: ConsistencyBannerProps
       </div>
       <button
         onClick={() => setDismissed(true)}
+        aria-label="Dismiss warning"
         className="text-[var(--muted)] hover:text-[var(--foreground)] shrink-0 transition-colors duration-150"
       >
         <X className="h-4 w-4" />

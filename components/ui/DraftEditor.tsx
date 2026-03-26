@@ -65,7 +65,7 @@ export function DraftEditor({
           {edited && (
             <button
               onClick={() => setShowResetConfirm(true)}
-              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] underline"
+              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:rounded-sm"
             >
               Reset to AI draft
             </button>

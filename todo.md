@@ -153,3 +153,35 @@ _Deferred — no auth in Phases 1–3. Plan separately when ready._
 - [ ] Monitor Anthropic API errors in Vercel logs; all AI failures return 502 + `retryable: true`
 - [x] `ConsistencyBanner` and `DraftEditor` UI shells built in Phase 1, AI wired in Phase 2 — no re-architecture needed
 - [x] All API routes return `{ data: T }` on success, `{ error, message, retryable?, fields? }` on failure
+
+---
+
+## Design Fixes (from audit)
+
+_Source: [docs/design-audit.md](docs/design-audit.md). Ordered by severity._
+
+### P1 Major
+
+- [x] [DESIGN] [P1] Add `aria-label` to all icon-only buttons (CompanyDetailTabs, OpportunityDetailTabs, ProfileEditor, ConsistencyBanner, and other icon-only controls)
+- [x] [DESIGN] [P1] Implement responsive sidebar (collapse/drawer on narrow viewports; remove fixed `ml-[220px]` on small screens) — Sidebar.tsx, app/(app)/layout.tsx, WizardShell.tsx
+- [x] [DESIGN] [P1] Increase touch targets to >= 44px on interactive controls (NavItem, Button size `sm`, icon buttons in tab editors)
+- [x] [DESIGN] [P1] Replace remaining hard-coded utility colors with semantic tokens — Button.tsx danger variant, OpportunityDetailTabs outreach chip, ProfileEditor error text
+- [x] [DESIGN] [P1] Add `@media (prefers-reduced-motion: reduce)` to globals.css to disable/reduce `animate-spin`, `animate-pulse`, and non-essential transitions
+- [x] [DESIGN] [P1] Replace `transition-all` + width animation on dashboard funnel bars with property-specific or transform-based approach — dashboard/page.tsx
+
+### P2 Minor
+
+- [x] [DESIGN] [P2] Replace `transition-all` with property-specific transitions across all components (ThemeToggle, NavItem, WizardShell, CmfWeightSliders, etc.)
+- [x] [DESIGN] [P2] Evaluate modal overlay `backdrop-blur-sm` cost; consider flat overlay fallback — Modal.tsx
+- [x] [DESIGN] [P2] Reconcile `docs/frontend.md` design system section with canonical `docs/ui.md` (remove stale Inter/dark-only references)
+- [x] [DESIGN] [P2] Replace Badge status hue utilities (blue-500, amber-500, green-500) with semantic token variants — Badge.tsx, OpportunityDetailTabs outreach chip
+- [x] [DESIGN] [P2] Add responsive column fallbacks to multi-column form grids (`grid-cols-1 md:grid-cols-2`) — CompanyDetailTabs, OpportunityDetailTabs
+- [x] [DESIGN] [P2] Add visible focus ring / keyboard focus state to text-link-style buttons — DraftEditor.tsx reset action
+- [x] [DESIGN] [P2] Audit 12px muted metadata for contrast; bump critical metadata to 13–14px where it carries task-relevant info
+
+### P3 Polish
+
+- [ ] [DESIGN] [P3] Flatten card-heavy list/detail compositions to separator/row patterns where suitable — company and opportunity lists
+- [ ] [DESIGN] [P3] Normalize microcopy casing (sentence case vs uppercase) for section labels and metadata across all modules
+- [ ] [DESIGN] [P3] Pair opacity-based disabled/muted states with explicit tokenized color variants for stronger distinction
+- [x] [DESIGN] [P3] Standardize transition timing/easing utility mapping at component level for motion consistency

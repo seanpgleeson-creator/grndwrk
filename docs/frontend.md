@@ -140,52 +140,44 @@ In the root `(app)/layout.tsx`, check whether the `UserProfile` singleton has `o
 
 ## 4. Design System
 
-### Colour Palette (Neutral Dark Theme)
+> **Canonical reference:** See [`docs/ui.md`](ui.md) for the full, authoritative design system. The summary below reflects the current implementation.
 
-The app uses a **dark neutral** base — reflecting a strategic "command center" tone. Colours defined as CSS custom properties in `globals.css` and mapped as Tailwind tokens in `tailwind.config.ts`.
+### Overview
 
-| Token | Value | Usage |
-|---|---|---|
-| `background` | `#0f1117` | Page background |
-| `surface` | `#1a1d27` | Cards, panels, sidebar |
-| `surface-raised` | `#222535` | Nested cards, input backgrounds |
-| `border` | `#2e3147` | Dividers, card borders |
-| `foreground` | `#e8eaf2` | Primary text |
-| `muted` | `#6b7280` | Secondary text, placeholders |
-| `accent` | `#6366f1` | Primary interactive (indigo-500) |
-| `accent-hover` | `#4f46e5` | Hover state (indigo-600) |
-| `success` | `#22c55e` | CMF high scores, positive states |
-| `warning` | `#f59e0b` | Narrative consistency flag, caution |
-| `danger` | `#ef4444` | Errors, skip recommendation |
-| `neutral-100..900` | Slate scale | General text and UI greys |
+grndwrk uses a **dual-mode** (light default / dark opt-in) design system with a Linear-inspired aesthetic. Light mode is the default; dark mode activates via `.light`/`:root` CSS class toggle managed by `ThemeProvider`.
 
-### Typography Scale
+### Colour Tokens
 
-| Class | Size | Weight | Usage |
+All colours are CSS custom properties defined in `app/globals.css`. **Never use hardcoded hex values in components** — always reference tokens.
+
+| Token | Light | Dark | Usage |
 |---|---|---|---|
-| `text-2xl font-semibold` | 24px | 600 | Page titles |
-| `text-xl font-medium` | 20px | 500 | Section headers, card titles |
-| `text-base` | 16px | 400 | Body text, form labels |
-| `text-sm` | 14px | 400 | Secondary text, metadata |
-| `text-xs` | 12px | 400 | Badges, timestamps, captions |
+| `--background` | `#FAFAF8` | `#0F0F0F` | Page background |
+| `--sidebar` | `#F4F4F2` | `#161616` | Sidebar background |
+| `--surface` | `#FFFFFF` | `#1A1A1A` | Cards, panels |
+| `--surface-raised` | `#F4F4F2` | `#1F1F1F` | Nested inputs, secondary panels |
+| `--border` | `#E5E5E5` | `#2A2A2A` | Dividers, card borders |
+| `--foreground` | `#1A1A1A` | `#E5E5E5` | Primary text |
+| `--muted` | `#6B6B6B` | `#6B6B6B` | Secondary text, placeholders |
+| `--accent` | `#3B4F7C` | `#3B4F7C` | Active states, CTAs, focus rings |
+| `--success` / `--warning` / `--danger` | mode-adaptive | mode-adaptive | Semantic status colours |
 
-Font family: `Inter` (via `next/font/google`), fallback `system-ui`.
+### Typography
 
-### Spacing & Layout Grid
+- **Body/UI:** DM Sans (loaded via `next/font/google`, variable `--font-body`)
+- **Display/headings:** Fraunces (loaded via `next/font/google`, variable `--font-heading`)
+- Page titles: Fraunces 28px normal weight
+- Section labels: DM Sans 13px semibold uppercase `tracking-[0.08em]`
+- Body/labels: DM Sans 14px medium
+- Metadata: DM Sans 12–13px muted
 
-- Content max-width: `1200px`, centered
-- Sidebar: `220px` fixed
-- Main content: fluid, `padding: 32px 40px` on desktop
-- Section gap within pages: `32px` (`gap-8`)
-- Card padding: `24px` (`p-6`)
-- Grid: 12-column Tailwind grid for responsive layouts
+### Layout
 
-### Elevation Model
-
-- **Level 0:** `background` — page base
-- **Level 1:** `surface` — primary cards, sidebar
-- **Level 2:** `surface-raised` — nested inputs, secondary panels
-- No box shadows in the dark theme; border + background differentiation provides hierarchy
+- Fixed left sidebar: 220px, `var(--sidebar)` background
+- Main content: `px-12 py-10` on desktop, responsive padding on mobile
+- Sidebar collapses to a top bar + drawer on narrow viewports (`md` breakpoint)
+- No drop shadows — borders provide hierarchy
+- Border radii: 8px cards, 6px inputs, 4px badges
 
 ---
 

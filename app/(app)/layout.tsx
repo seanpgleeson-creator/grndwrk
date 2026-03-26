@@ -33,7 +33,7 @@ export default async function AppLayout({
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 ml-[220px] px-12 py-10">
+      <main className="flex-1 md:ml-[220px] px-6 py-6 md:px-12 md:py-10 pt-[60px] md:pt-10">
         {children}
       </main>
     </div>

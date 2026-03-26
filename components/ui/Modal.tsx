@@ -23,7 +23,7 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
+        <Dialog.Overlay className="fixed inset-0 bg-black/60 z-40 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <Dialog.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2",
@@ -45,7 +45,10 @@ export function Modal({
             )}
           </div>
           {children}
-          <Dialog.Close className="absolute right-4 top-4 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors">
+          <Dialog.Close
+            className="absolute right-4 top-4 p-1 rounded text-[var(--muted)] hover:text-[var(--foreground)] transition-colors duration-150"
+            aria-label="Close dialog"
+          >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
