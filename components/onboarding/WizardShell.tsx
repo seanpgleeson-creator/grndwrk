@@ -41,7 +41,7 @@ export function WizardShell({
   return (
     <div className="min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex-col z-30 transition-colors duration-150">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex-col z-30 transition-colors duration-150">
         <div className="px-5 py-5">
           <span className="text-lg tracking-tight text-[var(--foreground)] [font-family:var(--font-heading),serif]">
             grndwrk
@@ -86,7 +86,7 @@ export function WizardShell({
       </aside>
 
       {/* Mobile: step progress bar */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-30 bg-[var(--sidebar)] border-b border-[var(--border)] px-4 py-3">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-[var(--sidebar)] border-b border-[var(--border)] px-4 py-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm tracking-tight text-[var(--foreground)] [font-family:var(--font-heading),serif]">
             grndwrk
@@ -104,7 +104,7 @@ export function WizardShell({
       </div>
 
       {/* Main content */}
-      <main className="md:ml-[220px] px-6 py-6 md:px-16 md:py-10 pt-[72px] md:pt-10">
+      <main className="lg:ml-[220px] px-6 py-6 lg:px-16 lg:py-10 pt-[72px] lg:pt-10">
         <div className="max-w-[680px]">
           <div className="mb-8">
             <h2 className="text-[28px] leading-tight font-normal text-[var(--foreground)] [font-family:var(--font-heading),serif]">

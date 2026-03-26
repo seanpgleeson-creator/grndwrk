@@ -36,12 +36,12 @@ export function Sidebar() {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex-col z-30 transition-colors duration-150">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex-col z-30 transition-colors duration-150">
         <SidebarContent />
       </aside>
 
       {/* Mobile: top bar with hamburger */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 bg-[var(--sidebar)] border-b border-[var(--border)]">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 py-3 bg-[var(--sidebar)] border-b border-[var(--border)]">
         <span className="text-base tracking-tight text-[var(--foreground)] [font-family:var(--font-heading),serif]">
           grndwrk
         </span>
@@ -57,7 +57,7 @@ export function Sidebar() {
       {/* Mobile drawer overlay */}
       {open && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/50"
+          className="lg:hidden fixed inset-0 z-40 bg-black/50"
           onClick={() => setOpen(false)}
           aria-hidden="true"
         />
@@ -65,7 +65,7 @@ export function Sidebar() {
 
       {/* Mobile drawer */}
       <aside
-        className={`md:hidden fixed left-0 top-0 h-screen w-[260px] border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col z-50 transition-transform duration-200 ${
+        className={`lg:hidden fixed left-0 top-0 h-screen w-[260px] border-r border-[var(--border)] bg-[var(--sidebar)] flex flex-col z-50 transition-transform duration-200 ${
           open ? "translate-x-0" : "-translate-x-full"
         }`}
       >
