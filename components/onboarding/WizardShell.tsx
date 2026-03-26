@@ -39,7 +39,7 @@ export function WizardShell({
   submitting,
 }: WizardShellProps) {
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex-col z-30 transition-colors duration-150">
         <div className="px-5 py-5">
@@ -104,7 +104,7 @@ export function WizardShell({
       </div>
 
       {/* Main content */}
-      <main className="flex-1 md:ml-[220px] px-6 py-6 md:px-12 md:py-10 pt-[72px] md:pt-10">
+      <main className="md:ml-[220px] px-6 py-6 md:px-16 md:py-10 pt-[72px] md:pt-10">
         <div className="max-w-[680px]">
           <div className="mb-8">
             <h2 className="text-[28px] leading-tight font-normal text-[var(--foreground)] [font-family:var(--font-heading),serif]">
@@ -115,7 +115,7 @@ export function WizardShell({
             )}
           </div>
 
-          <div className="space-y-7">{children}</div>
+          <div className="space-y-6">{children}</div>
 
           <div className="flex items-center justify-between mt-10 pt-6 border-t border-[var(--border)]">
             <button
