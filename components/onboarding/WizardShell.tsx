@@ -41,7 +41,7 @@ export function WizardShell({
   return (
     <div className="min-h-screen">
       {/* Sidebar */}
-      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[220px] border-r border-[var(--border)] bg-[var(--sidebar)] flex-col z-30 transition-colors duration-150">
+      <aside className="hidden lg:flex fixed left-0 top-0 h-screen w-[200px] border-r border-[var(--border)] bg-[var(--sidebar)] flex-col z-30 transition-colors duration-150">
         <div className="px-5 py-5">
           <span className="text-lg tracking-tight text-[var(--foreground)] [font-family:var(--font-heading),serif]">
             grndwrk
@@ -105,7 +105,7 @@ export function WizardShell({
 
       {/* Main content — inline margin ensures sidebar never overlaps regardless of Tailwind JIT */}
       <main
-        className="px-6 py-6 lg:px-16 lg:py-10 pt-[72px] lg:pt-10"
+        className="px-6 py-6 lg:px-14 lg:py-10 pt-[72px] lg:pt-10"
         style={{ marginLeft: "var(--sidebar-offset, 0px)" }}
       >
         <div className="max-w-[680px]">

@@ -78,7 +78,7 @@ textarea {
 /* Sidebar layout offset — used by WizardShell and app layout via inline style */
 @media (min-width: 1024px) {
   :root {
-    --sidebar-offset: 220px;
+    --sidebar-offset: 200px;
   }
 }
 
