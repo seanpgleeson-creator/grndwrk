@@ -168,6 +168,7 @@ _Source: [docs/design-audit.md](docs/design-audit.md). Ordered by severity._
 - [x] [DESIGN] [P1] Replace remaining hard-coded utility colors with semantic tokens — Button.tsx danger variant, OpportunityDetailTabs outreach chip, ProfileEditor error text
 - [x] [DESIGN] [P1] Add `@media (prefers-reduced-motion: reduce)` to globals.css to disable/reduce `animate-spin`, `animate-pulse`, and non-essential transitions
 - [x] [DESIGN] [P1] Replace `transition-all` + width animation on dashboard funnel bars with property-specific or transform-based approach — dashboard/page.tsx
+- [x] [DESIGN] [P1] Switch sidebar visibility and content offset from `md:` to `lg:` breakpoint (1024px) to prevent overlap on 768–1023px viewports — Sidebar.tsx, WizardShell.tsx, app/(app)/layout.tsx
 
 ### P2 Minor
 
