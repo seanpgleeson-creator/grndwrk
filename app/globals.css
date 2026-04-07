@@ -75,6 +75,13 @@ textarea {
   background: var(--muted);
 }
 
+/* Sidebar layout offset — used by WizardShell and app layout via inline style */
+@media (min-width: 1024px) {
+  :root {
+    --sidebar-offset: 220px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

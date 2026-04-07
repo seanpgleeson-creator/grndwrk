@@ -31,9 +31,12 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="min-h-screen">
       <Sidebar />
-      <main className="flex-1 lg:ml-[220px] px-6 py-6 lg:px-12 lg:py-10 pt-[60px] lg:pt-10">
+      <main
+        className="px-6 py-6 lg:px-12 lg:py-10 pt-[60px] lg:pt-10"
+        style={{ marginLeft: "var(--sidebar-offset, 0px)" }}
+      >
         {children}
       </main>
     </div>
