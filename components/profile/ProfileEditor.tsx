@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { CmfWeightSliders, type CmfWeights } from "./CmfWeightSliders";
+import { AiPositioningPanel } from "./AiPositioningPanel";
 import { updateProfile, updateCmfWeights, updateCompTargets } from "@/app/actions/profile";
 
 interface ProfileData {
@@ -62,6 +63,7 @@ function CoreProfileTab({ data }: { data: ProfileData }) {
   const [geography, setGeography] = useState(data.geography);
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+  const [aiPanelOpen, setAiPanelOpen] = useState(false);
 
   function handleSave() {
     startTransition(async () => {
@@ -76,39 +78,67 @@ function CoreProfileTab({ data }: { data: ProfileData }) {
     });
   }
 
+  const parsedRoles = roles.split(",").map((r) => r.trim()).filter(Boolean);
+  const parsedStages = stages.split(",").map((s) => s.trim()).filter(Boolean);
+
   return (
-    <div className="space-y-6 max-w-2xl">
-      <Textarea
-        label="Positioning statement"
-        value={statement}
-        onChange={(e) => setStatement(e.target.value)}
-        rows={5}
-        hint="Your north star — who you are, what you do, and what makes you distinctive."
-      />
-      <Input
-        label="Target roles"
-        value={roles}
-        onChange={(e) => setRoles(e.target.value)}
-        hint="Comma-separated"
-      />
-      <Input
-        label="Target company stages"
-        value={stages}
-        onChange={(e) => setStages(e.target.value)}
-        hint="Comma-separated (e.g. Series B, Series C, Public)"
-      />
-      <Input
-        label="Geography"
-        value={geography}
-        onChange={(e) => setGeography(e.target.value)}
-      />
-      <div className="flex items-center gap-3">
-        <Button variant="primary" onClick={handleSave} loading={isPending}>
-          Save changes
-        </Button>
-        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+    <>
+      <div className="space-y-6 max-w-2xl">
+        <div className="space-y-2">
+          <Textarea
+            label="Positioning statement"
+            value={statement}
+            onChange={(e) => setStatement(e.target.value)}
+            rows={5}
+            hint="Your north star — who you are, what you do, and what makes you distinctive."
+          />
+          <button
+            type="button"
+            onClick={() => setAiPanelOpen(true)}
+            className="flex items-center gap-1.5 text-[13px] text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors duration-150"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 1a.5.5 0 0 1 .5.5v1.793l1.146-1.147a.5.5 0 0 1 .708.708L9.207 4l1.147 1.146a.5.5 0 0 1-.708.708L8.5 4.707V6.5a.5.5 0 0 1-1 0V4.707L6.354 5.854a.5.5 0 1 1-.708-.708L6.793 4 5.646 2.854a.5.5 0 1 1 .708-.708L7.5 3.293V1.5A.5.5 0 0 1 8 1zM2.5 8a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z" />
+            </svg>
+            Help me write with AI
+          </button>
+        </div>
+        <Input
+          label="Target roles"
+          value={roles}
+          onChange={(e) => setRoles(e.target.value)}
+          hint="Comma-separated"
+        />
+        <Input
+          label="Target company stages"
+          value={stages}
+          onChange={(e) => setStages(e.target.value)}
+          hint="Comma-separated (e.g. Series B, Series C, Public)"
+        />
+        <Input
+          label="Geography"
+          value={geography}
+          onChange={(e) => setGeography(e.target.value)}
+        />
+        <div className="flex items-center gap-3">
+          <Button variant="primary" onClick={handleSave} loading={isPending}>
+            Save changes
+          </Button>
+          {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+        </div>
       </div>
-    </div>
+
+      <AiPositioningPanel
+        open={aiPanelOpen}
+        onClose={() => setAiPanelOpen(false)}
+        onUse={(draft) => setStatement(draft)}
+        currentStatement={statement}
+        resumeRaw={data.resume_raw}
+        targetRoles={parsedRoles}
+        targetStages={parsedStages}
+        geography={geography}
+      />
+    </>
   );
 }
 

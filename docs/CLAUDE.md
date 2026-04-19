@@ -40,14 +40,70 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 
 - **Phase 1:** Shipped — Vercel + Neon, full app shell and CRUD.
 - **Phase 2 (AI):** **Core work is done** — Anthropic is wired end-to-end for resume parse, CMF (AI), company brief, role brief, earnings signal analysis, and cover letter generation. Env: `ANTHROPIC_API_KEY` (required for AI). Optional: `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-20250514`).
-- **In parallel:** UI polish / design work may proceed in a separate session; this doc describes backend + AI behavior so you can align UI with real API responses.
+- **Onboarding + positioning AI (in progress):** Branch `cursor/ai-positioning-onboarding-redesign` — not yet merged to main. See §“Last session” below.
 
-**Remaining before calling Phase 2 “complete” (product-wise):** wire `ConsistencyBanner` to `narrative_check` from API responses, richer dashboard priority queue (optional), `outreachDraft` prompt (Phase 3 prep), production smoke test with a real API key.
+**Remaining before calling Phase 2 “complete” (product-wise):**
+1. Merge `cursor/ai-positioning-onboarding-redesign` and smoke-test the full onboarding flow (see §“Last session — next steps”)
+2. Wire `ConsistencyBanner` to `narrative_check` from API responses
+3. `outreachDraft` prompt (Phase 3 prep)
+4. Production smoke test with a real API key
 
 **Next product phase:** Phase 3 — Outreach & contacts UI (routes largely exist; needs pages and wiring).
 
 ---
 
+## Last session — what was built
+
+Work is on branch `cursor/ai-positioning-onboarding-redesign` (committed, not yet merged or deployed).
+
+### 1. AI positioning draft
+- **`lib/ai/prompts/positioningStatement.ts`** — Zod schema + prompt builder. Three guided questions → 2–4 sentence first-person statement. Anchors to resume when provided.
+- **`app/api/profile/positioning/draft/route.ts`** — `POST`, draft-only (no DB write). Uses raw `callClaude` (not `callClaudeWithProfile`) since the profile doesn’t yet exist during onboarding. Standard error shape (503/502/422).
+- **`components/profile/AiPositioningPanel.tsx`** — Right-side drawer (440px desktop / full mobile). Four states: prompts → loading → draft → error. Use / Regenerate / Discard actions. Replace-with-confirm if textarea already has content.
+
+### 2. Onboarding redesign (7 single-idea steps)
+- **`app/(onboarding)/profile/setup/page.tsx`** — Rewritten. Steps: Positioning → Target roles → Stages & location → Resume → Pillars → CMF weights → Comp targets. AI panel wired to Step 1. Resume step has “Skip for now →” ghost action. Per-step validation gates.
+- **`components/onboarding/WizardShell.tsx`** — More breathing room: `max-w-[520px]`, `px-20 py-16`, `mb-12` header margin, `space-y-8` fields. Step labels: active = 13px medium, inactive = 12px muted.
+
+### 3. Welcome page
+- **`app/(onboarding)/welcome/page.tsx`** — Editorial intro: hero, three philosophy blocks (Proactive / Positioned / Pointed), numbered setup preview. “Get started →” sets `grndwrk_welcomed=1` cookie and routes to `/profile/setup`.
+
+### 4. First-launch gate
+- **`app/(app)/layout.tsx`** — Three-way redirect logic: onboarding complete → through; partial progress or cookie present → `/profile/setup`; brand-new user (no cookie) → `/welcome`.
+
+### 5. AI panel on `/profile`
+- **`components/profile/ProfileEditor.tsx`** — `CoreProfileTab` wired with same `AiPositioningPanel`, pre-seeded with full profile context (resume, roles, stages, geography).
+
+### 6. All five `/docs` updated
+`prd.md`, `frontend.md`, `backend.md`, `CLAUDE.md`, `ui.md` — new route, 7-step structure, AI prompt contract, wizard whitespace spec, AI assist panel pattern.
+
+---
+
+## Last session — next steps (pick up here on return)
+
+Ordered by dependency and urgency.
+
+### Immediate: smoke-test and merge
+1. **Smoke-test the onboarding flow end-to-end** — `npm run dev` locally against a seeded DB. Key things to verify:
+   - `/welcome` renders correctly; “Get started →” sets cookie and routes to step 1
+   - AI panel opens/closes, runs draft, Use/Discard work (requires `ANTHROPIC_API_KEY` in `.env`)
+   - Step validation: step 1 blocks on empty statement, step 2 blocks on empty roles, steps 3–7 don’t block
+   - “Skip for now” on resume step advances correctly
+   - Step 7 submit lands on `/dashboard`
+   - Returning user (cookie already set) goes to `/profile/setup`, not `/welcome`
+2. **Verify `/profile` Core Profile tab** — “Help me write with AI” button appears and panel works with existing profile data.
+3. **Merge `cursor/ai-positioning-onboarding-redesign` to main** once smoke-tested.
+
+### Shortly after
+4. **Wire `ConsistencyBanner`** — Read `narrative_check` from CMF / brief / cover-letter API responses; show yellow banner when `consistency_score < 3`. `ConsistencyBanner` component already exists in `components/ui/`.
+5. **Production smoke test** — Confirm `ANTHROPIC_API_KEY` is set on Vercel; test all AI buttons end-to-end in production.
+
+### Phase 3 (next major phase)
+6. **Outreach page + contact CRUD UX** — Routes exist (`/contacts`, `/contacts/[id]/outreach`); need pages, forms, and wiring to the priority queue.
+7. **`outreachDraft` prompt** — Connect earnings signals or role priorities to user background; feed into the outreach pipeline.
+8. **Dashboard priority queue enhancements** — Extend `GET /api/dashboard` with urgency tiers using contacts + earnings signals (per `todo.md`).
+
+---
 ## Phase 2 — What was finished (AI layer)
 
 ### Libraries
@@ -64,6 +120,7 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 ### Endpoints (implemented)
 | Route | Purpose |
 |-------|---------|
+| `POST /api/profile/positioning/draft` | Draft-only positioning statement from guided answers + context; no DB write |
 | `POST /api/profile/resume` | Parse `resume_raw` → `resume_parsed` JSON on `UserProfile` |
 | `POST /api/opportunities/[id]/cmf` | Body `{ generate: true }` → AI CMF; else manual 5 dimension scores |
 | `POST /api/companies/[id]/brief` | Body `{ generate: true }` → company positioning brief fields + draft |
@@ -75,6 +132,7 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 Successful AI generations may include **`narrative_check`** in the JSON body (optional) — not yet consumed by UI for `ConsistencyBanner`.
 
 ### UI hooks (current)
+- **Onboarding Step 1 + Profile → Core Profile:** “Help me write with AI” opens `AiPositioningPanel` (guided prompts → side panel draft → Use/Regenerate/Discard). Uses `POST /api/profile/positioning/draft`. Draft-only until user accepts.
 - **Profile → Resume:** “Parse with AI” + parsed JSON preview.
 - **Company → Brief:** “Generate with AI”.
 - **Company → Signals:** “Analyze with AI” per signal.
@@ -126,11 +184,13 @@ If builds succeed but you see **404** or **configuration mismatch**:
 
 ## Next steps (ordered suggestions)
 
-1. **Your UI session:** Align components with AI flows (loading, errors from 502/503, retry, empty states). API responses: `{ data }` on success; `{ error, message, retryable }` on failure; some routes return `{ data, narrative_check }`.
-2. **ConsistencyBanner:** Read `narrative_check` from CMF/brief/cover-letter responses (or pass from server components after fetch); show yellow when `consistency_score < 3`, dismissible.
-3. **Dashboard:** Extend `GET /api/dashboard` priority queue with urgency tiers using contacts + earnings signals (per `todo.md`).
-4. **Production:** Confirm `ANTHROPIC_API_KEY` (and optional `ANTHROPIC_MODEL`) on Vercel; smoke-test all AI buttons.
-5. **Phase 3:** Outreach page, contact CRUD UX, `outreachDraft` prompt when ready.
+See §“Last session — next steps” above for the current ordered list. Short form:
+
+1. Smoke-test `cursor/ai-positioning-onboarding-redesign` branch — onboarding flow + AI panel
+2. Merge to main
+3. Wire `ConsistencyBanner` to `narrative_check`
+4. Production smoke test (`ANTHROPIC_API_KEY` on Vercel)
+5. Phase 3: Outreach page, contact CRUD, `outreachDraft` prompt
 
 ---
 
@@ -167,13 +227,13 @@ See `prisma/schema.prisma` and table in earlier docs; `resume_parsed` and `cmf_b
 
 ## Build Conventions
 
-- **First launch:** `/profile/setup` until onboarding complete.
+- **First launch:** `/welcome` (editorial intro, sets `grndwrk_welcomed=1` cookie) → `/profile/setup` (7-step wizard) → `/dashboard`. Skip welcome if cookie already set or profile has partial progress.
 - **UI design system:** Linear-inspired, light mode default. See [ui.md](ui.md) for full spec.
   - Light mode default; dark mode via `.dark` class on `<html>`, toggled in sidebar footer.
   - Accent: `#3B4F7C` (slate blue). Fonts: DM Sans (body) + Fraunces (headings) via `next/font/google`.
   - Icons: `lucide-react`. No inline SVGs in nav components.
   - Sidebar: 220px fixed left, `var(--sidebar)` bg, lowercase `grndwrk` wordmark in Fraunces.
-  - Onboarding: sidebar-step layout with step list replacing module nav during `/profile/setup`.
+  - Onboarding: sidebar-step layout (7 steps) with step list replacing module nav during `/profile/setup`.
   - All colors via CSS variables; never hardcode hex in components.
 - **AI content:** Draft vs edited; reset-to-draft pattern for briefs.
 - **Errors:** AI failures should surface **retry** in UI when `retryable: true`.

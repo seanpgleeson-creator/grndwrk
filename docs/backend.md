@@ -62,6 +62,8 @@ app/api/
     route.ts            # GET, POST
     resume/route.ts     # POST
     cmf-weights/route.ts# PATCH
+    positioning/
+      draft/route.ts    # POST — draft-only, no DB write (Phase 2)
   companies/
     route.ts            # GET, POST
     [id]/
@@ -468,6 +470,8 @@ All routes are Next.js App Router route handlers (`app/api/.../route.ts`). No au
 ## 4. AI Service Layer
 
 **Status:** Phase 2 implemented. `lib/ai/claude.ts`, `lib/ai/prompts/*`, and `lib/ai/narrative.ts` call Anthropic when `ANTHROPIC_API_KEY` is set. Without the key, AI routes return **503** `ai_not_configured`. AI failures return **502** `ai_failure` with `retryable: true`. `POST /api/benchmarks/fetch` returns `{ data: null, fallback: true }` (no scraper yet).
+
+**Note on `positioningStatement` prompt:** `POST /api/profile/positioning/draft` uses raw `callClaude` (not `callClaudeWithProfile`) because the positioning statement is being authored for the first time and the profile context (`positioning_statement`, `narrative_pillars`) does not yet exist. Context is instead fed manually from the request body (`answers`, `resume_raw`, `target_roles`, `target_stages`, `geography`).
 
 ### 4.1 `lib/ai/claude.ts` — single entry point (Phase 2)
 

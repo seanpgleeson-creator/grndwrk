@@ -111,6 +111,7 @@ The foundation that powers every other module. Before any analysis, scoring, or 
 - Upload or paste resume — stored as both raw text and a structured JSON parse. Parsing happens at upload time via a Claude API call. Structured schema: `experience[]` (company, title, dates, bullets), `skills[]`, `education[]`.
 - **Positioning statement**: A free-text summary of the candidate's core differentiator — the thing that makes them distinctly valuable, written in their own voice. This is not a bio. It is an answer to: "Why would the right company be lucky to have you?"
   - Example: "I combine deep marketplace and ecommerce domain expertise with hands-on technical building ability — a rare combination in senior PM roles. I've built the tools, not just managed the roadmaps."
+  - **AI-assisted drafting**: A "Help me write with AI" button under the textarea opens a side panel with three guided prompts ("What are you most distinctly good at?", "What kinds of problems do you want to solve next?", "What's one thing most resumes miss about you?"). The AI drafts a 2–4 sentence first-person statement from the answers plus any available profile context (resume, target roles, stages, geography). The user can use, regenerate, or discard the draft. Available both in onboarding Step 1 and on the `/profile` Core Profile tab.
 - Target role types (e.g., Principal PM, Director of Product, Head of Marketplace)
 - Target company stages (e.g., Series B–D, public tech, growth-phase)
 - Preferred geography / remote preference
@@ -424,6 +425,7 @@ All AI calls receive the user's `positioning_statement` and `narrative_pillars` 
 
 | Feature | AI Role |
 |---|---|
+| Positioning statement draft | Generate 2–4 sentence first-person statement from guided answers + available profile context |
 | Earnings call analysis | Parse transcript, extract signals, priorities, outreach triggers |
 | Company Positioning Brief | Generate structured brief from company research + user profile |
 | CMF Score generation | Multi-dimensional role analysis against user profile |
@@ -439,7 +441,15 @@ All AI calls receive the user's `positioning_statement` and `narrative_pillars` 
 
 ## AI Prompt Contracts
 
-The following three AI calls have explicit prompt contracts for implementation. All receive the user's `positioning_statement` and `narrative_pillars` as system context.
+The following AI calls have explicit prompt contracts for implementation.
+
+### Positioning statement draft (§1.1)
+- **System context:** None (called with raw `callClaude`; profile context does not yet exist when authoring the first statement)
+- **User message:** Guided answers (distinctly_good_at, problems, missed) + optional resume_raw + target_roles/stages/geography
+- **Instructions:** Write a 2–4 sentence, first-person, present-tense positioning statement that answers "Why would the right company be lucky to have you?" No clichés, no buzzwords. Concrete and specific; anchor to the resume when provided. Return JSON: `{ "statement": string }`.
+- **Route:** `POST /api/profile/positioning/draft` — draft-only, no DB write. Accepts `{ answers: { distinctly_good_at?, problems?, missed? }, resume_raw?, target_roles?, target_stages?, geography? }`. Returns `{ data: { statement: string } }`. Errors: 503 `ai_not_configured`, 502 `ai_failure` (`retryable: true`), 422 if no context provided.
+
+The following three AI calls receive the user's `positioning_statement` and `narrative_pillars` as system context.
 
 ### CMF Score generation (§3.1)
 - **System context:** positioning_statement, narrative_pillars, cmf_weights (the five dimension weights)
@@ -532,7 +542,26 @@ Backend is Next.js App Router API routes under `app/api/`. Phase 1: no auth. Key
 
 ## Onboarding Flow
 
-On first launch, redirect to a profile setup wizard at `/profile/setup` with four steps: (1) Core Profile + resume paste, (2) Narrative Pillars, (3) CMF Weights, (4) Compensation Targets. Steps 1 and 2 are required to proceed; steps 3 and 4 have pre-filled defaults. Completing this flow unlocks the full app. The app shell layout checks that the singleton profile exists and has completed steps 1 and 2 (e.g. `positioning_statement` set and `narrative_pillars` non-empty); if not, redirect to `/profile/setup`. Wizard state is client-side (e.g. `useReducer` + context); final submit upserts the profile and redirects to `/dashboard`. See [frontend.md](frontend.md) §6 and [backend.md](backend.md) §6.
+On first launch, the app redirects to a standalone `/welcome` page (inside the `(onboarding)` route group, no sidebar). This page explains the grndwrk philosophy (proactive / positioned / pointed) and the setup steps, with a single "Get started →" CTA. Clicking it sets a `grndwrk_welcomed=1` cookie and routes to `/profile/setup`.
+
+`/profile/setup` is a 7-step wizard:
+1. **Positioning statement** — single textarea + "Help me write with AI" side panel
+2. **Target roles** — single input
+3. **Stages & location** — company stage and geography
+4. **Resume** — optional paste with "Skip for now" ghost action
+5. **Narrative pillars** — 2–5 themed statements
+6. **CMF weights** — fit dimension weighting sliders
+7. **Comp targets** — optional salary/level targets
+
+Steps 1 and 2 are required to proceed; steps 3–7 have defaults or are optional. Completing the wizard upserts the profile and redirects to `/dashboard`.
+
+**First-launch gate logic** (in `app/(app)/layout.tsx`):
+- If `onboarding_complete` (positioning_statement set + narrative_pillars non-empty) → allow through
+- If profile has partial progress (`positioning_statement` set) → redirect to `/profile/setup`
+- If `grndwrk_welcomed=1` cookie exists → redirect to `/profile/setup`
+- Otherwise (brand-new user, no cookie) → redirect to `/welcome`
+
+Wizard state is client-side (`useReducer`); final submit upserts the profile via server action. See [frontend.md](frontend.md) §6 and [backend.md](backend.md) §6.
 
 ---
 

@@ -86,14 +86,40 @@ Page titles should be large and confident. Section labels should be small and re
 - Theme toggle in sidebar footer
 - Module order: Dashboard, Profile, Companies, Opportunities, Compensation, Outreach
 
-### Onboarding
+### Welcome page
 
-Onboarding and setup flows should feel like a guided experience, not a form inside a box.
+Before the setup wizard, a standalone `/welcome` page introduces the grndwrk philosophy (proactive / positioned / pointed) and what the setup flow covers.
+
+- No step sidebar, no progress indicator
+- Theme toggle in the top-right corner only
+- Max-width `600px`, single scrollable page
+- Hero section uses Fraunces display type at 38–46px; body uses DM Sans at 15–16px
+- "Get started →" CTA sets `grndwrk_welcomed=1` cookie and routes to `/profile/setup`
+
+### Onboarding wizard
+
+The setup flow is a 7-step wizard where each screen holds a single idea with generous whitespace.
+
+Steps: Positioning → Target roles → Where → Resume → Pillars → CMF weights → Comp targets
 
 - Left sidebar-step layout replacing the main app sidebar during setup
-- Left sidebar shows step list: number + label per step
+- Left sidebar (220px) shows step list: number + label per step
 - Steps are muted when incomplete, accent when active, checkmark when complete
-- Content area uses same `px-12 py-10` padding, `max-w-[680px]`
+- Content max-width: `520px`; horizontal padding: `px-20`; vertical padding: `py-16`
+- Step header bottom margin: `mb-12`; field group spacing: `space-y-8`
+- Step 1 includes "Help me write with AI" button that opens the `AiPositioningPanel` side drawer
+
+### AI assist panel
+
+Used for positioning statement drafting. A right-side drawer overlay pattern:
+
+- Width: `440px` on desktop, full-width on mobile
+- Background: `var(--surface)`, left border `var(--border)`
+- Header: 13px semibold uppercase label with Sparkles icon + close button
+- Prompt inputs: `var(--surface-raised)` background, 3-row min height
+- Footer: sticky action row (Discard / Draft my statement → Regenerate / Use this draft)
+- Three states: prompts view, loading, draft view, error view
+- Closes on Escape key or backdrop click
 
 ## Forms & Inputs
 
@@ -103,6 +129,7 @@ Onboarding and setup flows should feel like a guided experience, not a form insi
 - Focus state uses accent color: `focus:ring-0 focus:border-[var(--accent)]`
 - Textarea fields: `min-h-[120px]`, tall enough to invite real input, resize vertical only
 - Helper text: 12px, muted, below input
+- AI assist button: 13px, `var(--accent)` color, flex row with small icon, appears below the field it assists
 
 ## Components
 
