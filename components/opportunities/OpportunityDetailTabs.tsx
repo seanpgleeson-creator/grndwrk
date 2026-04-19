@@ -12,7 +12,10 @@ import { Select } from "@/components/ui/Select";
 import { CmfScore } from "@/components/ui/CmfScore";
 import { LevelsFyiEmbed } from "@/components/comp/LevelsFyiEmbed";
 import { updateOpportunity, saveCmfScore, upsertRoleBrief } from "@/app/actions/opportunities";
+import { ConsistencyBanner } from "@/components/ui/ConsistencyBanner";
 import { calcCmfScore, cmfRecommendation, type CmfWeights } from "@/lib/utils";
+
+type NarrativeCheck = { consistency_score: number; explanation: string };
 
 interface Opportunity {
   id: string;
@@ -173,6 +176,7 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
   );
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
+  const [narrativeCheck, setNarrativeCheck] = useState<NarrativeCheck | null>(null);
 
   useEffect(() => {
     const b = opportunity.cmf_breakdown;
@@ -188,14 +192,16 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
 
   async function handleGenerateAi() {
     setGenLoading(true);
+    setNarrativeCheck(null);
     try {
       const res = await fetch(`/api/opportunities/${opportunity.id}/cmf`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ generate: true }),
       });
-      const json = (await res.json()) as { message?: string };
+      const json = (await res.json()) as { message?: string; narrative_check?: NarrativeCheck };
       if (!res.ok) throw new Error(json.message || "Generation failed");
+      if (json.narrative_check) setNarrativeCheck(json.narrative_check);
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
@@ -222,6 +228,13 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
 
   return (
     <div className="space-y-6 max-w-xl">
+      {narrativeCheck && (
+        <ConsistencyBanner
+          score={narrativeCheck.consistency_score}
+          explanation={narrativeCheck.explanation}
+        />
+      )}
+
       <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-[var(--muted)]">
           Score each dimension (1–10), or generate with AI using your profile + JD.
@@ -328,6 +341,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
     proof_points: brief?.proof_points ?? [""],
   });
   const [saved, setSaved] = useState(false);
+  const [narrativeCheck, setNarrativeCheck] = useState<NarrativeCheck | null>(null);
 
   useEffect(() => {
     if (!brief) return;
@@ -341,14 +355,16 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
 
   async function handleGenerateAi() {
     setGenLoading(true);
+    setNarrativeCheck(null);
     try {
       const res = await fetch(`/api/opportunities/${opportunityId}/brief`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ generate: true }),
       });
-      const json = (await res.json()) as { message?: string };
+      const json = (await res.json()) as { message?: string; narrative_check?: NarrativeCheck };
       if (!res.ok) throw new Error(json.message || "Generation failed");
+      if (json.narrative_check) setNarrativeCheck(json.narrative_check);
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
@@ -371,6 +387,13 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
 
   return (
     <div className="space-y-5 max-w-2xl">
+      {narrativeCheck && (
+        <ConsistencyBanner
+          score={narrativeCheck.consistency_score}
+          explanation={narrativeCheck.explanation}
+        />
+      )}
+
       {brief?.completed_at && (
         <div className="flex items-center gap-2 text-sm text-[var(--success)]">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -443,6 +466,7 @@ function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
   const [isPending, startTransition] = useTransition();
   const [genLoading, setGenLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [narrativeCheck, setNarrativeCheck] = useState<NarrativeCheck | null>(null);
 
   useEffect(() => {
     const cl = opportunity.materials.cover_letter;
@@ -451,12 +475,14 @@ function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
 
   async function handleGenerateCoverLetter() {
     setGenLoading(true);
+    setNarrativeCheck(null);
     try {
       const res = await fetch(`/api/opportunities/${opportunity.id}/cover-letter`, {
         method: "POST",
       });
-      const json = (await res.json()) as { message?: string };
+      const json = (await res.json()) as { message?: string; narrative_check?: NarrativeCheck };
       if (!res.ok) throw new Error(json.message || "Generation failed");
+      if (json.narrative_check) setNarrativeCheck(json.narrative_check);
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
@@ -476,6 +502,13 @@ function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
 
   return (
     <div className="space-y-4 max-w-2xl">
+      {narrativeCheck && (
+        <ConsistencyBanner
+          score={narrativeCheck.consistency_score}
+          explanation={narrativeCheck.explanation}
+        />
+      )}
+
       <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-[var(--muted)]">
           Generate a draft with AI, then edit and save.

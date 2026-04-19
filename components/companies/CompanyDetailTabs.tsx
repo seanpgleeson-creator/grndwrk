@@ -12,6 +12,7 @@ import { Select } from "@/components/ui/Select";
 import { CmfScore } from "@/components/ui/CmfScore";
 import { LevelsFyiEmbed } from "@/components/comp/LevelsFyiEmbed";
 import { updateCompany, createEarningsSignal, deleteEarningsSignal, upsertCompanyBrief, deleteCompany } from "@/app/actions/companies";
+import { ConsistencyBanner } from "@/components/ui/ConsistencyBanner";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
@@ -230,6 +231,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
     proof_points: brief?.proof_points ?? [""],
   });
   const [saved, setSaved] = useState(false);
+  const [narrativeCheck, setNarrativeCheck] = useState<{ consistency_score: number; explanation: string } | null>(null);
 
   useEffect(() => {
     if (!brief) return;
@@ -244,14 +246,19 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
 
   async function handleGenerateAi() {
     setGenLoading(true);
+    setNarrativeCheck(null);
     try {
       const res = await fetch(`/api/companies/${companyId}/brief`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ generate: true }),
       });
-      const json = (await res.json()) as { message?: string };
+      const json = (await res.json()) as {
+        message?: string;
+        narrative_check?: { consistency_score: number; explanation: string };
+      };
       if (!res.ok) throw new Error(json.message || "Generation failed");
+      if (json.narrative_check) setNarrativeCheck(json.narrative_check);
       router.refresh();
     } catch (e) {
       alert(e instanceof Error ? e.message : "Failed");
@@ -274,6 +281,13 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
 
   return (
     <div className="space-y-6 max-w-2xl">
+      {narrativeCheck && (
+        <ConsistencyBanner
+          score={narrativeCheck.consistency_score}
+          explanation={narrativeCheck.explanation}
+        />
+      )}
+
       {brief?.completed_at && (
         <div className="flex items-center gap-2 text-sm text-[var(--success)]">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
