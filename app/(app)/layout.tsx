@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { Sidebar } from "@/components/nav/Sidebar";
 
@@ -27,7 +28,18 @@ export default async function AppLayout({
     })();
 
   if (!onboardingComplete) {
-    redirect("/profile/setup");
+    // If the user has already seen the welcome page (cookie set), skip straight
+    // to setup. If there is partial progress (positioning_statement exists but
+    // pillars are missing), also skip welcome and go to setup.
+    const cookieStore = await cookies();
+    const welcomed = cookieStore.get("grndwrk_welcomed");
+    const hasPartialProgress = !!profile?.positioning_statement;
+
+    if (welcomed || hasPartialProgress) {
+      redirect("/profile/setup");
+    } else {
+      redirect("/welcome");
+    }
   }
 
   return (

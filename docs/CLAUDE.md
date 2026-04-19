@@ -64,6 +64,7 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 ### Endpoints (implemented)
 | Route | Purpose |
 |-------|---------|
+| `POST /api/profile/positioning/draft` | Draft-only positioning statement from guided answers + context; no DB write |
 | `POST /api/profile/resume` | Parse `resume_raw` → `resume_parsed` JSON on `UserProfile` |
 | `POST /api/opportunities/[id]/cmf` | Body `{ generate: true }` → AI CMF; else manual 5 dimension scores |
 | `POST /api/companies/[id]/brief` | Body `{ generate: true }` → company positioning brief fields + draft |
@@ -75,12 +76,12 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 Successful AI generations may include **`narrative_check`** in the JSON body (optional) — not yet consumed by UI for `ConsistencyBanner`.
 
 ### UI hooks (current)
+- **Onboarding Step 1 + Profile → Core Profile:** “Help me write with AI” opens `AiPositioningPanel` (guided prompts → side panel draft → Use/Regenerate/Discard). Uses `POST /api/profile/positioning/draft`. Draft-only until user accepts.
 - **Profile → Resume:** “Parse with AI” + parsed JSON preview.
 - **Company → Brief:** “Generate with AI”.
 - **Company → Signals:** “Analyze with AI” per signal.
 - **Opportunity → CMF:** “Generate with AI” + short AI rationale / recommendation when `cmf_breakdown.ai` is present.
 - **Opportunity → Role brief / Materials:** “Generate with AI” / “Generate cover letter”.
-
 ### Data note
 - CMF `cmf_breakdown` JSON may include **flat scores** (manual) or **flat scores + `ai`** (AI: rationale, gaps, recommendation). [`normalizeCmfBreakdownForSliders`](../lib/utils.ts) keeps sliders working for both.
 
@@ -167,13 +168,13 @@ See `prisma/schema.prisma` and table in earlier docs; `resume_parsed` and `cmf_b
 
 ## Build Conventions
 
-- **First launch:** `/profile/setup` until onboarding complete.
+- **First launch:** `/welcome` (editorial intro, sets `grndwrk_welcomed=1` cookie) → `/profile/setup` (7-step wizard) → `/dashboard`. Skip welcome if cookie already set or profile has partial progress.
 - **UI design system:** Linear-inspired, light mode default. See [ui.md](ui.md) for full spec.
   - Light mode default; dark mode via `.dark` class on `<html>`, toggled in sidebar footer.
   - Accent: `#3B4F7C` (slate blue). Fonts: DM Sans (body) + Fraunces (headings) via `next/font/google`.
   - Icons: `lucide-react`. No inline SVGs in nav components.
   - Sidebar: 220px fixed left, `var(--sidebar)` bg, lowercase `grndwrk` wordmark in Fraunces.
-  - Onboarding: sidebar-step layout with step list replacing module nav during `/profile/setup`.
+  - Onboarding: sidebar-step layout (7 steps) with step list replacing module nav during `/profile/setup`.
   - All colors via CSS variables; never hardcode hex in components.
 - **AI content:** Draft vs edited; reset-to-draft pattern for briefs.
 - **Errors:** AI failures should surface **retry** in UI when `retryable: true`.

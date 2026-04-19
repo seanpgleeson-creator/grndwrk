@@ -36,8 +36,9 @@
 ### Route Structure
 
 ```
-/                           → redirect to /dashboard (or /profile/setup on first launch)
-/profile/setup              → onboarding wizard (4 steps)
+/                           → redirect to /dashboard (or /welcome on first launch)
+/welcome                    → Standalone intro/philosophy page (no sidebar); sets grndwrk_welcomed cookie
+/profile/setup              → onboarding wizard (7 steps)
 /profile                    → Profile & Positioning Hub (Module 1)
 /companies                  → Company list (Module 2)
 /companies/new              → Add company form
@@ -57,9 +58,11 @@
 app/
   layout.tsx                 ← Root layout: fonts, global styles, metadata
   (onboarding)/
+    welcome/
+      page.tsx               ← Standalone intro page; sets grndwrk_welcomed cookie
     profile/
       setup/
-        page.tsx             ← Wizard; no sidebar
+        page.tsx             ← Wizard (7 steps); no sidebar
     layout.tsx               ← Minimal layout (no sidebar/nav)
   (app)/
     layout.tsx               ← App shell layout: sidebar + <main>
@@ -97,7 +100,13 @@ app/
 
 ### First-Launch Gate
 
-In the root `(app)/layout.tsx`, check whether the `UserProfile` singleton has `onboarding_complete: true`. If not, `redirect('/profile/setup')`. This gate is server-side, so unauthenticated / incomplete profiles cannot access any app route.
+In the root `(app)/layout.tsx`, the gate logic (server-side) is:
+1. If `positioning_statement` is set and `narrative_pillars` is non-empty → allow through (onboarding complete)
+2. If `positioning_statement` is set but pillars are missing (partial progress) → `redirect('/profile/setup')`
+3. If `grndwrk_welcomed=1` cookie exists → `redirect('/profile/setup')`
+4. Otherwise (brand-new user, no cookie) → `redirect('/welcome')`
+
+The welcome page sets the cookie client-side on "Get started →" click, then routes to `/profile/setup`.
 
 ---
 
@@ -178,6 +187,33 @@ All colours are CSS custom properties defined in `app/globals.css`. **Never use 
 - Sidebar collapses to a top bar + drawer on narrow viewports (`md` breakpoint)
 - No drop shadows — borders provide hierarchy
 - Border radii: 8px cards, 6px inputs, 4px badges
+
+### Wizard whitespace spec (`WizardShell`)
+
+| Property | Value |
+|---|---|
+| Content max-width | `max-w-[520px]` |
+| Horizontal padding (desktop) | `px-20` |
+| Vertical padding (desktop) | `py-16` |
+| Step header bottom margin | `mb-12` |
+| Field group spacing | `space-y-8` |
+| Navigation top margin | `mt-14` |
+| Sidebar width | `220px` |
+| Step label: active | DM Sans 13px medium |
+| Step label: inactive | DM Sans 12px muted |
+
+The wizard sidebar shows step number + short label for all steps. The active step indicator uses `var(--accent)` border; completed steps fill with `var(--accent)` background + white check icon.
+
+### AI assist panel
+
+Used for the positioning statement draft flow. Pattern:
+- Right-side drawer: `w-[440px]` desktop / full-width mobile
+- Background: `var(--surface)`, left border `var(--border)`
+- Header: 13px semibold uppercase label + close icon
+- Prompt inputs: `var(--surface-raised)` background
+- Footer: sticky, always-visible action row
+- Animation: 200ms ease-out slide-in
+- Closes on Escape or backdrop click
 
 ---
 
