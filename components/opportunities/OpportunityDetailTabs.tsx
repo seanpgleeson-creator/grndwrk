@@ -13,6 +13,7 @@ import { CmfScore } from "@/components/ui/CmfScore";
 import { LevelsFyiEmbed } from "@/components/comp/LevelsFyiEmbed";
 import { updateOpportunity, saveCmfScore, upsertRoleBrief } from "@/app/actions/opportunities";
 import { ConsistencyBanner } from "@/components/ui/ConsistencyBanner";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { calcCmfScore, cmfRecommendation, type CmfWeights } from "@/lib/utils";
 
 type NarrativeCheck = { consistency_score: number; explanation: string };
@@ -107,36 +108,37 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-        <div>
-          <p className="text-[13px] text-[var(--muted)] mb-1">Status</p>
-          <Select
-            value={status}
-            onChange={(e) => handleStatusChange(e.target.value)}
-            options={STATUS_OPTIONS}
-          />
+      <SectionCard title="Status & outreach">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div>
+            <p className="text-[13px] font-medium text-[var(--foreground)] mb-1.5">Status</p>
+            <Select
+              value={status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              options={STATUS_OPTIONS}
+            />
+          </div>
+          <div>
+            <p className="text-[13px] font-medium text-[var(--foreground)] mb-1.5">Outreach sent</p>
+            <button
+              onClick={handleOutreachToggle}
+              disabled={isPending}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors ${
+                outreachSent
+                  ? "bg-[var(--accent)]/15 border-[var(--accent)]/25 text-[var(--accent)]"
+                  : "bg-[var(--surface)] border-[var(--border)] text-[var(--muted)]"
+              }`}
+            >
+              <div className={`h-3 w-3 rounded-full ${outreachSent ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`} />
+              {outreachSent ? "Yes" : "No"}
+            </button>
+          </div>
         </div>
-        <div>
-          <p className="text-[13px] text-[var(--muted)] mb-1">Outreach sent</p>
-          <button
-            onClick={handleOutreachToggle}
-            disabled={isPending}
-            className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors ${
-              outreachSent
-                ? "bg-[var(--accent)]/15 border-[var(--accent)]/25 text-[var(--accent)]"
-                : "bg-[var(--surface-raised)] border-[var(--border)] text-[var(--muted)]"
-            }`}
-          >
-            <div className={`h-3 w-3 rounded-full ${outreachSent ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`} />
-            {outreachSent ? "Yes" : "No"}
-          </button>
-        </div>
-      </div>
+      </SectionCard>
 
       {opportunity.key_requirements.length > 0 && (
-        <div>
-          <p className="text-xs text-[var(--muted)] mb-2">Key requirements</p>
-          <ul className="space-y-1">
+        <SectionCard title="Key requirements">
+          <ul className="space-y-1.5">
             {opportunity.key_requirements.map((req, i) => (
               <li key={i} className="text-sm text-[var(--foreground)] flex items-start gap-2">
                 <span className="text-[var(--accent)] mt-0.5">·</span>
@@ -144,23 +146,27 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
               </li>
             ))}
           </ul>
-        </div>
+        </SectionCard>
       )}
 
       {opportunity.jd_text && (
-        <div>
-          <button
-            onClick={() => setShowJd(!showJd)}
-            className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)]"
-          >
-            {showJd ? "Hide" : "Show"} job description
-          </button>
-          {showJd && (
-            <div className="mt-3 p-4 rounded-md bg-[var(--surface-raised)] border border-[var(--border)]">
-              <pre className="text-xs text-[var(--muted)] whitespace-pre-wrap font-sans">{opportunity.jd_text}</pre>
-            </div>
+        <SectionCard
+          title="Job description"
+          action={
+            <button
+              onClick={() => setShowJd(!showJd)}
+              className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+            >
+              {showJd ? "Hide" : "Show"}
+            </button>
+          }
+        >
+          {showJd ? (
+            <pre className="text-xs text-[var(--muted)] whitespace-pre-wrap font-sans">{opportunity.jd_text}</pre>
+          ) : (
+            <p className="text-xs text-[var(--muted)]">Full job description hidden. Click Show to expand.</p>
           )}
-        </div>
+        </SectionCard>
       )}
     </div>
   );
@@ -226,6 +232,27 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
     });
   }
 
+  const generateAction = (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      loading={genLoading}
+      onClick={handleGenerateAi}
+    >
+      Generate with AI
+    </Button>
+  );
+
+  const scoreFooter = (
+    <>
+      <Button variant="primary" onClick={handleSave} loading={isPending}>
+        Save CMF score
+      </Button>
+      {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+    </>
+  );
+
   return (
     <div className="space-y-6 max-w-xl">
       {narrativeCheck && (
@@ -235,69 +262,62 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
         />
       )}
 
-      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-[var(--muted)]">
-          Score each dimension (1–10), or generate with AI using your profile + JD.
-        </p>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          loading={genLoading}
-          onClick={handleGenerateAi}
-        >
-          Generate with AI
-        </Button>
-      </div>
-
       {typeof opportunity.cmf_ai === "object" && opportunity.cmf_ai !== null ? (
-        <Card className="p-4 space-y-2">
-          <p className="text-xs font-medium text-[var(--foreground)]">AI rationale</p>
-          {"resume_gap_analysis" in opportunity.cmf_ai && (
-            <p className="text-xs text-[var(--muted)] whitespace-pre-wrap">
-              {String((opportunity.cmf_ai as { resume_gap_analysis?: string }).resume_gap_analysis ?? "")}
-            </p>
-          )}
-          {"application_recommendation" in opportunity.cmf_ai && (
-            <Badge variant="default" className="capitalize">
-              {String((opportunity.cmf_ai as { application_recommendation?: string }).application_recommendation ?? "")}
-            </Badge>
-          )}
-        </Card>
+        <SectionCard title="AI rationale">
+          <div className="space-y-2">
+            {"resume_gap_analysis" in opportunity.cmf_ai && (
+              <p className="text-sm text-[var(--muted)] whitespace-pre-wrap leading-relaxed">
+                {String((opportunity.cmf_ai as { resume_gap_analysis?: string }).resume_gap_analysis ?? "")}
+              </p>
+            )}
+            {"application_recommendation" in opportunity.cmf_ai && (
+              <Badge variant="default" className="capitalize">
+                {String((opportunity.cmf_ai as { application_recommendation?: string }).application_recommendation ?? "")}
+              </Badge>
+            )}
+          </div>
+        </SectionCard>
       ) : null}
 
-      <div className="space-y-4">
-        {DIMS.map(({ key, label }) => (
-          <div key={key} className="flex items-center gap-4">
-            <div className="w-28 shrink-0">
-              <p className="text-sm text-[var(--foreground)]">{label}</p>
-              <p className="text-xs text-[var(--muted)]">Weight: {cmfWeights[key]}%</p>
+      <SectionCard
+        title="Dimension scores"
+        description="Score each dimension 1–10, or generate with AI using your profile + the JD."
+        action={generateAction}
+        footer={scoreFooter}
+      >
+        <div className="space-y-4">
+          {DIMS.map(({ key, label }) => (
+            <div key={key} className="flex items-center gap-4">
+              <div className="w-28 shrink-0">
+                <p className="text-sm font-medium text-[var(--foreground)]">{label}</p>
+                <p className="text-xs text-[var(--muted)]">Weight: {cmfWeights[key]}%</p>
+              </div>
+              <input
+                type="range"
+                min={1}
+                max={10}
+                value={scores[key]}
+                onChange={(e) => setScores({ ...scores, [key]: Number(e.target.value) })}
+                className="flex-1 h-1.5 rounded-full appearance-none bg-[var(--surface)] cursor-pointer"
+                style={{ accentColor: "var(--accent)" }}
+              />
+              <Input
+                type="number"
+                min={1}
+                max={10}
+                value={scores[key]}
+                onChange={(e) => setScores({ ...scores, [key]: Math.min(10, Math.max(1, Number(e.target.value))) })}
+                className="w-16"
+              />
             </div>
-            <input
-              type="range"
-              min={1}
-              max={10}
-              value={scores[key]}
-              onChange={(e) => setScores({ ...scores, [key]: Number(e.target.value) })}
-              className="flex-1 h-1.5 rounded-full appearance-none bg-[var(--surface-raised)] cursor-pointer"
-              style={{ accentColor: "var(--accent)" }}
-            />
-            <Input
-              type="number"
-              min={1}
-              max={10}
-              value={scores[key]}
-              onChange={(e) => setScores({ ...scores, [key]: Math.min(10, Math.max(1, Number(e.target.value))) })}
-              className="w-16"
-            />
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </SectionCard>
 
-      <Card className="p-4">
+      <SectionCard title="Composite score">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-[var(--muted)] mb-1">Composite CMF Score</p>
+            <p className="text-xs text-[var(--muted)] mb-1">CMF score</p>
             <CmfScore score={computedScore} size="lg" showRecommendation />
           </div>
           <div className="text-right">
@@ -318,14 +338,7 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
             </Badge>
           </div>
         </div>
-      </Card>
-
-      <div className="flex items-center gap-3">
-        <Button variant="primary" onClick={handleSave} loading={isPending}>
-          Save CMF score
-        </Button>
-        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
-      </div>
+      </SectionCard>
     </div>
   );
 }
@@ -385,8 +398,29 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
     });
   }
 
+  const generateAction = (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      loading={genLoading}
+      onClick={handleGenerateAi}
+    >
+      Generate with AI
+    </Button>
+  );
+
+  const briefFooter = (
+    <>
+      <Button variant="primary" onClick={() => handleSave()} loading={isPending}>Save</Button>
+      {!brief?.completed_at && <Button variant="secondary" onClick={() => handleSave(true)} loading={isPending}>Mark complete</Button>}
+      {brief?.completed_at && <Button variant="ghost" onClick={() => handleSave(false)} loading={isPending}>Reopen</Button>}
+      {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+    </>
+  );
+
   return (
-    <div className="space-y-5 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
       {narrativeCheck && (
         <ConsistencyBanner
           score={narrativeCheck.consistency_score}
@@ -403,58 +437,45 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
         </div>
       )}
 
-      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-[var(--muted)]">
-          Generate a role brief with AI, or edit sections manually.
-        </p>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          loading={genLoading}
-          onClick={handleGenerateAi}
-        >
-          Generate with AI
-        </Button>
-      </div>
+      <SectionCard
+        title="Role brief"
+        description="Generate a role brief with AI, or edit sections manually."
+        action={generateAction}
+        footer={briefFooter}
+      >
+        <div className="space-y-5">
+          {[
+            { key: "fit_summary" as const, label: "Fit summary", placeholder: "Why are you a strong fit for this role?" },
+            { key: "contribution_narrative" as const, label: "Contribution narrative", placeholder: "What will you build or change in the first 6–12 months?" },
+            { key: "differentiated_value" as const, label: "Differentiated value", placeholder: "What makes you uniquely suited vs. other candidates?" },
+          ].map(({ key, label, placeholder }) => (
+            <Textarea key={key} label={label} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} rows={3} />
+          ))}
 
-      {[
-        { key: "fit_summary" as const, label: "Fit summary", placeholder: "Why are you a strong fit for this role?" },
-        { key: "contribution_narrative" as const, label: "Contribution narrative", placeholder: "What will you build or change in the first 6–12 months?" },
-        { key: "differentiated_value" as const, label: "Differentiated value", placeholder: "What makes you uniquely suited vs. other candidates?" },
-      ].map(({ key, label, placeholder }) => (
-        <Textarea key={key} label={label} value={form[key]} onChange={(e) => setForm({ ...form, [key]: e.target.value })} placeholder={placeholder} rows={3} />
-      ))}
-
-      <div>
-        <p className="text-sm text-[var(--foreground)] mb-2">Proof points</p>
-        {form.proof_points.map((point, i) => (
-          <div key={i} className="flex items-center gap-2 mb-2">
-            <div className="flex-1">
-              <Input value={point} onChange={(e) => { const u = [...form.proof_points]; u[i] = e.target.value; setForm({ ...form, proof_points: u }); }} placeholder={`Proof point ${i + 1}`} />
-            </div>
-            {form.proof_points.length > 1 && (
-              <button
-                onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })}
-                aria-label={`Remove proof point ${i + 1}`}
-                className="text-[var(--muted)] hover:text-[var(--danger)]"
-              >
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
+          <div>
+            <p className="text-[13px] font-medium text-[var(--foreground)] mb-2">Proof points</p>
+            {form.proof_points.map((point, i) => (
+              <div key={i} className="flex items-center gap-2 mb-2">
+                <div className="flex-1">
+                  <Input value={point} onChange={(e) => { const u = [...form.proof_points]; u[i] = e.target.value; setForm({ ...form, proof_points: u }); }} placeholder={`Proof point ${i + 1}`} />
+                </div>
+                {form.proof_points.length > 1 && (
+                  <button
+                    onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })}
+                    aria-label={`Remove proof point ${i + 1}`}
+                    className="text-[var(--muted)] hover:text-[var(--danger)]"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  </button>
+                )}
+              </div>
+            ))}
+            {form.proof_points.length < 3 && (
+              <button onClick={() => setForm({ ...form, proof_points: [...form.proof_points, ""] })} className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]">+ Add proof point</button>
             )}
           </div>
-        ))}
-        {form.proof_points.length < 3 && (
-          <button onClick={() => setForm({ ...form, proof_points: [...form.proof_points, ""] })} className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)]">+ Add proof point</button>
-        )}
-      </div>
-
-      <div className="flex items-center gap-3">
-        <Button variant="primary" onClick={() => handleSave()} loading={isPending}>Save</Button>
-        {!brief?.completed_at && <Button variant="secondary" onClick={() => handleSave(true)} loading={isPending}>Mark complete</Button>}
-        {brief?.completed_at && <Button variant="ghost" onClick={() => handleSave(false)} loading={isPending}>Reopen</Button>}
-        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
-      </div>
+        </div>
+      </SectionCard>
     </div>
   );
 }
@@ -500,8 +521,20 @@ function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
     });
   }
 
+  const generateAction = (
+    <Button
+      type="button"
+      variant="secondary"
+      size="sm"
+      loading={genLoading}
+      onClick={handleGenerateCoverLetter}
+    >
+      Generate cover letter
+    </Button>
+  );
+
   return (
-    <div className="space-y-4 max-w-2xl">
+    <div className="space-y-6 max-w-2xl">
       {narrativeCheck && (
         <ConsistencyBanner
           score={narrativeCheck.consistency_score}
@@ -509,25 +542,19 @@ function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
         />
       )}
 
-      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs text-[var(--muted)]">
-          Generate a draft with AI, then edit and save.
-        </p>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          loading={genLoading}
-          onClick={handleGenerateCoverLetter}
-        >
-          Generate cover letter
-        </Button>
-      </div>
-      <Textarea label="Cover letter" value={text} onChange={(e) => setText(e.target.value)} rows={16} placeholder="Write your cover letter here..." />
-      <div className="flex items-center gap-3">
-        <Button variant="primary" onClick={handleSave} loading={isPending}>Save</Button>
-        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
-      </div>
+      <SectionCard
+        title="Cover letter"
+        description="Generate a draft with AI, then edit and save."
+        action={generateAction}
+        footer={
+          <>
+            <Button variant="primary" onClick={handleSave} loading={isPending}>Save</Button>
+            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+          </>
+        }
+      >
+        <Textarea label="Cover letter" value={text} onChange={(e) => setText(e.target.value)} rows={16} placeholder="Write your cover letter here..." />
+      </SectionCard>
     </div>
   );
 }
@@ -537,10 +564,9 @@ function CompTab({ opportunity, compTarget }: { opportunity: Opportunity; compTa
   const hasSnap = snap.total_low != null || snap.total_high != null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-2xl">
       {hasSnap && (
-        <Card className="p-4">
-          <p className="text-xs text-[var(--muted)] mb-3">Comp snapshot</p>
+        <SectionCard title="Comp snapshot">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {snap.base_low != null && (
               <div>
@@ -560,19 +586,21 @@ function CompTab({ opportunity, compTarget }: { opportunity: Opportunity; compTa
             )}
           </div>
           {compTarget.minimum != null && snap.total_high != null && (
-            <div className="mt-3 pt-3 border-t border-[var(--border)]">
+            <div className="mt-4 pt-4 border-t border-[var(--border)]">
               <Badge variant={snap.meets_target ? "success" : snap.meets_target === false ? "danger" : "default"}>
                 {snap.meets_target ? "Meets target" : snap.meets_target === false ? "Below target" : "Unknown vs. target"}
               </Badge>
             </div>
           )}
           {snap.stale && (
-            <p className="mt-2 text-xs text-[var(--warning)]">Data may be outdated (180+ days)</p>
+            <p className="mt-3 text-xs text-[var(--warning)]">Data may be outdated (180+ days)</p>
           )}
-        </Card>
+        </SectionCard>
       )}
 
-      <LevelsFyiEmbed company={opportunity.company.name} track="Product Manager" />
+      <SectionCard title="Live benchmarks" description={`From Levels.fyi scoped to ${opportunity.company.name}.`}>
+        <LevelsFyiEmbed company={opportunity.company.name} track="Product Manager" />
+      </SectionCard>
     </div>
   );
 }

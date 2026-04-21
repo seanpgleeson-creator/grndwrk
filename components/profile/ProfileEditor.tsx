@@ -6,6 +6,7 @@ import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { CmfWeightSliders, type CmfWeights } from "./CmfWeightSliders";
 import { AiPositioningPanel } from "./AiPositioningPanel";
 import { updateProfile, updateCmfWeights, updateCompTargets } from "@/app/actions/profile";
@@ -42,7 +43,7 @@ export function ProfileEditor({ data }: ProfileEditorProps) {
   ];
 
   return (
-    <Tabs tabs={tabs} className="px-6 pb-6">
+    <Tabs tabs={tabs}>
       {(activeTab) => (
         <>
           {activeTab === "core" && <CoreProfileTab data={data} />}
@@ -81,51 +82,70 @@ function CoreProfileTab({ data }: { data: ProfileData }) {
   const parsedRoles = roles.split(",").map((r) => r.trim()).filter(Boolean);
   const parsedStages = stages.split(",").map((s) => s.trim()).filter(Boolean);
 
+  const saveFooter = (
+    <>
+      <Button variant="primary" onClick={handleSave} loading={isPending}>
+        Save changes
+      </Button>
+      {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+    </>
+  );
+
+  const aiAssistButton = (
+    <button
+      type="button"
+      onClick={() => setAiPanelOpen(true)}
+      className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors duration-150"
+    >
+      <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 1a.5.5 0 0 1 .5.5v1.793l1.146-1.147a.5.5 0 0 1 .708.708L9.207 4l1.147 1.146a.5.5 0 0 1-.708.708L8.5 4.707V6.5a.5.5 0 0 1-1 0V4.707L6.354 5.854a.5.5 0 1 1-.708-.708L6.793 4 5.646 2.854a.5.5 0 1 1 .708-.708L7.5 3.293V1.5A.5.5 0 0 1 8 1zM2.5 8a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z" />
+      </svg>
+      Help me write with AI
+    </button>
+  );
+
   return (
     <>
       <div className="space-y-6 max-w-2xl">
-        <div className="space-y-2">
+        <SectionCard
+          title="Positioning"
+          description="Your north star — who you are, what you do, and what makes you distinctive."
+          action={aiAssistButton}
+          footer={saveFooter}
+        >
           <Textarea
             label="Positioning statement"
             value={statement}
             onChange={(e) => setStatement(e.target.value)}
             rows={5}
-            hint="Your north star — who you are, what you do, and what makes you distinctive."
           />
-          <button
-            type="button"
-            onClick={() => setAiPanelOpen(true)}
-            className="flex items-center gap-1.5 text-[13px] text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors duration-150"
-          >
-            <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M8 1a.5.5 0 0 1 .5.5v1.793l1.146-1.147a.5.5 0 0 1 .708.708L9.207 4l1.147 1.146a.5.5 0 0 1-.708.708L8.5 4.707V6.5a.5.5 0 0 1-1 0V4.707L6.354 5.854a.5.5 0 1 1-.708-.708L6.793 4 5.646 2.854a.5.5 0 1 1 .708-.708L7.5 3.293V1.5A.5.5 0 0 1 8 1zM2.5 8a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z" />
-            </svg>
-            Help me write with AI
-          </button>
-        </div>
-        <Input
-          label="Target roles"
-          value={roles}
-          onChange={(e) => setRoles(e.target.value)}
-          hint="Comma-separated"
-        />
-        <Input
-          label="Target company stages"
-          value={stages}
-          onChange={(e) => setStages(e.target.value)}
-          hint="Comma-separated (e.g. Series B, Series C, Public)"
-        />
-        <Input
-          label="Geography"
-          value={geography}
-          onChange={(e) => setGeography(e.target.value)}
-        />
-        <div className="flex items-center gap-3">
-          <Button variant="primary" onClick={handleSave} loading={isPending}>
-            Save changes
-          </Button>
-          {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
-        </div>
+        </SectionCard>
+
+        <SectionCard
+          title="Target criteria"
+          description="Where you're focusing your search — these anchor every CMF score and AI draft."
+          footer={saveFooter}
+        >
+          <div className="space-y-5">
+            <Input
+              label="Target roles"
+              value={roles}
+              onChange={(e) => setRoles(e.target.value)}
+              hint="Comma-separated"
+            />
+            <Input
+              label="Target company stages"
+              value={stages}
+              onChange={(e) => setStages(e.target.value)}
+              hint="Comma-separated (e.g. Series B, Series C, Public)"
+            />
+            <Input
+              label="Geography"
+              value={geography}
+              onChange={(e) => setGeography(e.target.value)}
+            />
+          </div>
+        </SectionCard>
       </div>
 
       <AiPositioningPanel
@@ -185,35 +205,40 @@ function ResumeTab({ data }: { data: ProfileData }) {
   }
 
   return (
-    <div className="space-y-4 max-w-2xl">
-      <div className="rounded-md border border-[var(--border)] bg-[var(--surface-raised)] px-4 py-3">
-        <p className="text-xs text-[var(--muted)]">
-          Paste your resume, save, then run <strong className="text-[var(--foreground)]">Parse with AI</strong> to extract experience, skills, and education for CMF scoring.
-        </p>
-      </div>
-      <Textarea
-        label="Resume text"
-        value={resume}
-        onChange={(e) => setResume(e.target.value)}
-        rows={20}
-        placeholder="Paste your full resume here..."
-      />
-      <div className="flex flex-wrap items-center gap-3">
-        <Button variant="primary" onClick={handleSave} loading={isPending}>
-          Save resume
-        </Button>
-        <Button variant="secondary" onClick={handleParse} loading={parseLoading}>
-          Parse with AI
-        </Button>
-        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
-      </div>
+    <div className="space-y-6 max-w-2xl">
+      <SectionCard
+        title="Resume"
+        description="Paste your resume, save, then run Parse with AI to extract experience, skills, and education for CMF scoring."
+        footer={
+          <>
+            <Button variant="primary" onClick={handleSave} loading={isPending}>
+              Save resume
+            </Button>
+            <Button variant="secondary" onClick={handleParse} loading={parseLoading}>
+              Parse with AI
+            </Button>
+            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+          </>
+        }
+      >
+        <Textarea
+          label="Resume text"
+          value={resume}
+          onChange={(e) => setResume(e.target.value)}
+          rows={20}
+          placeholder="Paste your full resume here..."
+        />
+      </SectionCard>
+
       {parsedPreview != null && (
-        <div className="rounded-md border border-[var(--border)] bg-[var(--surface)] p-4">
-          <p className="text-xs font-medium text-[var(--foreground)] mb-2">Parsed structure (preview)</p>
+        <SectionCard
+          title="Parsed structure"
+          description="What the AI extracted from your resume — used for CMF scoring and role matching."
+        >
           <pre className="text-xs text-[var(--muted)] overflow-x-auto whitespace-pre-wrap font-mono max-h-64 overflow-y-auto">
             {JSON.stringify(parsedPreview, null, 2)}
           </pre>
-        </div>
+        </SectionCard>
       )}
     </div>
   );
@@ -235,50 +260,56 @@ function PillarsTab({ data }: { data: ProfileData }) {
   }
 
   return (
-    <div className="space-y-4 max-w-xl">
-      <p className="text-sm text-[var(--muted)]">
-        2–5 recurring themes that define your professional identity. These anchor all AI-generated content.
-      </p>
-      {pillars.map((pillar, i) => (
-        <div key={i} className="flex items-center gap-2">
-          <div className="flex-1">
-            <Input
-              value={pillar}
-              onChange={(e) => {
-                const updated = [...pillars];
-                updated[i] = e.target.value;
-                setPillars(updated);
-              }}
-              placeholder={`Pillar ${i + 1}`}
-            />
-          </div>
-          {pillars.length > 2 && (
+    <div className="max-w-xl">
+      <SectionCard
+        title="Narrative pillars"
+        description="2–5 recurring themes that define your professional identity. These anchor all AI-generated content."
+        footer={
+          <>
+            <Button variant="primary" onClick={handleSave} loading={isPending}>
+              Save pillars
+            </Button>
+            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+          </>
+        }
+      >
+        <div className="space-y-4">
+          {pillars.map((pillar, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div className="flex-1">
+                <Input
+                  value={pillar}
+                  onChange={(e) => {
+                    const updated = [...pillars];
+                    updated[i] = e.target.value;
+                    setPillars(updated);
+                  }}
+                  placeholder={`Pillar ${i + 1}`}
+                />
+              </div>
+              {pillars.length > 2 && (
+                <button
+                  onClick={() => setPillars(pillars.filter((_, idx) => idx !== i))}
+                  aria-label={`Remove pillar ${i + 1}`}
+                  className="text-[var(--muted)] hover:text-[var(--danger)]"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+          {pillars.length < 5 && (
             <button
-              onClick={() => setPillars(pillars.filter((_, idx) => idx !== i))}
-              aria-label={`Remove pillar ${i + 1}`}
-              className="text-[var(--muted)] hover:text-[var(--danger)] mt-1"
+              onClick={() => setPillars([...pillars, ""])}
+              className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
             >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              + Add pillar
             </button>
           )}
         </div>
-      ))}
-      {pillars.length < 5 && (
-        <button
-          onClick={() => setPillars([...pillars, ""])}
-          className="text-sm text-[var(--accent)] hover:text-[var(--accent-hover)]"
-        >
-          + Add pillar
-        </button>
-      )}
-      <div className="flex items-center gap-3 pt-2">
-        <Button variant="primary" onClick={handleSave} loading={isPending}>
-          Save pillars
-        </Button>
-        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
-      </div>
+      </SectionCard>
     </div>
   );
 }
@@ -303,18 +334,22 @@ function CmfTab({ data }: { data: ProfileData }) {
   }
 
   return (
-    <div className="space-y-6 max-w-xl">
-      <p className="text-sm text-[var(--muted)]">
-        Adjust how much each dimension matters in your CMF score calculations.
-      </p>
-      <CmfWeightSliders value={weights} onChange={setWeights} />
-      {error && <p className="text-sm text-[var(--danger)]">{error}</p>}
-      <div className="flex items-center gap-3">
-        <Button variant="primary" onClick={handleSave} loading={isPending}>
-          Save weights
-        </Button>
-        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
-      </div>
+    <div className="max-w-xl">
+      <SectionCard
+        title="CMF weights"
+        description="How much each dimension matters in your Candidate Market Fit score. Weights must sum to 100."
+        footer={
+          <>
+            <Button variant="primary" onClick={handleSave} loading={isPending}>
+              Save weights
+            </Button>
+            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+          </>
+        }
+      >
+        <CmfWeightSliders value={weights} onChange={setWeights} />
+        {error && <p className="mt-4 text-sm text-[var(--danger)]">{error}</p>}
+      </SectionCard>
     </div>
   );
 }
@@ -341,42 +376,51 @@ function CompTab({ data }: { data: ProfileData }) {
   }
 
   return (
-    <div className="space-y-4 max-w-md">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Input
-          label="Base salary target ($)"
-          type="number"
-          value={base}
-          onChange={(e) => setBase(e.target.value)}
-          placeholder="200000"
-        />
-        <Input
-          label="Total comp target ($)"
-          type="number"
-          value={total}
-          onChange={(e) => setTotal(e.target.value)}
-          placeholder="300000"
-        />
-      </div>
-      <Input
-        label="Minimum acceptable total comp ($)"
-        type="number"
-        value={minimum}
-        onChange={(e) => setMinimum(e.target.value)}
-        placeholder="250000"
-      />
-      <Input
-        label="Target level"
-        value={level}
-        onChange={(e) => setLevel(e.target.value)}
-        placeholder="L6, Staff, Director"
-      />
-      <div className="flex items-center gap-3 pt-2">
-        <Button variant="primary" onClick={handleSave} loading={isPending}>
-          Save targets
-        </Button>
-        {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
-      </div>
+    <div className="max-w-xl">
+      <SectionCard
+        title="Compensation targets"
+        description="Set targets so grndwrk can tell you at a glance how each opportunity stacks up."
+        footer={
+          <>
+            <Button variant="primary" onClick={handleSave} loading={isPending}>
+              Save targets
+            </Button>
+            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+          </>
+        }
+      >
+        <div className="space-y-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Input
+              label="Base salary target ($)"
+              type="number"
+              value={base}
+              onChange={(e) => setBase(e.target.value)}
+              placeholder="200000"
+            />
+            <Input
+              label="Total comp target ($)"
+              type="number"
+              value={total}
+              onChange={(e) => setTotal(e.target.value)}
+              placeholder="300000"
+            />
+          </div>
+          <Input
+            label="Minimum acceptable total comp ($)"
+            type="number"
+            value={minimum}
+            onChange={(e) => setMinimum(e.target.value)}
+            placeholder="250000"
+          />
+          <Input
+            label="Target level"
+            value={level}
+            onChange={(e) => setLevel(e.target.value)}
+            placeholder="L6, Staff, Director"
+          />
+        </div>
+      </SectionCard>
     </div>
   );
 }

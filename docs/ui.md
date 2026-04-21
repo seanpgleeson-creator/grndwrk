@@ -139,6 +139,18 @@ Used for positioning statement drafting. A right-side drawer overlay pattern:
 - Background: `var(--surface)`
 - No drop shadows
 
+### SectionCard
+
+A titled container used on tabbed detail pages (`/profile`, `/companies/[id]`, `/opportunities/[id]`) to group related fields and give each section clear visual boundaries.
+
+- Background: `var(--surface-raised)` so inputs (which use `var(--surface)`) step down visually inside the card
+- Border: `1px solid var(--border)`, `rounded-lg`
+- Header: `px-6 pt-5 pb-4`, bottom border, contains `title` (15px semibold), optional `description` (13px muted), and optional `action` slot (right-aligned, typically a button)
+- Body: `px-6 py-6`
+- Footer (optional): `px-6 py-4`, top border, tinted `var(--surface)/40` background — used for Save / Cancel row
+- Use one `SectionCard` per logical group. Within the Core Profile tab, positioning and target criteria are two separate cards.
+- Spacing between stacked SectionCards: `space-y-6`
+
 ### Buttons
 
 - Primary: accent background (`var(--accent)`), white text
@@ -157,7 +169,12 @@ Used for positioning statement drafting. A right-side drawer overlay pattern:
 ### Tabs
 
 - Bottom border style with accent underline on active tab
-- Labels: 13px, semibold, uppercase, `tracking-[0.08em]`
+- Labels: 14px, medium weight, sentence case (no uppercase transform, no letter-spacing)
+- Spacing: `gap-6` between tabs; each tab uses `px-1 py-3` so the underline hugs the label
+- Active state: `text-[var(--foreground)]` with `border-[var(--accent)]` underline (`-mb-px` to align with the baseline border)
+- Inactive state: `text-[var(--muted)]`, underline transparent, hover lifts text to `var(--foreground)`
+- Overflow-x auto on the tab row for narrow viewports
+- Tab content container uses `pt-8` so the first SectionCard has breathing room from the tab row
 
 ### Modal
 
