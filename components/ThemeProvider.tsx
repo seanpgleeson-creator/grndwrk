@@ -7,14 +7,14 @@ type Theme = "dark" | "light";
 const ThemeContext = createContext<{
   theme: Theme;
   toggle: () => void;
-}>({ theme: "dark", toggle: () => {} });
+}>({ theme: "light", toggle: () => {} });
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("dark");
+  const [theme, setTheme] = useState<Theme>("light");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -27,12 +27,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mounted) return;
-    const root = document.documentElement;
-    if (theme === "light") {
-      root.classList.add("light");
-    } else {
-      root.classList.remove("light");
-    }
+    document.body.classList.toggle("dark", theme === "dark");
     localStorage.setItem("grndwrk-theme", theme);
   }, [theme, mounted]);
 
