@@ -11,28 +11,30 @@ Single-candidate users using grndwrk to run a deliberate, proactive job search c
 ### Brand Personality
 Premium, focused, editorial, and a little serious — closer to Linear or Notion than a generic SaaS dashboard. Emotional target: calm confidence and trustworthiness.
 
-### Aesthetic Direction (Linear-inspired)
-- Fixed left sidebar (~220px) with a lowercase `grndwrk` wordmark in Fraunces.
-- **Light mode is the default**; dark mode is opt-in via toggle in the sidebar footer.
-- Full-width main content with generous padding; no centered modal cards as primary content areas.
-- Onboarding/profile setup uses a left sidebar step list (number + label; muted when incomplete, accent when active, checkmark when complete), temporarily replacing the module nav pattern.
+### Aesthetic Direction
+- Icon-rail sidebar: 60px collapsed, 220px on hover-expand (`width 0.18s cubic-bezier(0.4,0,0.2,1)`). Logo box (24×24, `--ink` bg) + Inter wordmark. No Fraunces.
+- **Light mode is the default**; dark mode via `.dark` class on `<body>`.
+- Full-width main content (`var(--pad-y) var(--pad-x)`, max-width 1280px); no centered modal cards as primary content areas.
+- Onboarding/profile setup uses a left sidebar step list (number + label; muted when incomplete, ink when active, checkmark when complete), temporarily replacing the module nav.
+- No chromatic accent — hierarchy comes from ink levels and fills, not color.
 
 ### Typography (canonical)
-- Body/UI font: DM Sans
-- Display/headings: Fraunces
+- Body/UI font: **Inter** (`cv11`, `ss01`, `ss03` features). Variable: `--font-body`.
+- Mono accents: **JetBrains Mono** — eyebrows, table headers, `.meta`/`.tag` contexts. Variable: `--font-mono`.
+- No Fraunces, no DM Sans.
 
-### Color System
-- Light defaults (primary): background `#FAFAF8`, sidebar `#F4F4F2`, surface `#FFFFFF`, text `#1A1A1A`, muted `#6B6B6B`, border `#E5E5E5`
-- Dark defaults: background `#0F0F0F`, sidebar `#161616`, surface `#1A1A1A`, text `#E5E5E5`, muted `#6B6B6B`, border `#2A2A2A`
-- Accent: `#3B4F7C` (slate blue) used for active states, CTAs, and focus rings only. No gradients on primary backgrounds.
-- Status/semantic tokens (success/warning/danger) must adapt per mode.
+### Color System (new token names — see `docs/ui.md` for full table)
+- Light defaults: `--bg #ffffff`, `--bg-sub #fafafa`, `--bg-mute #f5f5f5`, `--ink #0a0a0a`, `--ink-3 #737373`, `--line #e8e8e8`
+- Dark defaults (`.dark` class): `--bg #0a0a0a`, `--bg-sub #0f0f0f`, `--bg-mute #1a1a1a`, `--ink #f5f5f5`, `--ink-3 #a3a3a3`, `--line #1f1f1f`
+- Accent: `--accent` = `--ink` (monochrome — no slate blue). Primary buttons use `--accent`/`--accent-ink` (inverted pair).
+- Never hardcode hex values. Never use old token names (`--background`, `--surface`, `--foreground`, `--border`, `--muted`, `--accent-hover`).
 
 ### Design Principles
 1. Confident, not flashy: predictable UI patterns and minimal decorative chrome.
 2. Focused, not feature-heavy looking: fewer, larger content regions; generous whitespace but not empty.
 3. Trustworthy for serious decisions: typography hierarchy and restraint signal credibility.
-4. Consistency: use semantic tokens and avoid hardcoded hex colors in UI components.
-5. Calm interaction feedback: ~150ms transitions for hover + mode toggle; respect reduced motion preferences.
+4. Consistency: use semantic tokens; never hardcode hex in components.
+5. Calm interaction feedback: 120ms transitions; respect reduced motion preferences.
 
 ---
 
@@ -83,7 +85,15 @@ Work is on branch `cursor/ai-positioning-onboarding-redesign` (committed, not ye
 
 Ordered by dependency and urgency.
 
-### Immediate: smoke-test and merge
+### Current priority: design system migration
+Full spec in `docs/ui.md`. Tasks tracked in `todo.md` under "Design System Migration". Five layers in order:
+1. **CSS tokens + fonts** — `app/globals.css` (new token names, light default, dark via `.dark`), `app/layout.tsx` (Inter + JetBrains Mono).
+2. **Theme system** — `components/ThemeProvider.tsx` (toggle `.dark` instead of `.light`).
+3. **Sidebar** — hover-expand icon rail (60→220px), new token names, remove ThemeToggle, add user chip.
+4. **Primitive components** — token rename across `Button`, `Input`, `Textarea`, `Select`, `PageHeader`, `Tabs`, `Badge`, `SectionCard`, `Modal`, `Skeleton`, `Card`.
+5. **Page components** — `CompanyList`, `OpportunityList`, `ProfileEditor`, `AiPositioningPanel`, `WizardShell`.
+
+### After design migration: smoke-test and merge onboarding branch
 1. **Smoke-test the onboarding flow end-to-end** — `npm run dev` locally against a seeded DB. Key things to verify:
    - `/welcome` renders correctly; “Get started →” sets cookie and routes to step 1
    - AI panel opens/closes, runs draft, Use/Discard work (requires `ANTHROPIC_API_KEY` in `.env`)
@@ -186,11 +196,12 @@ If builds succeed but you see **404** or **configuration mismatch**:
 
 See §“Last session — next steps” above for the current ordered list. Short form:
 
-1. Smoke-test `cursor/ai-positioning-onboarding-redesign` branch — onboarding flow + AI panel
-2. Merge to main
-3. Wire `ConsistencyBanner` to `narrative_check`
-4. Production smoke test (`ANTHROPIC_API_KEY` on Vercel)
-5. Phase 3: Outreach page, contact CRUD, `outreachDraft` prompt
+1. **Design system migration** — 5 layers: CSS tokens/fonts → ThemeProvider → Sidebar → primitives → page components (see `todo.md`)
+2. Smoke-test `cursor/ai-positioning-onboarding-redesign` branch — onboarding flow + AI panel
+3. Merge to main
+4. Wire `ConsistencyBanner` to `narrative_check`
+5. Production smoke test (`ANTHROPIC_API_KEY` on Vercel)
+6. Phase 3: Outreach page, contact CRUD, `outreachDraft` prompt
 
 ---
 
@@ -228,11 +239,12 @@ See `prisma/schema.prisma` and table in earlier docs; `resume_parsed` and `cmf_b
 ## Build Conventions
 
 - **First launch:** `/welcome` (editorial intro, sets `grndwrk_welcomed=1` cookie) → `/profile/setup` (7-step wizard) → `/dashboard`. Skip welcome if cookie already set or profile has partial progress.
-- **UI design system:** Linear-inspired, light mode default. See [ui.md](ui.md) for full spec.
-  - Light mode default; dark mode via `.dark` class on `<html>`, toggled in sidebar footer.
-  - Accent: `#3B4F7C` (slate blue). Fonts: DM Sans (body) + Fraunces (headings) via `next/font/google`.
-  - Icons: `lucide-react`. No inline SVGs in nav components.
-  - Sidebar: 220px fixed left, `var(--sidebar)` bg, lowercase `grndwrk` wordmark in Fraunces.
+- **UI design system:** See [ui.md](ui.md) — that is the source of truth. Key conventions:
+  - Light mode default; dark mode via `.dark` class on `<body>`.
+  - Fonts: Inter (body/UI, `--font-body`) + JetBrains Mono (eyebrows/table headers, `--font-mono`) via `next/font/google`. No DM Sans, no Fraunces.
+  - Tokens: `--bg`, `--bg-elev`, `--bg-sub`, `--bg-mute`, `--ink`…`--ink-5`, `--line`, `--line-2`, `--accent`, `--accent-ink`, `--focus`. Never use old names (`--background`, `--surface`, `--border`, etc.).
+  - Icons: custom 16×16 / 1.5-stroke set (see `docs/design-reference/icons.jsx`). Do not import `lucide-react` in nav or new components.
+  - Sidebar: icon rail (60px collapsed → 220px hover-expand). Active nav: `--bg-mute` bg, no accent color.
   - Onboarding: sidebar-step layout (7 steps) with step list replacing module nav during `/profile/setup`.
   - All colors via CSS variables; never hardcode hex in components.
 - **AI content:** Draft vs edited; reset-to-draft pattern for briefs.

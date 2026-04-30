@@ -186,3 +186,46 @@ _Source: [docs/design-audit.md](docs/design-audit.md). Ordered by severity._
 - [ ] [DESIGN] [P3] Normalize microcopy casing (sentence case vs uppercase) for section labels and metadata across all modules
 - [ ] [DESIGN] [P3] Pair opacity-based disabled/muted states with explicit tokenized color variants for stronger distinction
 - [x] [DESIGN] [P3] Standardize transition timing/easing utility mapping at component level for motion consistency
+
+---
+
+## Design System Migration (new design direction)
+
+_Source: `docs/ui.md` (rewritten Apr 2026). Implements Inter + monochrome + icon-rail system from `docs/design-reference/`. Must be done in order — each layer unblocks the next._
+
+### Layer 1 — CSS tokens + fonts (unblocks everything)
+
+- [ ] `app/globals.css` — Replace all CSS variables with new token set: `--bg`, `--bg-elev`, `--bg-sub`, `--bg-mute`, `--ink`, `--ink-2`, `--ink-3`, `--ink-4`, `--ink-5`, `--line`, `--line-2`, `--accent`, `--accent-ink`, `--focus`. Remove `--background`, `--sidebar`, `--surface`, `--surface-raised`, `--border`, `--foreground`, `--muted`, `--accent-hover`. Invert dark/light: light is `:root` default, `.dark` class adds dark values (currently reversed). Add spacing tokens (`--pad-x`, `--pad-y`, `--gap-row`, `--gap-section`, `--field-h`). Add global type scale (h1/h2/h3/p), scrollbar spec, and `font-feature-settings`.
+- [ ] `app/layout.tsx` — Replace `DM_Sans` + `Fraunces` imports with `Inter` (and `JetBrains_Mono` for `--font-mono`). Update `<html>` className.
+
+### Layer 2 — Theme system
+
+- [ ] `components/ThemeProvider.tsx` — Change from toggling `.light` class on `<html>` to toggling `.dark` class. Default to light (remove dark default). Keep localStorage key and cookie logic.
+
+### Layer 3 — Sidebar + app shell
+
+- [ ] `components/nav/Sidebar.tsx` — Replace fixed 200px sidebar with hover-expand icon rail: 60px collapsed → 220px expanded, `width 0.18s cubic-bezier(0.4,0,0.2,1)`. Replace lucide-react icons with custom icon set from `docs/design-reference/icons.jsx`. Replace Fraunces wordmark with 24×24 logo box (`--ink` bg) + Inter label. NavItem active state: `--bg-mute` bg (not accent). Footer: Settings nav item + 28px user-initials chip. Remove `ThemeToggle`.
+- [ ] `components/nav/NavItem.tsx` — Update all token references to new names. Height 36px, 7px radius, 13.5px/500/-0.005em label.
+- [ ] `app/(app)/layout.tsx` — Update main content padding to `var(--pad-y) var(--pad-x)`. Change sidebar offset from `var(--sidebar-offset)` to fixed `60px` rail width.
+
+### Layer 4 — Primitive components (token rename)
+
+- [ ] `components/ui/Button.tsx` — New token names. Primary: `--accent`/`--accent-ink`, hover via `color-mix`. Secondary: `--bg-mute`/`--line`. Ghost: `--ink-2`. 120ms transition. `color-mix` focus ring (18%). Add `btn-sm` (30px/6px radius) and `btn-icon` (square) size variants.
+- [ ] `components/ui/Input.tsx` — `--bg-elev`, `--line`, `--ink`, `--ink-4`, `--focus`. Add hover border (`--ink-4`). 3px `color-mix` focus shadow. 120ms transition.
+- [ ] `components/ui/Textarea.tsx` — Same token changes as Input. `min-height: 96px`.
+- [ ] `components/ui/Select.tsx` — Same token changes as Input.
+- [ ] `components/ui/PageHeader.tsx` — Add `eyebrow` prop (JetBrains Mono, 11px, uppercase, 0.08em, `--ink-3`, 10px margin-bottom). Inter h1 at 32px/600/-0.02em. Remove Fraunces. Rename tokens.
+- [ ] `components/ui/Tabs.tsx` — Underline color `--ink` (not `--accent`). Rename `--border`/`--foreground`/`--muted` tokens. 13px font, `10px 14px` padding.
+- [ ] `components/ui/Badge.tsx` — Remap variants to monochrome token set. Remove `--accent`-tinted variants; use `--bg-mute`/`--ink` approach matching StatusPill spec in `ui.md`.
+- [ ] `components/ui/SectionCard.tsx` — Rename `--surface-raised` → `--bg-mute`, `--border` → `--line`, `--surface` → `--bg-elev`, `--foreground` → `--ink`, `--muted` → `--ink-3`.
+- [ ] `components/ui/Modal.tsx` — Rename tokens.
+- [ ] `components/ui/Skeleton.tsx` — Rename tokens.
+- [ ] `components/ui/Card.tsx` — Rename tokens.
+
+### Layer 5 — Page-level components
+
+- [ ] `components/companies/CompanyList.tsx` — Table layout matching `ui.md` Companies spec: mono-uppercase column headers, StatusPill component, FitBar component, row hover `--bg-sub`.
+- [ ] `components/opportunities/OpportunityList.tsx` — Update token names; consider kanban layout per `ui.md` Opportunities spec.
+- [ ] `components/profile/ProfileEditor.tsx` — Swap SectionCard-based layout for FieldRow two-column pattern (`220px / 1fr`, `--line-2` dividers) per `ui.md` Profile spec.
+- [ ] `components/profile/AiPositioningPanel.tsx` — Update token names (`--bg-elev` panel bg, `--bg-sub` input bg, `--line` left border).
+- [ ] `components/onboarding/WizardShell.tsx` — Update token names for step sidebar (`--bg-sub`, `--line`, `--ink-3`/`--ink` step states).
