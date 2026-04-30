@@ -137,7 +137,7 @@ export function WizardShell({
             )}
           </div>
 
-          <div className="space-y-8">{children}</div>
+          <div className="space-y-6">{children}</div>
 
           {/* Navigation */}
           <div className="flex items-center justify-between mt-14 pt-6 border-t border-[var(--border)]">
