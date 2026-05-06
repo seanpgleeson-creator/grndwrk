@@ -21,25 +21,31 @@ interface BadgeProps {
 }
 
 const variantStyles: Record<BadgeVariant, string> = {
-  watching: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
-  preparing: "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/20",
-  applied: "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/25",
-  "in-process": "bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20",
-  closed: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
-  "tier-1": "bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/25 font-semibold",
-  "tier-2": "bg-[var(--accent)]/10 text-[var(--accent)] border-[var(--accent)]/15",
-  "tier-3": "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
-  default: "bg-[var(--surface-raised)] text-[var(--muted)] border-[var(--border)]",
-  success: "bg-[var(--success)]/10 text-[var(--success)] border-[var(--success)]/20",
-  warning: "bg-[var(--warning)]/10 text-[var(--warning)] border-[var(--warning)]/20",
-  danger: "bg-[var(--danger)]/10 text-[var(--danger)] border-[var(--danger)]/20",
+  // Status — mirrors StatusPill tones from ui.md
+  watching:   "bg-transparent text-[var(--ink-3)] border-[var(--line)]",
+  preparing:  "bg-[var(--bg-mute)] text-[var(--ink)] border-[var(--bg-mute)]",
+  applied:    "bg-[var(--ink)] text-[var(--bg)] border-[var(--ink)]",
+  "in-process": "bg-[var(--bg-mute)] text-[var(--ink)] border-[var(--bg-mute)]",
+  closed:     "bg-transparent text-[var(--ink-4)] border-[var(--line-2)]",
+  // Tier
+  "tier-1":   "bg-[var(--ink)] text-[var(--bg)] border-[var(--ink)] font-semibold",
+  "tier-2":   "bg-[var(--bg-mute)] text-[var(--ink)] border-[var(--bg-mute)]",
+  "tier-3":   "bg-transparent text-[var(--ink-3)] border-[var(--line)]",
+  // Generic
+  default:    "bg-[var(--bg-mute)] text-[var(--ink-3)] border-[var(--line-2)]",
+  // Semantic (contextual color kept for feedback legibility)
+  success:    "bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-900",
+  warning:    "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-400 dark:border-amber-900",
+  danger:     "bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-400 dark:border-red-900",
 };
 
 export function Badge({ variant = "default", children, className }: BadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border transition-colors duration-150",
+        "inline-flex items-center px-2 py-0.5 rounded border",
+        "text-[11px] font-medium tracking-[0.005em]",
+        "transition-colors duration-[120ms]",
         variantStyles[variant],
         className,
       )}
@@ -51,12 +57,12 @@ export function Badge({ variant = "default", children, className }: BadgeProps) 
 
 export function statusToBadgeVariant(status: string): BadgeVariant {
   switch (status) {
-    case "Watching": return "watching";
-    case "Preparing": return "preparing";
-    case "Applied": return "applied";
-    case "InProcess": return "in-process";
-    case "Closed": return "closed";
-    default: return "default";
+    case "Watching":   return "watching";
+    case "Preparing":  return "preparing";
+    case "Applied":    return "applied";
+    case "InProcess":  return "in-process";
+    case "Closed":     return "closed";
+    default:           return "default";
   }
 }
 

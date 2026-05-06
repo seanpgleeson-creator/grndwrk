@@ -43,13 +43,20 @@ export default async function AppLayout({
   }
 
   return (
-    <div className="min-h-screen">
+    <div style={{ display: "flex", minHeight: "100vh" }}>
       <Sidebar />
       <main
-        className="px-6 py-6 lg:px-14 lg:py-10 pt-[60px] lg:pt-10"
-        style={{ marginLeft: "var(--sidebar-offset, 0px)" }}
+        style={{
+          flex: 1,
+          minWidth: 0,
+          padding: "var(--pad-y) var(--pad-x)",
+          // On mobile, add top offset for the fixed top bar (52px)
+        }}
+        className="pt-[52px] lg:pt-[var(--pad-y)]"
       >
-        {children}
+        <div style={{ maxWidth: 1280, margin: "0 auto" }}>
+          {children}
+        </div>
       </main>
     </div>
   );

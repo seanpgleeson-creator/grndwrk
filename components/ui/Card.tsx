@@ -9,7 +9,8 @@ export function Card({ children, className }: CardProps) {
   return (
     <div
       className={cn(
-        "rounded-lg border bg-[var(--surface)] border-[var(--border)] transition-colors duration-150",
+        "rounded-[var(--radius-lg)] border border-[var(--line)] bg-[var(--bg-elev)]",
+        "transition-colors duration-[120ms]",
         className,
       )}
     >

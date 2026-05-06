@@ -56,7 +56,35 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 
 ## Last session — what was built
 
-Work is on branch `cursor/ai-positioning-onboarding-redesign` (committed, not yet merged or deployed).
+### Design system migration (Apr 2026) — Layers 1–4 complete, Layer 5 pending
+
+Work committed to `main`. Old DM Sans / Fraunces / slate-blue system fully replaced in all primitive components. 19 page/feature-level files still use old tokens (Layer 5 — see `todo.md`).
+
+**Layer 1 — `app/globals.css` + `app/layout.tsx`**
+- New 14-token CSS variable set (`--bg`, `--bg-elev`, `--bg-sub`, `--bg-mute`, `--ink`…`--ink-5`, `--line`, `--line-2`, `--accent`, `--accent-ink`, `--focus`). Light is `:root` default; dark via `body.dark`.
+- Spacing tokens: `--pad-x/y`, `--gap-row/section`, `--field-h`, `--radius`, `--radius-lg`. Global type scale h1–p.
+- Fonts: `Inter` (`--font-body`) + `JetBrains_Mono` (`--font-mono`). DM Sans + Fraunces removed.
+
+**Layer 2 — `components/ThemeProvider.tsx`**
+- Toggles `body.dark` (not `html.light`). Default is light.
+
+**Layer 3 — Sidebar + app shell**
+- `Sidebar.tsx`: hover-expand icon rail (60px → 220px), inline SVG icon set, no lucide-react, logo box + Inter wordmark, user-chip footer, ThemeToggle removed.
+- `NavItem.tsx`: new tokens, 36px/7px radius, `collapsed` fade prop.
+- `app/(app)/layout.tsx`: flex shell, `var(--pad-y) var(--pad-x)`, 1280px max-width.
+
+**Layer 4 — All 15 primitive UI components in `components/ui/`**
+- `Button`, `Input`, `Textarea`, `Select`, `PageHeader`, `Tabs`, `Badge`, `SectionCard`, `Modal`, `Skeleton`, `Card`, `DraftEditor`, `ConsistencyBanner`, `ErrorMessage`, `CmfScore`.
+- Zero old token names remain in `components/ui/`. `PageHeader` gained `eyebrow` prop. `Badge` remapped to monochrome. lucide-react removed from `ConsistencyBanner` + `ErrorMessage`.
+
+**Layer 5 — NOT YET DONE. Files with old tokens remaining:**
+- App pages: `dashboard/page.tsx`, `companies/page.tsx`, `companies/[id]/page.tsx`, `opportunities/page.tsx`, `opportunities/[id]/page.tsx`, `comp/page.tsx`
+- Onboarding: `(onboarding)/layout.tsx`, `welcome/page.tsx`, `profile/setup/page.tsx`
+- Feature components: `CompanyList.tsx`, `CompanyDetailTabs.tsx`, `OpportunityList.tsx`, `OpportunityDetailTabs.tsx`, `ProfileEditor.tsx`, `AiPositioningPanel.tsx`, `CmfWeightSliders.tsx`, `WizardShell.tsx`, `LevelsFyiEmbed.tsx`, `ThemeToggle.tsx`
+
+---
+
+### Previous session — AI positioning + onboarding redesign (branch: `cursor/ai-positioning-onboarding-redesign`, not yet merged)
 
 ### 1. AI positioning draft
 - **`lib/ai/prompts/positioningStatement.ts`** — Zod schema + prompt builder. Three guided questions → 2–4 sentence first-person statement. Anchors to resume when provided.
@@ -81,19 +109,20 @@ Work is on branch `cursor/ai-positioning-onboarding-redesign` (committed, not ye
 
 ---
 
-## Last session — next steps (pick up here on return)
+## Next steps (pick up here on return)
 
 Ordered by dependency and urgency.
 
-### Current priority: design system migration
-Full spec in `docs/ui.md`. Tasks tracked in `todo.md` under "Design System Migration". Five layers in order:
-1. **CSS tokens + fonts** — `app/globals.css` (new token names, light default, dark via `.dark`), `app/layout.tsx` (Inter + JetBrains Mono).
-2. **Theme system** — `components/ThemeProvider.tsx` (toggle `.dark` instead of `.light`).
-3. **Sidebar** — hover-expand icon rail (60→220px), new token names, remove ThemeToggle, add user chip.
-4. **Primitive components** — token rename across `Button`, `Input`, `Textarea`, `Select`, `PageHeader`, `Tabs`, `Badge`, `SectionCard`, `Modal`, `Skeleton`, `Card`.
-5. **Page components** — `CompanyList`, `OpportunityList`, `ProfileEditor`, `AiPositioningPanel`, `WizardShell`.
+### Current priority: Layer 5 — finish token migration
+Layers 1–4 are done. Layer 5 updates 19 remaining files. Full task list in `todo.md` under "Layer 5". Key work:
+- **`CompanyList.tsx`** — Table layout per `ui.md` Companies spec: mono-uppercase column headers, `StatusPill` component, `FitBar` component, row hover `--bg-sub`.
+- **`OpportunityList.tsx`** — Token rename + consider kanban layout per `ui.md` Opportunities spec.
+- **`ProfileEditor.tsx`** — Swap SectionCard layout for FieldRow two-column pattern (220px / 1fr, `--line-2` dividers).
+- **`AiPositioningPanel.tsx`** — Token rename: `--bg-elev` panel bg, `--bg-sub` input bg, `--line` left border.
+- **`WizardShell.tsx`** — Token rename: `--bg-sub`, `--line`, `--ink-3`/`--ink` step states.
+- App pages + `CompanyDetailTabs`, `OpportunityDetailTabs`, `CmfWeightSliders`, `LevelsFyiEmbed`, `ThemeToggle` — token rename only.
 
-### After design migration: smoke-test and merge onboarding branch
+### After Layer 5: smoke-test and merge onboarding branch
 1. **Smoke-test the onboarding flow end-to-end** — `npm run dev` locally against a seeded DB. Key things to verify:
    - `/welcome` renders correctly; “Get started →” sets cookie and routes to step 1
    - AI panel opens/closes, runs draft, Use/Discard work (requires `ANTHROPIC_API_KEY` in `.env`)

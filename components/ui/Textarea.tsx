@@ -13,7 +13,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
     return (
       <div className="flex flex-col gap-1.5">
         {label && (
-          <label htmlFor={inputId} className="text-[13px] font-medium text-[var(--foreground)]">
+          <label
+            htmlFor={inputId}
+            className="block text-[13px] font-medium text-[var(--ink)] tracking-[-0.005em]"
+          >
             {label}
           </label>
         )}
@@ -21,17 +24,20 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            "w-full rounded-md border bg-[var(--surface)] border-[var(--border)]",
-            "px-3 py-2.5 text-[14px] text-[var(--foreground)] placeholder:text-[var(--muted)]",
-            "focus:outline-none focus:ring-0 focus:border-[var(--accent)]",
-            "disabled:opacity-50 resize-y min-h-[120px] transition-colors duration-150",
-            error && "border-red-500/50 focus:border-red-500",
+            "w-full rounded-[var(--radius)] border bg-[var(--bg-elev)]",
+            "border-[var(--line)] px-3 py-[10px] text-[14px] text-[var(--ink)] leading-[1.5]",
+            "placeholder:text-[var(--ink-4)]",
+            "outline-none transition-[border-color,box-shadow,background] duration-[120ms] ease-[ease]",
+            "hover:border-[var(--ink-4)]",
+            "focus:border-[var(--focus)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--focus)_12%,transparent)]",
+            "resize-y min-h-[96px] disabled:opacity-50",
+            error && "border-red-500/60 focus:border-red-500 focus:shadow-[0_0_0_3px_rgba(239,68,68,0.12)]",
             className,
           )}
           {...props}
         />
-        {hint && !error && <p className="text-[12px] text-[var(--muted)]">{hint}</p>}
-        {error && <p className="text-[12px] text-[var(--danger)]">{error}</p>}
+        {hint && !error && <p className="text-[12px] text-[var(--ink-3)] leading-[1.45]">{hint}</p>}
+        {error && <p className="text-[12px] text-red-500">{error}</p>}
       </div>
     );
   },
