@@ -78,7 +78,8 @@ export default function CompPage() {
                   {selectedCompanies.length > 1 && (
                     <button
                       onClick={() => removeCompany(i)}
-                      className="mb-1 text-[var(--muted)] hover:text-red-400"
+                      aria-label="Remove company"
+                      className="mb-1 text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
                     >
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -90,7 +91,7 @@ export default function CompPage() {
               {selectedCompanies.length < 3 && (
                 <button
                   onClick={addCompany}
-                  className="mb-1 text-sm text-[var(--accent)] hover:text-[var(--accent-hover)]"
+                  className="mb-1 text-sm text-[var(--ink)] hover:text-[var(--ink-2)] transition-colors"
                 >
                   + Compare
                 </button>
@@ -100,14 +101,14 @@ export default function CompPage() {
         </Card>
 
         {activeCompanies.length === 0 ? (
-          <div className="text-center py-16 text-[var(--muted)]">
+          <div className="text-center py-16 text-[var(--ink-3)]">
             <p className="text-sm">Select a company above to view compensation data.</p>
           </div>
         ) : (
           <div className={`grid gap-6 ${activeCompanies.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
             {activeCompanies.map((company) => (
               <div key={company}>
-                <p className="text-sm font-medium text-[var(--foreground)] mb-2">{company}</p>
+                <p className="text-sm font-medium text-[var(--ink)] mb-2">{company}</p>
                 <LevelsFyiEmbed company={company} track={track} />
               </div>
             ))}

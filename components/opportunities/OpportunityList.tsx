@@ -40,14 +40,13 @@ export function OpportunityList({ opportunities }: OpportunityListProps) {
   if (opportunities.length === 0) {
     return (
       <Card className="p-12 text-center">
-        <div className="text-4xl mb-4">📋</div>
-        <h3 className="text-lg font-medium text-[var(--foreground)] mb-2">No opportunities yet</h3>
-        <p className="text-sm text-[var(--muted)] mb-6">
-          Start tracking roles you're pursuing to score your fit and manage your pipeline.
+        <h3 className="text-base font-semibold text-[var(--ink)] mb-2">No opportunities yet</h3>
+        <p className="text-sm text-[var(--ink-3)] mb-6 max-w-sm mx-auto">
+          Start tracking roles you&apos;re pursuing to score your fit and manage your pipeline.
         </p>
         <Link
           href="/opportunities/new"
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--accent)] text-[var(--accent-ink)] hover:bg-[color-mix(in_srgb,var(--accent)_88%,transparent)] text-sm font-medium transition-colors"
         >
           Add your first opportunity
         </Link>
@@ -59,71 +58,52 @@ export function OpportunityList({ opportunities }: OpportunityListProps) {
     <div className="space-y-4">
       {/* Filter bar */}
       <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-[var(--muted)]">Status:</span>
-          {[
+        <FilterGroup
+          label="Status"
+          value={statusFilter}
+          onChange={setStatusFilter}
+          options={[
             { value: "active", label: "Active" },
             { value: "all", label: "All" },
-            ...STATUS_OPTIONS.map((s: string) => ({ value: s, label: s === "InProcess" ? "In Process" : s })),
-          ].map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setStatusFilter(opt.value)}
-              className={cn(
-                "px-2.5 py-1 rounded text-xs transition-colors",
-                statusFilter === opt.value
-                  ? "bg-[var(--accent)] text-white"
-                  : "bg-[var(--surface-raised)] text-[var(--muted)] hover:text-[var(--foreground)]",
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-1">
-          <span className="text-xs text-[var(--muted)]">CMF:</span>
-          {[
+            ...STATUS_OPTIONS.map((s) => ({
+              value: s,
+              label: s === "InProcess" ? "In Process" : s,
+            })),
+          ]}
+        />
+        <FilterGroup
+          label="CMF"
+          value={cmfFilter}
+          onChange={setCmfFilter}
+          options={[
             { value: "all", label: "All" },
             { value: "high", label: "≥8" },
             { value: "medium", label: "6–7" },
             { value: "low", label: "<6" },
             { value: "unscored", label: "Unscored" },
-          ].map((opt) => (
-            <button
-              key={opt.value}
-              onClick={() => setCmfFilter(opt.value)}
-              className={cn(
-                "px-2.5 py-1 rounded text-xs transition-colors",
-                cmfFilter === opt.value
-                  ? "bg-[var(--accent)] text-white"
-                  : "bg-[var(--surface-raised)] text-[var(--muted)] hover:text-[var(--foreground)]",
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <span className="text-xs text-[var(--muted)] ml-auto">
+          ]}
+        />
+        <span className="[font-family:var(--font-mono)] text-[11px] uppercase tracking-[0.06em] text-[var(--ink-3)] ml-auto tabular-nums">
           {filtered.length} of {opportunities.length}
         </span>
       </div>
 
       {/* List */}
-      <Card className="divide-y divide-[var(--border)]">
+      <Card className="divide-y divide-[var(--line-2)]">
         {filtered.length === 0 ? (
-          <div className="p-8 text-center text-sm text-[var(--muted)]">
+          <div className="p-8 text-center text-sm text-[var(--ink-3)]">
             No opportunities match the current filters.
           </div>
         ) : (
           filtered.map((opp) => (
             <Link key={opp.id} href={`/opportunities/${opp.id}`} className="block">
-              <div className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--surface-raised)] transition-colors">
+              <div className="flex items-center gap-4 px-5 py-4 hover:bg-[var(--bg-sub)] transition-colors">
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                  <p className="text-[14px] font-medium text-[var(--ink)] truncate tracking-[-0.005em]">
                     {opp.role_title}
                   </p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-[var(--muted)]">{opp.company.name}</span>
+                    <span className="text-[12.5px] text-[var(--ink-3)]">{opp.company.name}</span>
                     {opp.company.tier && (
                       <Badge variant={tierToBadgeVariant(opp.company.tier)} className="text-[10px]">
                         T{opp.company.tier}
@@ -133,13 +113,15 @@ export function OpportunityList({ opportunities }: OpportunityListProps) {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {opp.outreach_sent && (
-                    <span className="text-xs text-[var(--accent)]">Outreach sent</span>
+                    <span className="[font-family:var(--font-mono)] text-[10px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
+                      Outreach sent
+                    </span>
                   )}
                   <CmfScore score={opp.cmf_score} size="sm" />
                   <Badge variant={statusToBadgeVariant(opp.status)}>
                     {opp.status === "InProcess" ? "In Process" : opp.status}
                   </Badge>
-                  <span className="text-xs text-[var(--muted)] w-20 text-right">
+                  <span className="text-[12px] text-[var(--ink-3)] w-20 text-right tabular-nums">
                     {formatDate(opp.created_at)}
                   </span>
                 </div>
@@ -148,6 +130,40 @@ export function OpportunityList({ opportunities }: OpportunityListProps) {
           ))
         )}
       </Card>
+    </div>
+  );
+}
+
+function FilterGroup({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      <span className="[font-family:var(--font-mono)] text-[11px] uppercase tracking-[0.06em] text-[var(--ink-3)] mr-1">
+        {label}
+      </span>
+      {options.map((opt) => (
+        <button
+          key={opt.value}
+          onClick={() => onChange(opt.value)}
+          className={cn(
+            "px-2.5 h-[26px] rounded-[6px] text-[12px] font-medium tracking-[-0.005em] transition-colors duration-[120ms]",
+            value === opt.value
+              ? "bg-[var(--ink)] text-[var(--bg)]"
+              : "bg-transparent text-[var(--ink-3)] hover:bg-[var(--bg-mute)] hover:text-[var(--ink)]",
+          )}
+        >
+          {opt.label}
+        </button>
+      ))}
     </div>
   );
 }

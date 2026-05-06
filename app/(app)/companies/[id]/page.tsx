@@ -46,7 +46,7 @@ export default async function CompanyDetailPage({
   return (
     <div>
       <div className="mb-2">
-        <Link href="/companies" className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]">
+        <Link href="/companies" className="text-xs text-[var(--ink-3)] hover:text-[var(--ink)]">
           ← Companies
         </Link>
       </div>
@@ -62,7 +62,7 @@ export default async function CompanyDetailPage({
             )}
             <Link
               href={`/opportunities/new?company_id=${company.id}`}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--accent)] text-[var(--accent-ink)] hover:bg-[color-mix(in_srgb,var(--accent)_88%,transparent)] text-sm font-medium transition-colors"
             >
               + Add opportunity
             </Link>

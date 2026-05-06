@@ -19,11 +19,11 @@ const DIMENSIONS = [
 ];
 
 const DIM_COLORS = {
-  domain: "bg-[var(--accent)]",
-  stage: "bg-[var(--accent)]/80",
-  scope: "bg-[var(--accent)]/60",
-  strategic: "bg-[var(--accent)]/40",
-  narrative: "bg-[var(--accent)]/25",
+  domain: "bg-[var(--ink)]",
+  stage: "bg-[var(--ink-2)]",
+  scope: "bg-[var(--ink-3)]",
+  strategic: "bg-[var(--ink-4)]",
+  narrative: "bg-[var(--ink-5)]",
 };
 
 interface CmfWeightSlidersProps {
@@ -75,10 +75,10 @@ export function CmfWeightSliders({ value, onChange }: CmfWeightSlidersProps) {
         <div key={dim.key} className="space-y-1.5">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm font-medium text-[var(--foreground)]">{dim.label}</span>
-              <span className="ml-2 text-xs text-[var(--muted)]">{dim.description}</span>
+              <span className="text-sm font-medium text-[var(--ink)]">{dim.label}</span>
+              <span className="ml-2 text-xs text-[var(--ink-3)]">{dim.description}</span>
             </div>
-            <span className="text-sm font-semibold text-[var(--foreground)] w-8 text-right">
+            <span className="text-sm font-semibold text-[var(--ink)] w-8 text-right tabular-nums">
               {value[dim.key]}%
             </span>
           </div>
@@ -88,7 +88,7 @@ export function CmfWeightSliders({ value, onChange }: CmfWeightSlidersProps) {
             max={60}
             value={value[dim.key]}
             onChange={(e) => handleChange(dim.key, Number(e.target.value))}
-            className="w-full h-1.5 rounded-full appearance-none bg-[var(--surface-raised)] cursor-pointer"
+            className="w-full h-1.5 rounded-full appearance-none bg-[var(--bg-mute)] cursor-pointer"
             style={{ accentColor: "var(--accent)" }}
           />
         </div>
@@ -110,14 +110,16 @@ export function CmfWeightSliders({ value, onChange }: CmfWeightSlidersProps) {
             {DIMENSIONS.map((dim) => (
               <div key={dim.key} className="flex items-center gap-1">
                 <div className={cn("h-2 w-2 rounded-full", DIM_COLORS[dim.key])} />
-                <span className="text-xs text-[var(--muted)]">{dim.label.split(" ")[0]}</span>
+                <span className="text-xs text-[var(--ink-3)]">{dim.label.split(" ")[0]}</span>
               </div>
             ))}
           </div>
           <span
             className={cn(
-              "text-xs font-medium",
-              sum === 100 ? "text-[var(--success)]" : "text-[var(--danger)]",
+              "text-xs font-medium tabular-nums",
+              sum === 100
+                ? "text-green-700 dark:text-green-400"
+                : "text-red-700 dark:text-red-400",
             )}
           >
             Total: {sum} / 100

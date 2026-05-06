@@ -77,10 +77,19 @@ Work committed to `main`. Old DM Sans / Fraunces / slate-blue system fully repla
 - `Button`, `Input`, `Textarea`, `Select`, `PageHeader`, `Tabs`, `Badge`, `SectionCard`, `Modal`, `Skeleton`, `Card`, `DraftEditor`, `ConsistencyBanner`, `ErrorMessage`, `CmfScore`.
 - Zero old token names remain in `components/ui/`. `PageHeader` gained `eyebrow` prop. `Badge` remapped to monochrome. lucide-react removed from `ConsistencyBanner` + `ErrorMessage`.
 
-**Layer 5 — NOT YET DONE. Files with old tokens remaining:**
+**Layer 5a — Token sweep COMPLETE (May 2026).** All 19 page/feature-level files migrated:
 - App pages: `dashboard/page.tsx`, `companies/page.tsx`, `companies/[id]/page.tsx`, `opportunities/page.tsx`, `opportunities/[id]/page.tsx`, `comp/page.tsx`
 - Onboarding: `(onboarding)/layout.tsx`, `welcome/page.tsx`, `profile/setup/page.tsx`
 - Feature components: `CompanyList.tsx`, `CompanyDetailTabs.tsx`, `OpportunityList.tsx`, `OpportunityDetailTabs.tsx`, `ProfileEditor.tsx`, `AiPositioningPanel.tsx`, `CmfWeightSliders.tsx`, `WizardShell.tsx`, `LevelsFyiEmbed.tsx`, `ThemeToggle.tsx`
+- Removed every legacy token reference (`--background`, `--surface`, `--surface-raised`, `--sidebar`, `--border`, `--foreground`, `--muted`, `--accent-hover`, `--success`, `--warning`, `--danger`, `--font-heading`).
+- Saved / warning / error states now use Tailwind hue classes with dark variants (`text-green-700 dark:text-green-400`, etc.), matching the `Badge` semantic mapping from Layer 4.
+- `CompanyList`, `OpportunityList`, `WelcomePage`, `WizardShell` got light visual refreshes during the sweep (mono-uppercase eyebrows, ink-only filter pills, monochrome step indicators) — but no structural rewrite yet.
+- Verified `next build` + `tsc --noEmit` clean.
+
+**Layer 5b — Page redesigns still pending:**
+- `CompanyList.tsx` → table layout per `ui.md` Companies spec (`StatusPill`, `FitBar`).
+- `OpportunityList.tsx` → evaluate kanban layout per `ui.md` Opportunities spec.
+- `ProfileEditor.tsx` → swap `SectionCard` for FieldRow two-column pattern (220px / 1fr, `--line-2` dividers).
 
 ---
 
@@ -113,14 +122,11 @@ Work committed to `main`. Old DM Sans / Fraunces / slate-blue system fully repla
 
 Ordered by dependency and urgency.
 
-### Current priority: Layer 5 — finish token migration
-Layers 1–4 are done. Layer 5 updates 19 remaining files. Full task list in `todo.md` under "Layer 5". Key work:
-- **`CompanyList.tsx`** — Table layout per `ui.md` Companies spec: mono-uppercase column headers, `StatusPill` component, `FitBar` component, row hover `--bg-sub`.
-- **`OpportunityList.tsx`** — Token rename + consider kanban layout per `ui.md` Opportunities spec.
-- **`ProfileEditor.tsx`** — Swap SectionCard layout for FieldRow two-column pattern (220px / 1fr, `--line-2` dividers).
-- **`AiPositioningPanel.tsx`** — Token rename: `--bg-elev` panel bg, `--bg-sub` input bg, `--line` left border.
-- **`WizardShell.tsx`** — Token rename: `--bg-sub`, `--line`, `--ink-3`/`--ink` step states.
-- App pages + `CompanyDetailTabs`, `OpportunityDetailTabs`, `CmfWeightSliders`, `LevelsFyiEmbed`, `ThemeToggle` — token rename only.
+### Current priority: Layer 5b — page redesigns (optional polish)
+Layer 5a (token sweep across all 19 files) is done. The remaining structural redesigns from `ui.md` are not blocking — the app compiles, looks consistent, and uses only the new token set. These are pure UX upgrades and can be picked up at any time:
+- **`CompanyList.tsx`** — Replace card grid with table layout per `ui.md` Companies spec (mono-uppercase headers, `StatusPill`, `FitBar`, `--bg-sub` row hover).
+- **`OpportunityList.tsx`** — Evaluate kanban layout grouped by status per `ui.md` Opportunities spec.
+- **`ProfileEditor.tsx`** — Swap `SectionCard` layout for FieldRow two-column pattern (220px / 1fr, `--line-2` dividers).
 
 ### After Layer 5: smoke-test and merge onboarding branch
 1. **Smoke-test the onboarding flow end-to-end** — `npm run dev` locally against a seeded DB. Key things to verify:

@@ -198,17 +198,17 @@ function OverviewTab({ company }: { company: Company }) {
             { label: "Tier", value: company.tier ? `Tier ${company.tier}` : null },
           ].map(({ label, value, href }) => (
             <div key={label}>
-              <p className="text-[13px] text-[var(--muted)] mb-0.5">{label}</p>
+              <p className="text-[13px] text-[var(--ink-3)] mb-0.5">{label}</p>
               {value ? (
                 href ? (
                   <a href={href} target="_blank" rel="noopener noreferrer" className="text-sm text-[var(--accent)] hover:underline">
                     {value}
                   </a>
                 ) : (
-                  <p className="text-sm text-[var(--foreground)]">{value}</p>
+                  <p className="text-sm text-[var(--ink)]">{value}</p>
                 )
               ) : (
-                <p className="text-sm text-[var(--muted)]">—</p>
+                <p className="text-sm text-[var(--ink-3)]">—</p>
               )}
             </div>
           ))}
@@ -220,14 +220,14 @@ function OverviewTab({ company }: { company: Company }) {
           <div className="space-y-4">
             {company.notes && (
               <div>
-                <p className="text-xs text-[var(--muted)] mb-1">Notes</p>
-                <p className="text-sm text-[var(--foreground)] whitespace-pre-wrap">{company.notes}</p>
+                <p className="text-xs text-[var(--ink-3)] mb-1">Notes</p>
+                <p className="text-sm text-[var(--ink)] whitespace-pre-wrap">{company.notes}</p>
               </div>
             )}
             {company.role_alert_criteria && (
               <div>
-                <p className="text-xs text-[var(--muted)] mb-1">Role alert criteria</p>
-                <p className="text-sm text-[var(--foreground)]">{company.role_alert_criteria}</p>
+                <p className="text-xs text-[var(--ink-3)] mb-1">Role alert criteria</p>
+                <p className="text-sm text-[var(--ink)]">{company.role_alert_criteria}</p>
               </div>
             )}
           </div>
@@ -326,7 +326,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
           Reopen
         </Button>
       )}
-      {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+      {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
     </>
   );
 
@@ -340,7 +340,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
       )}
 
       {brief?.completed_at && (
-        <div className="flex items-center gap-2 text-sm text-[var(--success)]">
+        <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -372,7 +372,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
           ))}
 
           <div>
-            <p className="text-[13px] font-medium text-[var(--foreground)] mb-2">Proof points (2–3)</p>
+            <p className="text-[13px] font-medium text-[var(--ink)] mb-2">Proof points (2–3)</p>
             {form.proof_points.map((point, i) => (
               <div key={i} className="flex items-center gap-2 mb-2">
                 <div className="flex-1">
@@ -390,7 +390,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
                   <button
                     onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })}
                     aria-label={`Remove proof point ${i + 1}`}
-                    className="text-[var(--muted)] hover:text-[var(--danger)]"
+                    className="text-[var(--ink-3)] hover:text-red-600 dark:hover:text-red-400 transition-colors"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -402,7 +402,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
             {form.proof_points.length < 3 && (
               <button
                 onClick={() => setForm({ ...form, proof_points: [...form.proof_points, ""] })}
-                className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+                className="text-sm font-medium text-[var(--ink)] hover:text-[var(--ink-2)] transition-colors"
               >
                 + Add proof point
               </button>
@@ -468,7 +468,7 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
         action={addAction}
       >
         {showForm && (
-          <div className="mb-5 space-y-4 rounded-md border border-[var(--border)] bg-[var(--surface)] p-4">
+          <div className="mb-5 space-y-4 rounded-md border border-[var(--line)] bg-[var(--bg-elev)] p-4">
             <Input label="Date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             <Input label="Source URL (optional)" value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} placeholder="https://..." />
             <Textarea label="Transcript / notes *" value={form.transcript} onChange={(e) => setForm({ ...form, transcript: e.target.value })} rows={6} placeholder="Paste earnings call transcript or key notes..." />
@@ -479,7 +479,7 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
         )}
 
         {signals.length === 0 && !showForm ? (
-          <div className="text-center py-8 text-[var(--muted)]">
+          <div className="text-center py-8 text-[var(--ink-3)]">
             <p className="text-sm">No signals yet. Add earnings calls or market signals to track company momentum.</p>
           </div>
         ) : (
@@ -488,7 +488,7 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
           <Card key={signal.id} className="p-4">
             <div className="flex items-start justify-between mb-2">
               <div>
-                <p className="text-sm font-medium text-[var(--foreground)]">{formatDate(signal.date)}</p>
+                <p className="text-sm font-medium text-[var(--ink)]">{formatDate(signal.date)}</p>
                 {signal.source_url && (
                   <a href={signal.source_url} target="_blank" rel="noopener noreferrer" className="text-xs text-[var(--accent)] hover:underline">
                     Source →
@@ -514,7 +514,7 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
                 <button
                   onClick={() => handleDelete(signal.id)}
                   aria-label="Delete signal"
-                  className="text-[var(--muted)] hover:text-[var(--danger)]"
+                  className="text-[var(--ink-3)] hover:text-red-600 dark:hover:text-red-400 transition-colors"
                 >
                   <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -522,7 +522,7 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
                 </button>
               </div>
             </div>
-            <p className="text-xs text-[var(--muted)] line-clamp-3">{signal.transcript}</p>
+            <p className="text-xs text-[var(--ink-3)] line-clamp-3">{signal.transcript}</p>
           </Card>
         ))}
           </div>
@@ -536,7 +536,7 @@ function OpportunitiesTab({ opportunities, companyId }: { opportunities: Opportu
   const addAction = (
     <Link
       href={`/opportunities/new?company_id=${companyId}`}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--surface-raised)] border border-[var(--border)] text-sm font-medium text-[var(--foreground)] hover:border-[var(--accent)]/40 transition-colors"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-elev)] border border-[var(--line)] text-sm font-medium text-[var(--ink)] hover:border-[var(--ink-4)] hover:bg-[var(--bg-sub)] transition-colors"
     >
       + Add opportunity
     </Link>
@@ -546,18 +546,18 @@ function OpportunitiesTab({ opportunities, companyId }: { opportunities: Opportu
     <div className="max-w-2xl">
       <SectionCard title="Opportunities at this company" action={addAction}>
         {opportunities.length === 0 ? (
-          <div className="text-center py-6 text-[var(--muted)]">
+          <div className="text-center py-6 text-[var(--ink-3)]">
             <p className="text-sm">No opportunities tracked at this company yet.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {opportunities.map((opp) => (
               <Link key={opp.id} href={`/opportunities/${opp.id}`}>
-                <Card className="p-4 hover:border-[var(--accent)]/40 transition-colors cursor-pointer">
+                <Card className="p-4 hover:border-[var(--ink-4)] hover:bg-[var(--bg-sub)] transition-colors cursor-pointer">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-[var(--foreground)]">{opp.role_title}</p>
-                      <p className="text-xs text-[var(--muted)] mt-0.5">{formatDate(opp.created_at)}</p>
+                      <p className="text-sm font-medium text-[var(--ink)]">{opp.role_title}</p>
+                      <p className="text-xs text-[var(--ink-3)] mt-0.5">{formatDate(opp.created_at)}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <CmfScore score={opp.cmf_score} size="sm" />
@@ -585,16 +585,16 @@ function CompTab({ companyName }: { companyName: string }) {
     >
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <span className="text-sm text-[var(--muted)]">Role family:</span>
+          <span className="text-sm text-[var(--ink-3)]">Role family:</span>
           <div className="flex gap-2">
             {tracks.map((t: string) => (
             <button
               key={t}
               onClick={() => setTrack(t)}
-              className={`px-3 py-1 rounded text-xs transition-colors ${
+              className={`px-2.5 h-[26px] rounded-[6px] text-[12px] font-medium tracking-[-0.005em] transition-colors duration-[120ms] ${
                 track === t
-                  ? "bg-[var(--accent)] text-white"
-                  : "bg-[var(--surface-raised)] text-[var(--muted)] hover:text-[var(--foreground)]"
+                  ? "bg-[var(--ink)] text-[var(--bg)]"
+                  : "bg-transparent text-[var(--ink-3)] hover:bg-[var(--bg-mute)] hover:text-[var(--ink)]"
               }`}
             >
                 {t}

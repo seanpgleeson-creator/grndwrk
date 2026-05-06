@@ -87,7 +87,7 @@ function CoreProfileTab({ data }: { data: ProfileData }) {
       <Button variant="primary" onClick={handleSave} loading={isPending}>
         Save changes
       </Button>
-      {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+      {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
     </>
   );
 
@@ -95,7 +95,7 @@ function CoreProfileTab({ data }: { data: ProfileData }) {
     <button
       type="button"
       onClick={() => setAiPanelOpen(true)}
-      className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors duration-150"
+      className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--ink)] hover:text-[var(--ink-2)] transition-colors duration-150"
     >
       <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
         <path d="M8 1a.5.5 0 0 1 .5.5v1.793l1.146-1.147a.5.5 0 0 1 .708.708L9.207 4l1.147 1.146a.5.5 0 0 1-.708.708L8.5 4.707V6.5a.5.5 0 0 1-1 0V4.707L6.354 5.854a.5.5 0 1 1-.708-.708L6.793 4 5.646 2.854a.5.5 0 1 1 .708-.708L7.5 3.293V1.5A.5.5 0 0 1 8 1zM2.5 8a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z" />
@@ -217,7 +217,7 @@ function ResumeTab({ data }: { data: ProfileData }) {
             <Button variant="secondary" onClick={handleParse} loading={parseLoading}>
               Parse with AI
             </Button>
-            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+            {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
           </>
         }
       >
@@ -235,7 +235,7 @@ function ResumeTab({ data }: { data: ProfileData }) {
           title="Parsed structure"
           description="What the AI extracted from your resume — used for CMF scoring and role matching."
         >
-          <pre className="text-xs text-[var(--muted)] overflow-x-auto whitespace-pre-wrap font-mono max-h-64 overflow-y-auto">
+          <pre className="text-xs text-[var(--ink-3)] overflow-x-auto whitespace-pre-wrap [font-family:var(--font-mono)] max-h-64 overflow-y-auto">
             {JSON.stringify(parsedPreview, null, 2)}
           </pre>
         </SectionCard>
@@ -269,7 +269,7 @@ function PillarsTab({ data }: { data: ProfileData }) {
             <Button variant="primary" onClick={handleSave} loading={isPending}>
               Save pillars
             </Button>
-            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+            {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
           </>
         }
       >
@@ -291,7 +291,7 @@ function PillarsTab({ data }: { data: ProfileData }) {
                 <button
                   onClick={() => setPillars(pillars.filter((_, idx) => idx !== i))}
                   aria-label={`Remove pillar ${i + 1}`}
-                  className="text-[var(--muted)] hover:text-[var(--danger)]"
+                  className="text-[var(--ink-3)] hover:text-red-600 dark:hover:text-red-400 transition-colors"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -303,7 +303,7 @@ function PillarsTab({ data }: { data: ProfileData }) {
           {pillars.length < 5 && (
             <button
               onClick={() => setPillars([...pillars, ""])}
-              className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+              className="text-sm font-medium text-[var(--ink)] hover:text-[var(--ink-2)] transition-colors"
             >
               + Add pillar
             </button>
@@ -343,12 +343,12 @@ function CmfTab({ data }: { data: ProfileData }) {
             <Button variant="primary" onClick={handleSave} loading={isPending}>
               Save weights
             </Button>
-            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+            {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
           </>
         }
       >
         <CmfWeightSliders value={weights} onChange={setWeights} />
-        {error && <p className="mt-4 text-sm text-[var(--danger)]">{error}</p>}
+        {error && <p className="mt-4 text-sm text-red-700 dark:text-red-400">{error}</p>}
       </SectionCard>
     </div>
   );
@@ -385,7 +385,7 @@ function CompTab({ data }: { data: ProfileData }) {
             <Button variant="primary" onClick={handleSave} loading={isPending}>
               Save targets
             </Button>
-            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+            {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
           </>
         }
       >

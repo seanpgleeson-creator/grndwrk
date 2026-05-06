@@ -111,7 +111,7 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
       <SectionCard title="Status & outreach">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           <div>
-            <p className="text-[13px] font-medium text-[var(--foreground)] mb-1.5">Status</p>
+            <p className="text-[13px] font-medium text-[var(--ink)] mb-1.5">Status</p>
             <Select
               value={status}
               onChange={(e) => handleStatusChange(e.target.value)}
@@ -119,17 +119,17 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
             />
           </div>
           <div>
-            <p className="text-[13px] font-medium text-[var(--foreground)] mb-1.5">Outreach sent</p>
+            <p className="text-[13px] font-medium text-[var(--ink)] mb-1.5">Outreach sent</p>
             <button
               onClick={handleOutreachToggle}
               disabled={isPending}
-              className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm transition-colors ${
+              className={`flex items-center gap-2 px-3 py-2 rounded-md border text-sm font-medium tracking-[-0.005em] transition-colors duration-[120ms] ${
                 outreachSent
-                  ? "bg-[var(--accent)]/15 border-[var(--accent)]/25 text-[var(--accent)]"
-                  : "bg-[var(--surface)] border-[var(--border)] text-[var(--muted)]"
+                  ? "bg-[var(--ink)] border-[var(--ink)] text-[var(--bg)]"
+                  : "bg-[var(--bg-elev)] border-[var(--line)] text-[var(--ink-3)] hover:border-[var(--ink-4)] hover:text-[var(--ink)]"
               }`}
             >
-              <div className={`h-3 w-3 rounded-full ${outreachSent ? "bg-[var(--accent)]" : "bg-[var(--border)]"}`} />
+              <div className={`h-2 w-2 rounded-full ${outreachSent ? "bg-[var(--bg)]" : "bg-[var(--ink-5)]"}`} />
               {outreachSent ? "Yes" : "No"}
             </button>
           </div>
@@ -140,7 +140,7 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
         <SectionCard title="Key requirements">
           <ul className="space-y-1.5">
             {opportunity.key_requirements.map((req, i) => (
-              <li key={i} className="text-sm text-[var(--foreground)] flex items-start gap-2">
+              <li key={i} className="text-sm text-[var(--ink)] flex items-start gap-2">
                 <span className="text-[var(--accent)] mt-0.5">·</span>
                 {req}
               </li>
@@ -155,16 +155,16 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
           action={
             <button
               onClick={() => setShowJd(!showJd)}
-              className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]"
+              className="text-sm font-medium text-[var(--ink)] hover:text-[var(--ink-2)] transition-colors"
             >
               {showJd ? "Hide" : "Show"}
             </button>
           }
         >
           {showJd ? (
-            <pre className="text-xs text-[var(--muted)] whitespace-pre-wrap font-sans">{opportunity.jd_text}</pre>
+            <pre className="text-xs text-[var(--ink-3)] whitespace-pre-wrap font-sans">{opportunity.jd_text}</pre>
           ) : (
-            <p className="text-xs text-[var(--muted)]">Full job description hidden. Click Show to expand.</p>
+            <p className="text-xs text-[var(--ink-3)]">Full job description hidden. Click Show to expand.</p>
           )}
         </SectionCard>
       )}
@@ -249,7 +249,7 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
       <Button variant="primary" onClick={handleSave} loading={isPending}>
         Save CMF score
       </Button>
-      {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+      {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
     </>
   );
 
@@ -266,7 +266,7 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
         <SectionCard title="AI rationale">
           <div className="space-y-2">
             {"resume_gap_analysis" in opportunity.cmf_ai && (
-              <p className="text-sm text-[var(--muted)] whitespace-pre-wrap leading-relaxed">
+              <p className="text-sm text-[var(--ink-3)] whitespace-pre-wrap leading-relaxed">
                 {String((opportunity.cmf_ai as { resume_gap_analysis?: string }).resume_gap_analysis ?? "")}
               </p>
             )}
@@ -289,8 +289,8 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
           {DIMS.map(({ key, label }) => (
             <div key={key} className="flex items-center gap-4">
               <div className="w-28 shrink-0">
-                <p className="text-sm font-medium text-[var(--foreground)]">{label}</p>
-                <p className="text-xs text-[var(--muted)]">Weight: {cmfWeights[key]}%</p>
+                <p className="text-sm font-medium text-[var(--ink)]">{label}</p>
+                <p className="text-xs text-[var(--ink-3)]">Weight: {cmfWeights[key]}%</p>
               </div>
               <input
                 type="range"
@@ -298,7 +298,7 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
                 max={10}
                 value={scores[key]}
                 onChange={(e) => setScores({ ...scores, [key]: Number(e.target.value) })}
-                className="flex-1 h-1.5 rounded-full appearance-none bg-[var(--surface)] cursor-pointer"
+                className="flex-1 h-1.5 rounded-full appearance-none bg-[var(--bg-elev)] cursor-pointer"
                 style={{ accentColor: "var(--accent)" }}
               />
               <Input
@@ -317,11 +317,11 @@ function CmfTab({ opportunity, cmfWeights }: { opportunity: Opportunity; cmfWeig
       <SectionCard title="Composite score">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-[var(--muted)] mb-1">CMF score</p>
+            <p className="text-xs text-[var(--ink-3)] mb-1">CMF score</p>
             <CmfScore score={computedScore} size="lg" showRecommendation />
           </div>
           <div className="text-right">
-            <p className="text-xs text-[var(--muted)] mb-1">Recommendation</p>
+            <p className="text-xs text-[var(--ink-3)] mb-1">Recommendation</p>
             <Badge
               variant={
                 recommendation === "prioritize"
@@ -415,7 +415,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
       <Button variant="primary" onClick={() => handleSave()} loading={isPending}>Save</Button>
       {!brief?.completed_at && <Button variant="secondary" onClick={() => handleSave(true)} loading={isPending}>Mark complete</Button>}
       {brief?.completed_at && <Button variant="ghost" onClick={() => handleSave(false)} loading={isPending}>Reopen</Button>}
-      {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+      {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
     </>
   );
 
@@ -429,7 +429,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
       )}
 
       {brief?.completed_at && (
-        <div className="flex items-center gap-2 text-sm text-[var(--success)]">
+        <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
@@ -453,7 +453,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
           ))}
 
           <div>
-            <p className="text-[13px] font-medium text-[var(--foreground)] mb-2">Proof points</p>
+            <p className="text-[13px] font-medium text-[var(--ink)] mb-2">Proof points</p>
             {form.proof_points.map((point, i) => (
               <div key={i} className="flex items-center gap-2 mb-2">
                 <div className="flex-1">
@@ -463,7 +463,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
                   <button
                     onClick={() => setForm({ ...form, proof_points: form.proof_points.filter((_, idx) => idx !== i) })}
                     aria-label={`Remove proof point ${i + 1}`}
-                    className="text-[var(--muted)] hover:text-[var(--danger)]"
+                    className="text-[var(--ink-3)] hover:text-red-600 dark:hover:text-red-400 transition-colors"
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
                   </button>
@@ -471,7 +471,7 @@ function BriefTab({ opportunityId, brief }: { opportunityId: string; brief: Brie
               </div>
             ))}
             {form.proof_points.length < 3 && (
-              <button onClick={() => setForm({ ...form, proof_points: [...form.proof_points, ""] })} className="text-sm font-medium text-[var(--accent)] hover:text-[var(--accent-hover)]">+ Add proof point</button>
+              <button onClick={() => setForm({ ...form, proof_points: [...form.proof_points, ""] })} className="text-sm font-medium text-[var(--ink)] hover:text-[var(--ink-2)] transition-colors">+ Add proof point</button>
             )}
           </div>
         </div>
@@ -549,7 +549,7 @@ function MaterialsTab({ opportunity }: { opportunity: Opportunity }) {
         footer={
           <>
             <Button variant="primary" onClick={handleSave} loading={isPending}>Save</Button>
-            {saved && <span className="text-sm text-[var(--success)]">Saved</span>}
+            {saved && <span className="text-sm text-green-700 dark:text-green-400">Saved</span>}
           </>
         }
       >
@@ -570,30 +570,30 @@ function CompTab({ opportunity, compTarget }: { opportunity: Opportunity; compTa
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {snap.base_low != null && (
               <div>
-                <p className="text-xs text-[var(--muted)]">Base range</p>
-                <p className="text-sm font-medium text-[var(--foreground)]">
+                <p className="text-xs text-[var(--ink-3)]">Base range</p>
+                <p className="text-sm font-medium text-[var(--ink)]">
                   ${snap.base_low?.toLocaleString()} – ${snap.base_high?.toLocaleString()}
                 </p>
               </div>
             )}
             {snap.total_low != null && (
               <div>
-                <p className="text-xs text-[var(--muted)]">Total comp range</p>
-                <p className="text-sm font-medium text-[var(--foreground)]">
+                <p className="text-xs text-[var(--ink-3)]">Total comp range</p>
+                <p className="text-sm font-medium text-[var(--ink)]">
                   ${snap.total_low?.toLocaleString()} – ${snap.total_high?.toLocaleString()}
                 </p>
               </div>
             )}
           </div>
           {compTarget.minimum != null && snap.total_high != null && (
-            <div className="mt-4 pt-4 border-t border-[var(--border)]">
+            <div className="mt-4 pt-4 border-t border-[var(--line)]">
               <Badge variant={snap.meets_target ? "success" : snap.meets_target === false ? "danger" : "default"}>
                 {snap.meets_target ? "Meets target" : snap.meets_target === false ? "Below target" : "Unknown vs. target"}
               </Badge>
             </div>
           )}
           {snap.stale && (
-            <p className="mt-3 text-xs text-[var(--warning)]">Data may be outdated (180+ days)</p>
+            <p className="mt-3 text-xs text-amber-700 dark:text-amber-400">Data may be outdated (180+ days)</p>
           )}
         </SectionCard>
       )}

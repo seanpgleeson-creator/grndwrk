@@ -228,8 +228,16 @@ _Source: `docs/ui.md` (rewritten Apr 2026). Implements Inter + monochrome + icon
 
 ### Layer 5 — Page-level components
 
-- [ ] `components/companies/CompanyList.tsx` — Table layout matching `ui.md` Companies spec: mono-uppercase column headers, StatusPill component, FitBar component, row hover `--bg-sub`.
-- [ ] `components/opportunities/OpportunityList.tsx` — Update token names; consider kanban layout per `ui.md` Opportunities spec.
-- [ ] `components/profile/ProfileEditor.tsx` — Swap SectionCard-based layout for FieldRow two-column pattern (`220px / 1fr`, `--line-2` dividers) per `ui.md` Profile spec.
-- [ ] `components/profile/AiPositioningPanel.tsx` — Update token names (`--bg-elev` panel bg, `--bg-sub` input bg, `--line` left border).
-- [ ] `components/onboarding/WizardShell.tsx` — Update token names for step sidebar (`--bg-sub`, `--line`, `--ink-3`/`--ink` step states).
+#### 5a — Token rename sweep (mechanical migration, no redesign)
+
+- [x] App pages: `dashboard/page.tsx`, `companies/page.tsx`, `companies/[id]/page.tsx`, `opportunities/page.tsx`, `opportunities/[id]/page.tsx`, `comp/page.tsx`
+- [x] Onboarding: `(onboarding)/layout.tsx`, `welcome/page.tsx`, `profile/setup/page.tsx`
+- [x] Feature components: `CompanyList.tsx`, `CompanyDetailTabs.tsx`, `OpportunityList.tsx`, `OpportunityDetailTabs.tsx`, `ProfileEditor.tsx`, `AiPositioningPanel.tsx`, `CmfWeightSliders.tsx`, `WizardShell.tsx`, `LevelsFyiEmbed.tsx`, `ThemeToggle.tsx`
+- [x] Removed all `--background`, `--surface`, `--surface-raised`, `--sidebar`, `--border`, `--foreground`, `--muted`, `--accent-hover`, `--success`, `--warning`, `--danger`, `--font-heading` references. Saved/danger/warning surfaces now use `text-{green|amber|red}-{700|400}` Tailwind hue pattern (matching `Badge` semantic variants).
+- [x] `next build` + `tsc --noEmit` pass clean.
+
+#### 5b — Page redesigns per `ui.md` (still pending)
+
+- [ ] `components/companies/CompanyList.tsx` — Currently a card grid. `ui.md` Companies spec calls for a table layout: mono-uppercase column headers, `StatusPill` component, `FitBar` component, row hover `--bg-sub`.
+- [ ] `components/opportunities/OpportunityList.tsx` — Currently a list. `ui.md` Opportunities spec suggests evaluating a kanban layout grouped by status.
+- [ ] `components/profile/ProfileEditor.tsx` — Currently `SectionCard`-based. `ui.md` Profile spec calls for FieldRow two-column pattern (`220px / 1fr`, `--line-2` dividers).

@@ -69,7 +69,7 @@ export default async function OpportunityDetailPage({
   return (
     <div>
       <div className="mb-2">
-        <Link href="/opportunities" className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]">
+        <Link href="/opportunities" className="text-xs text-[var(--ink-3)] hover:text-[var(--ink)]">
           ← Opportunities
         </Link>
       </div>
