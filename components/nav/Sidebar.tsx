@@ -264,16 +264,13 @@ function MobileNav() {
   return (
     <>
       <div
-        className="lg:hidden"
+        className="lg:hidden flex items-center justify-between"
         style={{
           position: "fixed",
           top: 0,
           left: 0,
           right: 0,
           zIndex: 40,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
           padding: "0 16px",
           height: 52,
           background: "var(--bg-sub)",
@@ -330,7 +327,7 @@ function MobileNav() {
 
       {/* Drawer */}
       <aside
-        className="lg:hidden"
+        className="lg:hidden flex flex-col"
         style={{
           position: "fixed",
           top: 0,
@@ -340,8 +337,6 @@ function MobileNav() {
           zIndex: 50,
           background: "var(--bg-sub)",
           borderRight: "1px solid var(--line)",
-          display: "flex",
-          flexDirection: "column",
           padding: "20px 12px",
           gap: 24,
           transform: open ? "translateX(0)" : "translateX(-100%)",
