@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { X, Sparkles, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -156,7 +155,9 @@ export function AiPositioningPanel({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[var(--line)]">
           <div className="flex items-center gap-2.5">
-            <Sparkles className="h-4 w-4 text-[var(--ink)]" strokeWidth={1.5} />
+            <svg width={14} height={14} viewBox="0 0 16 16" fill="currentColor" className="text-[var(--ink)]" aria-hidden="true">
+              <path d="M8 1a.5.5 0 0 1 .5.5v1.793l1.146-1.147a.5.5 0 0 1 .708.708L9.207 4l1.147 1.146a.5.5 0 0 1-.708.708L8.5 4.707V6.5a.5.5 0 0 1-1 0V4.707L6.354 5.854a.5.5 0 1 1-.708-.708L6.793 4 5.646 2.854a.5.5 0 1 1 .708-.708L7.5 3.293V1.5A.5.5 0 0 1 8 1zM2.5 8a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z" />
+            </svg>
             <span className="[font-family:var(--font-mono)] text-[11px] font-medium tracking-[0.08em] uppercase text-[var(--ink)]">
               Help me write with AI
             </span>
@@ -166,7 +167,9 @@ export function AiPositioningPanel({
             className="text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors duration-150 p-1"
             aria-label="Close panel"
           >
-            <X className="h-4 w-4" />
+            <svg width={14} height={14} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" aria-hidden="true">
+              <path d="M3 3l10 10M13 3 3 13" />
+            </svg>
           </button>
         </div>
 
@@ -297,7 +300,10 @@ export function AiPositioningPanel({
                 }}
                 className="flex items-center gap-1.5 text-[13px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
               >
-                <RotateCcw className="h-3.5 w-3.5" />
+                <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5" />
+                  <path d="M8 1v3.5L10.5 2" />
+                </svg>
                 Regenerate
               </button>
               <div className="flex items-center gap-2">

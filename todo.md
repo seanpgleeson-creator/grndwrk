@@ -113,7 +113,7 @@ _Activate AI endpoints one at a time. Each follows: implement prompt file → wi
 - [x] **[PARALLEL]** Implement `cmf` prompt + activate `POST /api/opportunities/[id]/cmf`; "Generate with AI" on CMF tab
 - [x] **[PARALLEL]** Implement `roleBrief` prompt + activate `POST /api/opportunities/[id]/brief` with `generate: true`; "Generate with AI" on Role Brief tab
 - [x] **[PARALLEL]** Implement `coverLetter` via `POST /api/opportunities/[id]/cover-letter`; Materials tab "Generate cover letter"
-- [ ] Implement `narrativeCheck` — runs after generation (API returns `narrative_check`); **TODO:** wire `ConsistencyBanner` to show when score < 3
+- [x] Implement `narrativeCheck` — runs after generation (API returns `narrative_check`); `ConsistencyBanner` wired in `OpportunityDetailTabs` (CMF, brief, cover-letter tabs) and `CompanyDetailTabs` (brief tab)
 - [ ] Implement `outreachDraft` prompt (prep for Phase 3)
 - [x] Set `export const maxDuration = 60` on long-running AI routes
 - [ ] Activate Priority Action Queue full logic in `GET /api/dashboard` (6 urgency tiers using real Contact + EarningsSignal data)
@@ -123,12 +123,13 @@ _Activate AI endpoints one at a time. Each follows: implement prompt file → wi
 
 ## Phase 3 — Outreach & Relationship Pipeline
 
-- [ ] **[PARALLEL]** Implement `Contact` CRUD API routes (`GET /api/contacts`, `POST`, `PATCH /api/contacts/[id]`, `DELETE`)
-- [ ] **[PARALLEL]** Implement `OutreachRecord` API routes (`GET /api/contacts/[id]/outreach`, `POST`, `PATCH .../[recordId]`)
-- [ ] Build `/outreach` page — contact list with warmth badges, priority queue, filter by company/warmth
-- [ ] Build contact detail view — outreach history timeline, connection degree, notes, last contact date
-- [ ] Wire `outreachDraft` AI prompt to outreach compose flow
-- [ ] Add Contacts tab to `/companies/[id]` detail page
+- [x] **[PARALLEL]** Implement `Contact` CRUD API routes (`GET /api/contacts`, `POST`, `PATCH /api/contacts/[id]`, `DELETE`) — already existed
+- [x] **[PARALLEL]** Implement `OutreachRecord` API routes (`GET /api/contacts/[id]/outreach`, `POST`, `PATCH .../[recordId]`) — already existed
+- [x] Build `/outreach` page — `ContactsPanel` with warmth filter (Hot/Warm/Cold), sorted by warmth priority, company name shown
+- [x] Build contact detail view — inline row expansion with outreach history timeline, log-outreach form, connection degree, notes, last contact
+- [x] Add Contacts tab to `/companies/[id]` detail page — `ContactsPanel` scoped to company, tab shows count
+- [x] Sidebar nav Outreach item — removed `comingSoon` flag, fully live
+- [ ] Wire `outreachDraft` AI prompt to outreach compose flow (Phase 3 stretch)
 - [ ] Deploy and test in production
 
 ---
@@ -236,8 +237,9 @@ _Source: `docs/ui.md` (rewritten Apr 2026). Implements Inter + monochrome + icon
 - [x] Removed all `--background`, `--surface`, `--surface-raised`, `--sidebar`, `--border`, `--foreground`, `--muted`, `--accent-hover`, `--success`, `--warning`, `--danger`, `--font-heading` references. Saved/danger/warning surfaces now use `text-{green|amber|red}-{700|400}` Tailwind hue pattern (matching `Badge` semantic variants).
 - [x] `next build` + `tsc --noEmit` pass clean.
 
-#### 5b — Page redesigns per `ui.md` (still pending)
+#### 5b — Page redesigns per `ui.md` (COMPLETE May 2026)
 
-- [ ] `components/companies/CompanyList.tsx` — Currently a card grid. `ui.md` Companies spec calls for a table layout: mono-uppercase column headers, `StatusPill` component, `FitBar` component, row hover `--bg-sub`.
-- [ ] `components/opportunities/OpportunityList.tsx` — Currently a list. `ui.md` Opportunities spec suggests evaluating a kanban layout grouped by status.
-- [ ] `components/profile/ProfileEditor.tsx` — Currently `SectionCard`-based. `ui.md` Profile spec calls for FieldRow two-column pattern (`220px / 1fr`, `--line-2` dividers).
+- [x] `components/companies/CompanyList.tsx` — Rebuilt as a table: `StatusPill` component (999px radius, Active/Engaged/Sourced tiers), `LogoBox` initials, `TierBadge`, mono-uppercase column headers on `--bg-sub`, `--line-2` row dividers, `--bg-sub` row hover, filter bar with FilterGroup components. `SectionCard` removed.
+- [x] `components/opportunities/OpportunityList.tsx` — Rebuilt as kanban: 5 columns (Watching / Preparing / Applied / In Process / Closed), `OppCard` components (`--bg-elev`, hover border `--ink-4`, logo box + role + next-action footer with arrow-right icon), show/hide Closed toggle. `SectionCard` removed.
+- [x] `components/profile/ProfileEditor.tsx` — All 5 tabs now use `FieldRow` two-column layout (`220px / 1fr`, `gap: 32`, `--line-2` dividers, max-w 920px). Inline tag chips on target roles and stages. `SectionCard` import removed entirely.
+- [x] `tsc --noEmit` + `next build` pass clean.

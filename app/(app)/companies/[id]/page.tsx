@@ -88,6 +88,10 @@ export default async function CompanyDetailPage({
           parsed_signals: parseJsonField(s.parsed_signals, null),
         }))}
         opportunities={company.opportunities}
+        contacts={company.contacts.map((c: (typeof company.contacts)[number]) => ({
+          ...c,
+          company: { id: company.id, name: company.name },
+        }))}
       />
     </div>
   );

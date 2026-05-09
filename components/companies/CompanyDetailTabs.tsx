@@ -14,6 +14,7 @@ import { CmfScore } from "@/components/ui/CmfScore";
 import { LevelsFyiEmbed } from "@/components/comp/LevelsFyiEmbed";
 import { updateCompany, createEarningsSignal, deleteEarningsSignal, upsertCompanyBrief, deleteCompany } from "@/app/actions/companies";
 import { ConsistencyBanner } from "@/components/ui/ConsistencyBanner";
+import { ContactsPanel, type Contact } from "@/components/contacts/ContactsPanel";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
@@ -63,6 +64,7 @@ interface CompanyDetailTabsProps {
   brief: Brief | null;
   signals: Signal[];
   opportunities: Opportunity[];
+  contacts: Contact[];
 }
 
 const STAGE_OPTIONS = [
@@ -82,12 +84,13 @@ const TIER_OPTIONS = [
   { value: "3", label: "Tier 3" },
 ];
 
-export function CompanyDetailTabs({ company, brief, signals, opportunities }: CompanyDetailTabsProps) {
+export function CompanyDetailTabs({ company, brief, signals, opportunities, contacts }: CompanyDetailTabsProps) {
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "brief", label: "Brief" },
     { id: "signals", label: `Signals (${signals.length})` },
     { id: "opportunities", label: `Opportunities (${opportunities.length})` },
+    { id: "contacts", label: `Contacts (${contacts.length})` },
     { id: "comp", label: "Comp" },
   ];
 
@@ -99,6 +102,9 @@ export function CompanyDetailTabs({ company, brief, signals, opportunities }: Co
           {activeTab === "brief" && <BriefTab companyId={company.id} brief={brief} />}
           {activeTab === "signals" && <SignalsTab companyId={company.id} signals={signals} />}
           {activeTab === "opportunities" && <OpportunitiesTab opportunities={opportunities} companyId={company.id} />}
+          {activeTab === "contacts" && (
+            <ContactsPanel contacts={contacts} companyId={company.id} />
+          )}
           {activeTab === "comp" && <CompTab companyName={company.name} />}
         </>
       )}

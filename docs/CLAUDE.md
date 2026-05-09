@@ -86,10 +86,13 @@ Work committed to `main`. Old DM Sans / Fraunces / slate-blue system fully repla
 - `CompanyList`, `OpportunityList`, `WelcomePage`, `WizardShell` got light visual refreshes during the sweep (mono-uppercase eyebrows, ink-only filter pills, monochrome step indicators) — but no structural rewrite yet.
 - Verified `next build` + `tsc --noEmit` clean.
 
-**Layer 5b — Page redesigns still pending:**
-- `CompanyList.tsx` → table layout per `ui.md` Companies spec (`StatusPill`, `FitBar`).
-- `OpportunityList.tsx` → evaluate kanban layout per `ui.md` Opportunities spec.
-- `ProfileEditor.tsx` → swap `SectionCard` for FieldRow two-column pattern (220px / 1fr, `--line-2` dividers).
+**Layer 5b — Page redesigns COMPLETE (May 2026):**
+- `CompanyList.tsx` → rebuilt as a table with `StatusPill` (999px radius pill, Active/Engaged/Sourced per brief_status), `LogoBox` initials, `TierBadge`, mono-uppercase `--bg-sub` header row, `--line-2` row dividers, `--bg-sub` hover, `FilterGroup` filter pills.
+- `OpportunityList.tsx` → rebuilt as kanban with 5 columns (Watching / Preparing / Applied / In Process / Closed), `OppCard` per spec (logo box, role title, next-action footer with arrow icon), show/hide Closed toggle.
+- `ProfileEditor.tsx` → all 5 tabs now use `FieldRow` two-column layout (`220px / 1fr`, `gap: 32px`, `--line-2` dividers, `max-width: 920px`). `SectionCard` import fully removed. Inline tag chips on target roles and stages.
+- `tsc --noEmit` + `next build` pass clean.
+
+**Design system migration fully complete.** All 5 layers done and on the `cursor/profile-design-refresh` branch.
 
 ---
 

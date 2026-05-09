@@ -89,7 +89,7 @@ const NAV = [
   { href: "/companies",     label: "Companies",     icon: <Icons.Building /> },
   { href: "/opportunities", label: "Opportunities", icon: <Icons.Target /> },
   { href: "/comp",          label: "Compensation",  icon: <Icons.Dollar /> },
-  { href: "/outreach",      label: "Outreach",      icon: <Icons.Mail />, comingSoon: true },
+  { href: "/outreach",      label: "Outreach",      icon: <Icons.Mail /> },
 ];
 
 const RAIL_W = 60;
@@ -164,11 +164,9 @@ export function Sidebar() {
             {NAV.map((item) => (
               <NavItem
                 key={item.href}
-                href={item.comingSoon ? undefined : item.href}
+                href={item.href}
                 label={item.label}
                 icon={item.icon}
-                disabled={item.comingSoon}
-                comingSoon={item.comingSoon}
                 collapsed={collapsed}
               />
             ))}
@@ -384,11 +382,9 @@ function MobileNav() {
           {NAV.map((item) => (
             <NavItem
               key={item.href}
-              href={item.comingSoon ? undefined : item.href}
+              href={item.href}
               label={item.label}
               icon={item.icon}
-              disabled={item.comingSoon}
-              comingSoon={item.comingSoon}
               collapsed={false}
               onClick={() => setOpen(false)}
             />
