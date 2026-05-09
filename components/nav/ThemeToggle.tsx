@@ -9,7 +9,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggle}
-      className="flex items-center gap-3 px-3 py-2 min-h-[44px] rounded-md text-sm text-[var(--muted)] hover:text-[var(--foreground)] hover:bg-[var(--surface-raised)] transition-colors duration-150 w-full"
+      className="flex items-center gap-3 px-3 py-2 min-h-[44px] rounded-md text-sm text-[var(--ink-3)] hover:text-[var(--ink)] hover:bg-[var(--bg-mute)] transition-colors duration-150 w-full"
       aria-label="Toggle theme"
     >
       {theme === "dark" ? (

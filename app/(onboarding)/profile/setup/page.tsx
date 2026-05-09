@@ -216,14 +216,14 @@ export default function SetupPage() {
             <button
               type="button"
               onClick={() => setAiPanelOpen(true)}
-              className="flex items-center gap-1.5 text-[13px] text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors duration-150"
+              className="flex items-center gap-1.5 text-[13px] text-[var(--ink)] hover:text-[var(--ink-2)] transition-colors duration-150"
             >
               <svg className="h-3.5 w-3.5" viewBox="0 0 16 16" fill="currentColor">
                 <path d="M8 1a.5.5 0 0 1 .5.5v1.793l1.146-1.147a.5.5 0 0 1 .708.708L9.207 4l1.147 1.146a.5.5 0 0 1-.708.708L8.5 4.707V6.5a.5.5 0 0 1-1 0V4.707L6.354 5.854a.5.5 0 1 1-.708-.708L6.793 4 5.646 2.854a.5.5 0 1 1 .708-.708L7.5 3.293V1.5A.5.5 0 0 1 8 1zM2.5 8a5.5 5.5 0 1 1 11 0 5.5 5.5 0 0 1-11 0z" />
               </svg>
               Help me write with AI
             </button>
-            <p className="text-[12px] text-[var(--muted)]">
+            <p className="text-[12px] text-[var(--ink-3)]">
               Describe who you are, what you do, and what makes you distinctive. This is your north star — every module in grndwrk builds from it.
             </p>
           </div>
@@ -278,14 +278,14 @@ export default function SetupPage() {
               rows={12}
               className="min-h-[280px]"
             />
-            <p className="text-[12px] text-[var(--muted)]">
+            <p className="text-[12px] text-[var(--ink-3)]">
               Pasting your resume unlocks richer AI output — better positioning drafts, more precise CMF analysis, and stronger cover letters. You can skip this and add it later from your profile.
             </p>
             {!state.resume_raw.trim() && (
               <button
                 type="button"
                 onClick={() => dispatch({ type: "NEXT_STEP" })}
-                className="text-[13px] text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+                className="text-[13px] text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
               >
                 Skip for now →
               </button>
@@ -296,7 +296,7 @@ export default function SetupPage() {
         {/* Step 5: Narrative pillars */}
         {state.step === 5 && (
           <div className="space-y-4">
-            <p className="text-[13px] text-[var(--muted)] leading-relaxed">
+            <p className="text-[13px] text-[var(--ink-3)] leading-relaxed">
               Enter 2–5 narrative pillars. These are the recurring themes that define your professional identity and anchor all AI-generated content.
             </p>
             {state.narrative_pillars.map((pillar, i) => (
@@ -314,7 +314,7 @@ export default function SetupPage() {
                 {state.narrative_pillars.length > 2 && (
                   <button
                     onClick={() => dispatch({ type: "REMOVE_PILLAR", index: i })}
-                    className="mt-8 text-[var(--muted)] hover:text-[var(--danger)] transition-colors"
+                    className="mt-8 text-[var(--ink-3)] hover:text-[var(--ink)] transition-colors"
                     aria-label={`Remove pillar ${i + 1}`}
                   >
                     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -327,7 +327,7 @@ export default function SetupPage() {
             {state.narrative_pillars.length < 5 && (
               <button
                 onClick={() => dispatch({ type: "ADD_PILLAR" })}
-                className="text-[13px] text-[var(--accent)] hover:text-[var(--accent-hover)] transition-colors"
+                className="text-[13px] text-[var(--ink)] hover:text-[var(--ink-2)] transition-colors"
               >
                 + Add pillar
               </button>
@@ -383,7 +383,7 @@ export default function SetupPage() {
               }
               placeholder="L6, Staff, Director"
             />
-            {error && <p className="text-[13px] text-[var(--danger)]">{error}</p>}
+            {error && <p className="text-[13px] text-red-700 dark:text-red-400">{error}</p>}
           </>
         )}
       </WizardShell>

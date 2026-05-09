@@ -142,11 +142,11 @@ export default async function DashboardPage() {
   const { funnel, metrics, priority_queue } = data;
 
   const funnelStages = [
-    { label: "Monitoring", count: funnel.monitoring, href: "/opportunities?status=active", color: "bg-[var(--muted)]" },
-    { label: "Positioned", count: funnel.positioned, href: "/opportunities", color: "bg-[var(--accent)]" },
-    { label: "Applied / Outreach", count: funnel.appliedOutreach, href: "/opportunities?status=Applied", color: "bg-[var(--accent)]/70" },
-    { label: "In Process", count: funnel.inProcess, href: "/opportunities?status=InProcess", color: "bg-[var(--warning)]" },
-    { label: "Outcome", count: funnel.outcome, href: "/opportunities?status=Closed", color: "bg-[var(--success)]" },
+    { label: "Monitoring", count: funnel.monitoring, href: "/opportunities?status=active", color: "bg-[var(--ink-4)]" },
+    { label: "Positioned", count: funnel.positioned, href: "/opportunities", color: "bg-[var(--ink)]" },
+    { label: "Applied / Outreach", count: funnel.appliedOutreach, href: "/opportunities?status=Applied", color: "bg-[var(--ink-2)]" },
+    { label: "In Process", count: funnel.inProcess, href: "/opportunities?status=InProcess", color: "bg-[var(--ink-3)]" },
+    { label: "Outcome", count: funnel.outcome, href: "/opportunities?status=Closed", color: "bg-[var(--ink-5)]" },
   ];
 
   const metricCards = [
@@ -169,28 +169,30 @@ export default async function DashboardPage() {
         <div className="col-span-2 space-y-6">
           {/* Priority Action Queue */}
           <Card className="p-5">
-            <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] mb-4">Priority Actions</h2>
+            <h2 className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--ink-3)] mb-4 [font-family:var(--font-mono)]">
+              Priority Actions
+            </h2>
             {priority_queue.length === 0 ? (
-              <p className="text-sm text-[var(--muted)]">
+              <p className="text-sm text-[var(--ink-3)]">
                 No actions needed right now. Add companies and opportunities to get started.
               </p>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {priority_queue.map((item, i) => (
                   <Link key={i} href={item.href}>
-                    <div className="flex items-center gap-3 p-3 rounded-md hover:bg-[var(--surface-raised)] transition-colors group">
+                    <div className="flex items-center gap-3 p-3 rounded-md hover:bg-[var(--bg-sub)] transition-colors group">
                       <div
                         className={cn(
                           "h-2 w-2 rounded-full shrink-0",
                           item.urgency === "high"
-                            ? "bg-[var(--danger)]"
+                            ? "bg-[var(--ink)]"
                             : item.urgency === "medium"
-                              ? "bg-[var(--warning)]"
-                              : "bg-[var(--muted)]",
+                              ? "bg-[var(--ink-3)]"
+                              : "bg-[var(--ink-5)]",
                         )}
                       />
-                      <p className="flex-1 text-sm text-[var(--foreground)]">{item.label}</p>
-                      <span className="text-xs text-[var(--accent)] group-hover:underline shrink-0">
+                      <p className="flex-1 text-sm text-[var(--ink)]">{item.label}</p>
+                      <span className="text-xs text-[var(--ink-3)] group-hover:text-[var(--ink)] transition-colors shrink-0">
                         {item.action} →
                       </span>
                     </div>
@@ -202,18 +204,20 @@ export default async function DashboardPage() {
 
           {/* Funnel View */}
           <Card className="p-5">
-            <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)] mb-4">Search Funnel</h2>
+            <h2 className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--ink-3)] mb-4 [font-family:var(--font-mono)]">
+              Search Funnel
+            </h2>
             <div className="space-y-2">
               {funnelStages.map((stage) => (
                 <Link key={stage.label} href={stage.href}>
                   <div className="flex items-center gap-3 group">
-                    <span className="text-sm text-[var(--muted)] w-36 shrink-0">{stage.label}</span>
-                    <div className="flex-1 h-6 bg-[var(--surface-raised)] rounded overflow-hidden">
+                    <span className="text-sm text-[var(--ink-3)] w-36 shrink-0">{stage.label}</span>
+                    <div className="flex-1 h-5 bg-[var(--bg-mute)] rounded overflow-hidden">
                       <div
                         className={cn(
                           "h-full rounded transition-[width] duration-300",
                           stage.color,
-                          stage.count === 0 ? "opacity-20" : "opacity-80",
+                          stage.count === 0 ? "opacity-20" : "opacity-90",
                         )}
                         style={{
                           width: stage.count > 0
@@ -222,7 +226,7 @@ export default async function DashboardPage() {
                         }}
                       />
                     </div>
-                    <span className="text-sm font-semibold text-[var(--foreground)] w-6 text-right">
+                    <span className="text-sm font-semibold text-[var(--ink)] w-6 text-right tabular-nums">
                       {stage.count}
                     </span>
                   </div>
@@ -234,11 +238,13 @@ export default async function DashboardPage() {
 
         {/* Right: Metrics */}
         <div className="space-y-3">
-          <h2 className="text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--muted)]">Search Health</h2>
+          <h2 className="text-[11px] font-medium uppercase tracking-[0.08em] text-[var(--ink-3)] [font-family:var(--font-mono)]">
+            Search Health
+          </h2>
           {metricCards.map((m: { label: string; value: string | number }) => (
             <Card key={m.label} className="p-4">
-              <p className="text-xs text-[var(--muted)] mb-1">{m.label}</p>
-              <p className="text-2xl font-semibold text-[var(--foreground)]">{m.value}</p>
+              <p className="text-xs text-[var(--ink-3)] mb-1">{m.label}</p>
+              <p className="text-2xl font-semibold text-[var(--ink)] tabular-nums">{m.value}</p>
             </Card>
           ))}
         </div>

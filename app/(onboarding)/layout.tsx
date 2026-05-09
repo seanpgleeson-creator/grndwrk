@@ -4,7 +4,7 @@ export default function OnboardingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-[var(--background)] transition-colors duration-150">
+    <div className="min-h-screen bg-[var(--bg)] transition-colors duration-150">
       {children}
     </div>
   );

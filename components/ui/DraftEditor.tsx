@@ -53,7 +53,7 @@ export function DraftEditor({
 
   return (
     <div className="space-y-3">
-      {label && <p className="text-sm font-medium text-[var(--foreground)]">{label}</p>}
+      {label && <p className="text-[13px] font-medium text-[var(--ink)] tracking-[-0.005em]">{label}</p>}
       <Textarea
         value={value}
         onChange={(e) => setValue(e.target.value)}
@@ -65,7 +65,7 @@ export function DraftEditor({
           {edited && (
             <button
               onClick={() => setShowResetConfirm(true)}
-              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)] underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:rounded-sm"
+              className="text-[12px] text-[var(--ink-3)] hover:text-[var(--ink)] underline focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_color-mix(in_srgb,var(--focus)_18%,transparent)] focus-visible:rounded-sm transition-colors duration-[120ms]"
             >
               Reset to AI draft
             </button>

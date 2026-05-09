@@ -20,23 +20,35 @@ export function Tabs({ tabs, defaultTab, children, className }: TabsProps) {
 
   return (
     <div className={cn("flex flex-col", className)}>
-      <div className="flex border-b border-[var(--border)] gap-1">
+      <div
+        className="flex overflow-x-auto"
+        style={{ borderBottom: "1px solid var(--line)", marginBottom: "var(--gap-section)", gap: 4 }}
+      >
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => setActive(tab.id)}
             className={cn(
-              "px-4 py-2.5 text-[13px] font-semibold uppercase tracking-[0.08em] transition-colors duration-150 border-b-2 -mb-px",
+              "whitespace-nowrap transition-[color,border-color] duration-[120ms] ease-[ease]",
+              "border-0 bg-transparent cursor-pointer font-inherit tracking-[-0.005em]",
               active === tab.id
-                ? "border-[var(--accent)] text-[var(--accent)]"
-                : "border-transparent text-[var(--muted)] hover:text-[var(--foreground)]",
+                ? "text-[var(--ink)]"
+                : "text-[var(--ink-3)] hover:text-[var(--ink)]",
             )}
+            style={{
+              fontSize: 13,
+              fontWeight: 500,
+              padding: "10px 14px",
+              borderBottom: `2px solid ${active === tab.id ? "var(--ink)" : "transparent"}`,
+              marginBottom: -1,
+              font: "inherit",
+            }}
           >
             {tab.label}
           </button>
         ))}
       </div>
-      <div className="pt-6">{children(active)}</div>
+      <div>{children(active)}</div>
     </div>
   );
 }

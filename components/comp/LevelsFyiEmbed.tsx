@@ -15,15 +15,15 @@ export function LevelsFyiEmbed({ company, track = "Product Manager" }: LevelsFyi
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-64 rounded-lg border border-[var(--border)] bg-[var(--surface-raised)] text-center p-6">
-        <p className="text-sm text-[var(--muted)] mb-2">Compensation data unavailable</p>
-        <p className="text-xs text-[var(--muted)]">
+      <div className="flex flex-col items-center justify-center h-64 rounded-lg border border-[var(--line)] bg-[var(--bg-mute)] text-center p-6">
+        <p className="text-sm text-[var(--ink-3)] mb-2">Compensation data unavailable</p>
+        <p className="text-xs text-[var(--ink-3)]">
           Visit{" "}
           <a
             href={`https://www.levels.fyi/companies/${encodedCompany}/`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[var(--accent)] hover:underline"
+            className="text-[var(--ink)] underline underline-offset-2 hover:no-underline"
           >
             levels.fyi
           </a>{" "}
@@ -34,7 +34,7 @@ export function LevelsFyiEmbed({ company, track = "Product Manager" }: LevelsFyi
   }
 
   return (
-    <div className="rounded-lg overflow-hidden border border-[var(--border)]">
+    <div className="rounded-lg overflow-hidden border border-[var(--line)]">
       <iframe
         src={src}
         width="100%"

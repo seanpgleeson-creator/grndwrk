@@ -1,7 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { parseJsonField } from "@/lib/utils";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { Card } from "@/components/ui/Card";
 import { ProfileEditor } from "@/components/profile/ProfileEditor";
 
 export default async function ProfilePage() {
@@ -35,9 +34,7 @@ export default async function ProfilePage() {
         title="Profile & Positioning Hub"
         description="Your positioning foundation powers every module in grndwrk."
       />
-      <Card className="p-0 overflow-hidden">
-        <ProfileEditor data={data} />
-      </Card>
+      <ProfileEditor data={data} />
     </div>
   );
 }
