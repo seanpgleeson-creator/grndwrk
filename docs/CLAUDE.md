@@ -40,28 +40,82 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 
 ## Current status (pick up here)
 
-- **Phase 1:** Shipped — Vercel + Neon, full app shell and CRUD.
-- **Phase 2 (AI):** **Core work is done** — Anthropic is wired end-to-end for resume parse, CMF (AI), company brief, role brief, earnings signal analysis, and cover letter generation. Env: `ANTHROPIC_API_KEY` (required for AI). Optional: `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-20250514`).
-- **Onboarding + positioning AI (in progress):** Branch `cursor/ai-positioning-onboarding-redesign` — not yet merged to main. See §“Last session” below.
+- **Phase 1:** Complete — Vercel + Neon, full app shell and CRUD.
+- **Phase 2 (AI):** Substantially complete. All core AI routes wired end-to-end. `outreachDraft` prompt + API route + `LogOutreachForm` UI compose flow shipped May 23 2026. `jdExtract` prompt + `POST /api/opportunities/extract-jd` shipped May 26 2026. Two items remain (see below).
+- **Phase 3 (Outreach):** Complete — `/outreach` page, `ContactsPanel` with full outreach history and log form, `outreachDraft` AI compose button all shipped and merged to `main`.
+- **Design system migration:** Complete — all 5 layers done and merged to `main`. Env: `ANTHROPIC_API_KEY` required for AI; optional `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-20250514`).
+- **May 26 2026 small updates:** Three items shipped — button text fix (Companies/Opportunities), JD extraction from URL, "What is grndwrk?" sidebar modal.
 
-**Remaining before calling Phase 2 “complete” (product-wise):**
-1. Merge `cursor/ai-positioning-onboarding-redesign` and smoke-test the full onboarding flow (see §“Last session — next steps”)
-2. Wire `ConsistencyBanner` to `narrative_check` from API responses
-3. `outreachDraft` prompt (Phase 3 prep)
-4. Production smoke test with a real API key
+**Two items remaining before calling Phase 2 fully done:**
+1. **Dashboard priority queue full logic** — upgrade `GET /api/dashboard` from rule-based to 6 urgency tiers using real `Contact` + `EarningsSignal` data (see `todo.md`).
+2. **Production smoke test** — deploy to Vercel, confirm `ANTHROPIC_API_KEY` is set, test all AI buttons end-to-end in prod (including `outreachDraft`, `extract-jd`).
 
-**Next product phase:** Phase 3 — Outreach & contacts UI (routes largely exist; needs pages and wiring).
+**Optional polish (P3 design audit — non-blocking):**
+- Flatten card-heavy list/detail layouts to separator/row patterns where suitable
+- Normalize microcopy casing across modules
+- Replace opacity-only disabled states with explicit token variants
+
+**Deferred:** Phase 4 — Council Mode (auth, multi-user, shared watchlists, export). Plan separately.
 
 ---
 
-## Last session — what was built
+## Next steps (pick up here on return)
 
-### Design system migration (Apr 2026) — Layers 1–4 complete, Layer 5 pending
+Ordered by priority.
 
-Work committed to `main`. Old DM Sans / Fraunces / slate-blue system fully replaced in all primitive components. 19 page/feature-level files still use old tokens (Layer 5 — see `todo.md`).
+1. **Dashboard priority queue full logic** — `GET /api/dashboard`: implement 6 urgency tiers using `Contact` + `EarningsSignal` data. Current rule-based Phase 1 logic is a stub.
+2. **Production smoke test** — push to `main`, confirm Vercel build passes, verify `ANTHROPIC_API_KEY` in Vercel env, test all AI routes end-to-end in prod (including `extract-jd` with a real Greenhouse/Lever URL).
+3. **P3 design polish** (optional) — see "Optional polish" above and `todo.md` P3 items.
+4. **Phase 4** — auth (Clerk or NextAuth), multi-user, `userId` on all models, council shared watchlists, `GET /api/export`.
+
+---
+
+## Last session (May 26 2026) — what was built
+
+### Three small updates
+
+**Button text legibility fix (Companies + Opportunities pages)**
+- All primary `<Link>` CTA buttons on `/companies`, `/opportunities`, and their empty-state CTAs now use inline `style={{ background: "var(--accent)", color: "var(--accent-ink)" }}` instead of Tailwind class utilities. This ensures `--accent-ink` (white in light mode, near-black in dark mode) always takes precedence over the `a { color: inherit }` rule in `globals.css`.
+- Files changed: `app/(app)/companies/page.tsx`, `app/(app)/opportunities/page.tsx`, `components/companies/CompanyList.tsx`, `components/opportunities/OpportunityList.tsx`.
+
+**JD extraction from posting URL (`POST /api/opportunities/extract-jd`)**
+- `lib/ai/prompts/jdExtract.ts` — Zod schema `{ role_title?, level?, team?, jd_text, key_requirements[] }` + prompt that strips, cleans, and extracts from raw page text.
+- `app/api/opportunities/extract-jd/route.ts` — accepts `{ url }`, server-side fetches the page with a descriptive User-Agent, strips `<script>`/`<style>`/all HTML tags to plain text, clamps to 50k chars, calls `callClaude` with the `jdExtract` prompt, returns `{ data: JdExtract }`. Errors: `fetch_failed` (non-2xx or timeout), `ai_error` (parse/Claude failure), `ai_not_configured` (503 no key). `maxDuration = 60`.
+- `app/(app)/opportunities/new/page.tsx` — replaced the bare JD `<Textarea>` with a "Posting URL" input + "Extract from link" button. On success, populates `role_title`, `level`, `team`, `jd_text` (only overwrites empty fields). Inline spinner + error states. "Paste manually instead" toggle shows the textarea without a URL (also shown automatically after extraction for review). Works for static job boards (Greenhouse, Lever, Ashby); SPA/auth-gated pages (LinkedIn, Workday) may require manual paste.
+
+**"What is grndwrk?" sidebar modal**
+- `components/nav/WhatIsGrndwrkModal.tsx` — uses `Modal` from `components/ui/Modal.tsx`. Three sections: "What it helps you accomplish", "What it requires from you", "Why it's different from job boards". Voiced consistently with `/welcome`. "Got it" close button uses inline `style` for accent colors.
+- `components/nav/Sidebar.tsx` — added `HelpCircle` icon (inline SVG), `helpOpen` state in `Sidebar`, `onHelp` prop on `MobileNav`. New `NavItem label="What is grndwrk?"` appears immediately above Settings in both desktop footer and mobile drawer footer. `<WhatIsGrndwrkModal>` rendered once at the `Sidebar` root, shared by both triggers.
+
+`tsc --noEmit` passes clean.
+
+---
+
+## Session May 23 2026 — what was built
+
+### `outreachDraft` — full AI outreach compose flow
+
+**`lib/ai/prompts/outreachDraft.ts`**
+- Zod schema: `{ draft: string, subject?: string }`.
+- Prompt builder aware of: channel (linkedin/email/other — affects length and subject line), connection degree (first/second/cold — tone tier), prior outreach history (up to 3 summaries, avoids repeating), optional user context note. Uses `callClaudeWithProfile` so candidate positioning + narrative pillars are injected in system context.
+
+**`app/api/contacts/[id]/outreach-draft/route.ts`**
+- `POST` — accepts `{ channel?, opportunity_id?, context_note? }`. Fetches contact + optional opportunity for role title. Loads prior outreach summaries. Returns `{ data: { draft, subject? } }`. Has `maxDuration = 60`. Error shape: `{ error: "ai_error", retryable: true }` on failure.
+
+**`components/contacts/ContactsPanel.tsx` — `LogOutreachForm` updates**
+- "Draft with AI" button: calls `/api/contacts/[id]/outreach-draft`, populates the message textarea on success. Email drafts prepend `Subject: ...` to the textarea.
+- "Add context" toggle: reveals an optional textarea for user guidance (role, angle, specific ask) before drafting.
+- Drafting spinner state; inline error display if AI call fails.
+- `tsc --noEmit` passes clean.
+
+---
+
+## Previous sessions — what was built
+
+### Design system migration (complete, merged to main)
 
 **Layer 1 — `app/globals.css` + `app/layout.tsx`**
-- New 14-token CSS variable set (`--bg`, `--bg-elev`, `--bg-sub`, `--bg-mute`, `--ink`…`--ink-5`, `--line`, `--line-2`, `--accent`, `--accent-ink`, `--focus`). Light is `:root` default; dark via `body.dark`.
+- New 14-token CSS variable set (`--bg`, `--bg-elev`, `--bg-sub`, `--bg-mute`, `--ink`...`--ink-5`, `--line`, `--line-2`, `--accent`, `--accent-ink`, `--focus`). Light is `:root` default; dark via `body.dark`.
 - Spacing tokens: `--pad-x/y`, `--gap-row/section`, `--field-h`, `--radius`, `--radius-lg`. Global type scale h1–p.
 - Fonts: `Inter` (`--font-body`) + `JetBrains_Mono` (`--font-mono`). DM Sans + Fraunces removed.
 
@@ -77,118 +131,70 @@ Work committed to `main`. Old DM Sans / Fraunces / slate-blue system fully repla
 - `Button`, `Input`, `Textarea`, `Select`, `PageHeader`, `Tabs`, `Badge`, `SectionCard`, `Modal`, `Skeleton`, `Card`, `DraftEditor`, `ConsistencyBanner`, `ErrorMessage`, `CmfScore`.
 - Zero old token names remain in `components/ui/`. `PageHeader` gained `eyebrow` prop. `Badge` remapped to monochrome. lucide-react removed from `ConsistencyBanner` + `ErrorMessage`.
 
-**Layer 5a — Token sweep COMPLETE (May 2026).** All 19 page/feature-level files migrated:
-- App pages: `dashboard/page.tsx`, `companies/page.tsx`, `companies/[id]/page.tsx`, `opportunities/page.tsx`, `opportunities/[id]/page.tsx`, `comp/page.tsx`
-- Onboarding: `(onboarding)/layout.tsx`, `welcome/page.tsx`, `profile/setup/page.tsx`
-- Feature components: `CompanyList.tsx`, `CompanyDetailTabs.tsx`, `OpportunityList.tsx`, `OpportunityDetailTabs.tsx`, `ProfileEditor.tsx`, `AiPositioningPanel.tsx`, `CmfWeightSliders.tsx`, `WizardShell.tsx`, `LevelsFyiEmbed.tsx`, `ThemeToggle.tsx`
-- Removed every legacy token reference (`--background`, `--surface`, `--surface-raised`, `--sidebar`, `--border`, `--foreground`, `--muted`, `--accent-hover`, `--success`, `--warning`, `--danger`, `--font-heading`).
-- Saved / warning / error states now use Tailwind hue classes with dark variants (`text-green-700 dark:text-green-400`, etc.), matching the `Badge` semantic mapping from Layer 4.
-- `CompanyList`, `OpportunityList`, `WelcomePage`, `WizardShell` got light visual refreshes during the sweep (mono-uppercase eyebrows, ink-only filter pills, monochrome step indicators) — but no structural rewrite yet.
-- Verified `next build` + `tsc --noEmit` clean.
+**Layer 5a — Token sweep (complete).** All 19 page/feature-level files migrated. Every legacy token reference removed (`--background`, `--surface`, `--surface-raised`, `--sidebar`, `--border`, `--foreground`, `--muted`, `--accent-hover`, `--success`, `--warning`, `--danger`, `--font-heading`). Error/warning/success surfaces use Tailwind hue classes with dark variants.
 
-**Layer 5b — Page redesigns COMPLETE (May 2026):**
-- `CompanyList.tsx` → rebuilt as a table with `StatusPill` (999px radius pill, Active/Engaged/Sourced per brief_status), `LogoBox` initials, `TierBadge`, mono-uppercase `--bg-sub` header row, `--line-2` row dividers, `--bg-sub` hover, `FilterGroup` filter pills.
-- `OpportunityList.tsx` → rebuilt as kanban with 5 columns (Watching / Preparing / Applied / In Process / Closed), `OppCard` per spec (logo box, role title, next-action footer with arrow icon), show/hide Closed toggle.
-- `ProfileEditor.tsx` → all 5 tabs now use `FieldRow` two-column layout (`220px / 1fr`, `gap: 32px`, `--line-2` dividers, `max-width: 920px`). `SectionCard` import fully removed. Inline tag chips on target roles and stages.
-- `tsc --noEmit` + `next build` pass clean.
+**Layer 5b — Page redesigns (complete):**
+- `CompanyList.tsx` → table with `StatusPill`, `LogoBox`, `TierBadge`, mono-uppercase header, `--bg-sub` row hover, `FilterGroup` pills.
+- `OpportunityList.tsx` → kanban with 5 columns, `OppCard` per spec, show/hide Closed toggle.
+- `ProfileEditor.tsx` → all 5 tabs use `FieldRow` two-column layout (220px / 1fr, `--line-2` dividers, max-w 920px). `SectionCard` removed.
 
-**Design system migration fully complete.** All 5 layers done and on the `cursor/profile-design-refresh` branch.
+### Phase 3 — Outreach module (complete, merged to main)
 
----
+- `/outreach` page (`app/(app)/outreach/page.tsx`) with `ContactsPanel` — warmth filter (Hot/Warm/Cold), sorted by warmth priority.
+- `ContactsPanel.tsx` — contact table with `WarmthPill`, `DegreeBadge`, row expansion, outreach history timeline, `LogOutreachForm`, `AddContactForm`.
+- Contacts tab wired into `/companies/[id]` detail page, scoped by company.
+- Sidebar nav Outreach item fully live (no `comingSoon` flag).
 
-### Previous session — AI positioning + onboarding redesign (branch: `cursor/ai-positioning-onboarding-redesign`, not yet merged)
+### AI positioning + onboarding redesign (complete, merged to main)
 
-### 1. AI positioning draft
-- **`lib/ai/prompts/positioningStatement.ts`** — Zod schema + prompt builder. Three guided questions → 2–4 sentence first-person statement. Anchors to resume when provided.
-- **`app/api/profile/positioning/draft/route.ts`** — `POST`, draft-only (no DB write). Uses raw `callClaude` (not `callClaudeWithProfile`) since the profile doesn’t yet exist during onboarding. Standard error shape (503/502/422).
-- **`components/profile/AiPositioningPanel.tsx`** — Right-side drawer (440px desktop / full mobile). Four states: prompts → loading → draft → error. Use / Regenerate / Discard actions. Replace-with-confirm if textarea already has content.
-
-### 2. Onboarding redesign (7 single-idea steps)
-- **`app/(onboarding)/profile/setup/page.tsx`** — Rewritten. Steps: Positioning → Target roles → Stages & location → Resume → Pillars → CMF weights → Comp targets. AI panel wired to Step 1. Resume step has “Skip for now →” ghost action. Per-step validation gates.
-- **`components/onboarding/WizardShell.tsx`** — More breathing room: `max-w-[520px]`, `px-20 py-16`, `mb-12` header margin, `space-y-8` fields. Step labels: active = 13px medium, inactive = 12px muted.
-
-### 3. Welcome page
-- **`app/(onboarding)/welcome/page.tsx`** — Editorial intro: hero, three philosophy blocks (Proactive / Positioned / Pointed), numbered setup preview. “Get started →” sets `grndwrk_welcomed=1` cookie and routes to `/profile/setup`.
-
-### 4. First-launch gate
-- **`app/(app)/layout.tsx`** — Three-way redirect logic: onboarding complete → through; partial progress or cookie present → `/profile/setup`; brand-new user (no cookie) → `/welcome`.
-
-### 5. AI panel on `/profile`
-- **`components/profile/ProfileEditor.tsx`** — `CoreProfileTab` wired with same `AiPositioningPanel`, pre-seeded with full profile context (resume, roles, stages, geography).
-
-### 6. All five `/docs` updated
-`prd.md`, `frontend.md`, `backend.md`, `CLAUDE.md`, `ui.md` — new route, 7-step structure, AI prompt contract, wizard whitespace spec, AI assist panel pattern.
+- `lib/ai/prompts/positioningStatement.ts` — guided 3-question → 2–4 sentence first-person draft.
+- `app/api/profile/positioning/draft/route.ts` — `POST`, draft-only, no DB write.
+- `components/profile/AiPositioningPanel.tsx` — right-side drawer, 4 states (prompts / loading / draft / error), Use/Regenerate/Discard.
+- Onboarding redesigned to 7 single-idea steps: Positioning → Target roles → Stages & location → Resume → Pillars → CMF weights → Comp targets.
+- `/welcome` editorial intro page with cookie gate.
+- `app/(app)/layout.tsx` — three-way redirect: new user → `/welcome`; partial progress → `/profile/setup`; complete → through.
 
 ---
 
-## Next steps (pick up here on return)
-
-Ordered by dependency and urgency.
-
-### Current priority: Layer 5b — page redesigns (optional polish)
-Layer 5a (token sweep across all 19 files) is done. The remaining structural redesigns from `ui.md` are not blocking — the app compiles, looks consistent, and uses only the new token set. These are pure UX upgrades and can be picked up at any time:
-- **`CompanyList.tsx`** — Replace card grid with table layout per `ui.md` Companies spec (mono-uppercase headers, `StatusPill`, `FitBar`, `--bg-sub` row hover).
-- **`OpportunityList.tsx`** — Evaluate kanban layout grouped by status per `ui.md` Opportunities spec.
-- **`ProfileEditor.tsx`** — Swap `SectionCard` layout for FieldRow two-column pattern (220px / 1fr, `--line-2` dividers).
-
-### After Layer 5: smoke-test and merge onboarding branch
-1. **Smoke-test the onboarding flow end-to-end** — `npm run dev` locally against a seeded DB. Key things to verify:
-   - `/welcome` renders correctly; “Get started →” sets cookie and routes to step 1
-   - AI panel opens/closes, runs draft, Use/Discard work (requires `ANTHROPIC_API_KEY` in `.env`)
-   - Step validation: step 1 blocks on empty statement, step 2 blocks on empty roles, steps 3–7 don’t block
-   - “Skip for now” on resume step advances correctly
-   - Step 7 submit lands on `/dashboard`
-   - Returning user (cookie already set) goes to `/profile/setup`, not `/welcome`
-2. **Verify `/profile` Core Profile tab** — “Help me write with AI” button appears and panel works with existing profile data.
-3. **Merge `cursor/ai-positioning-onboarding-redesign` to main** once smoke-tested.
-
-### Shortly after
-4. **Wire `ConsistencyBanner`** — Read `narrative_check` from CMF / brief / cover-letter API responses; show yellow banner when `consistency_score < 3`. `ConsistencyBanner` component already exists in `components/ui/`.
-5. **Production smoke test** — Confirm `ANTHROPIC_API_KEY` is set on Vercel; test all AI buttons end-to-end in production.
-
-### Phase 3 (next major phase)
-6. **Outreach page + contact CRUD UX** — Routes exist (`/contacts`, `/contacts/[id]/outreach`); need pages, forms, and wiring to the priority queue.
-7. **`outreachDraft` prompt** — Connect earnings signals or role priorities to user background; feed into the outreach pipeline.
-8. **Dashboard priority queue enhancements** — Extend `GET /api/dashboard` with urgency tiers using contacts + earnings signals (per `todo.md`).
-
----
-## Phase 2 — What was finished (AI layer)
+## Phase 2 — AI layer reference
 
 ### Libraries
 - [`lib/ai/claude.ts`](../lib/ai/claude.ts) — `callClaude`, `callClaudeWithProfile` (injects `UserProfile` positioning + narrative pillars), 3-attempt retry.
 - [`lib/ai/extractJson.ts`](../lib/ai/extractJson.ts) — Strip markdown JSON fences, `parseWithSchema` (Zod).
 - [`lib/ai/narrative.ts`](../lib/ai/narrative.ts) — `runNarrativeCheck` after generations (optional; failures ignored).
-- [`lib/ai/prompts/`](../lib/ai/prompts/) — `resumeParse`, `cmf`, `companyBrief`, `roleBrief`, `earnings`, `narrativeCheck`, `coverLetter` (Zod schemas + prompt builders).
+- [`lib/ai/prompts/`](../lib/ai/prompts/) — `resumeParse`, `cmf`, `companyBrief`, `roleBrief`, `earnings`, `narrativeCheck`, `coverLetter`, `positioningStatement`, `outreachDraft`, `jdExtract` (Zod schemas + prompt builders).
 
 ### API behavior
 - No key → **503** `ai_not_configured` on AI routes.
 - AI / parse failure → **502** `ai_failure`, `retryable: true` (monitor in Vercel logs).
 - `export const maxDuration = 60` on long-running AI routes.
 
-### Endpoints (implemented)
+### Endpoints (all implemented)
 | Route | Purpose |
 |-------|---------|
-| `POST /api/profile/positioning/draft` | Draft-only positioning statement from guided answers + context; no DB write |
+| `POST /api/profile/positioning/draft` | Draft-only positioning statement; no DB write |
 | `POST /api/profile/resume` | Parse `resume_raw` → `resume_parsed` JSON on `UserProfile` |
 | `POST /api/opportunities/[id]/cmf` | Body `{ generate: true }` → AI CMF; else manual 5 dimension scores |
-| `POST /api/companies/[id]/brief` | Body `{ generate: true }` → company positioning brief fields + draft |
-| `POST /api/opportunities/[id]/brief` | Body `{ generate: true }` → role brief fields + draft |
+| `POST /api/companies/[id]/brief` | Body `{ generate: true }` → company positioning brief |
+| `POST /api/opportunities/[id]/brief` | Body `{ generate: true }` → role brief |
 | `POST /api/companies/[id]/signals/[signalId]/analyze` | Analyze transcript → `parsed_signals`, `outreach_trigger_score` |
 | `POST /api/opportunities/[id]/cover-letter` | Generate cover letter → `materials.cover_letter.draft` |
+| `POST /api/contacts/[id]/outreach-draft` | Body `{ channel?, opportunity_id?, context_note? }` → `{ draft, subject? }` |
+| `POST /api/opportunities/extract-jd` | Body `{ url }` → fetch posting URL, strip HTML, extract `{ role_title?, level?, team?, jd_text, key_requirements[] }` via AI |
 | `POST /api/benchmarks/fetch` | Returns `{ data: null, fallback: true }` (no scraper yet) |
 
 Successful AI generations may include **`narrative_check`** in the JSON body (optional) — not yet consumed by UI for `ConsistencyBanner`.
 
-### UI hooks (current)
-- **Onboarding Step 1 + Profile → Core Profile:** “Help me write with AI” opens `AiPositioningPanel` (guided prompts → side panel draft → Use/Regenerate/Discard). Uses `POST /api/profile/positioning/draft`. Draft-only until user accepts.
-- **Profile → Resume:** “Parse with AI” + parsed JSON preview.
-- **Company → Brief:** “Generate with AI”.
-- **Company → Signals:** “Analyze with AI” per signal.
-- **Opportunity → CMF:** “Generate with AI” + short AI rationale / recommendation when `cmf_breakdown.ai` is present.
-- **Opportunity → Role brief / Materials:** “Generate with AI” / “Generate cover letter”.
+### UI hooks
+- **Onboarding Step 1 + Profile → Core Profile:** "Help me write with AI" → `AiPositioningPanel`.
+- **Profile → Resume:** "Parse with AI" + parsed JSON preview.
+- **Company → Brief / Signals:** "Generate with AI" / "Analyze with AI".
+- **Opportunity → CMF / Role brief / Materials:** "Generate with AI" / "Generate cover letter".
+- **Outreach → Log form:** "Draft with AI" → calls `outreachDraft` route, populates message textarea.
+- **Opportunities → Add opportunity:** "Extract from link" → calls `extract-jd` with a posting URL, populates `role_title`, `level`, `team`, `jd_text` form fields. Manual paste fallback via toggle.
 
 ### Data note
-- CMF `cmf_breakdown` JSON may include **flat scores** (manual) or **flat scores + `ai`** (AI: rationale, gaps, recommendation). [`normalizeCmfBreakdownForSliders`](../lib/utils.ts) keeps sliders working for both.
+- CMF `cmf_breakdown` JSON may include flat scores (manual) or flat scores + `ai` (AI: rationale, gaps, recommendation). `normalizeCmfBreakdownForSliders` in `lib/utils.ts` keeps sliders working for both.
 
 ---
 
@@ -205,13 +211,11 @@ Successful AI generations may include **`narrative_check`** in the JSON body (op
 - **Module 2** — Company list/detail, signals, company brief tabs
 - **Module 3** — Opportunities, CMF tab, role brief, materials, comp snapshot
 - **Module 4** — `/comp`, Levels.fyi embeds
-- **Module 6** — `/dashboard` funnel + priority queue (rule-based)
-
-### API surface (non-exhaustive; see `app/api/`)
-- Profile, companies, opportunities, benchmarks, contacts, dashboard — as in Phase 1; AI-specific routes listed in the Phase 2 table above.
+- **Module 5** — `/outreach`, contacts, outreach history, AI compose
+- **Module 6** — `/dashboard` funnel + priority queue (rule-based; full urgency-tier logic pending)
 
 ### Shared UI (`components/ui/`)
-`Card`, `Badge`, `Button`, `Input`, `Textarea`, `Select`, `Skeleton`, `ErrorMessage`, `Modal`, `Tabs`, `PageHeader`, `CmfScore`, `DraftEditor`, `ConsistencyBanner` (banner not yet wired to AI `narrative_check`)
+`Card`, `Badge`, `Button`, `Input`, `Textarea`, `Select`, `Skeleton`, `ErrorMessage`, `Modal`, `Tabs`, `PageHeader`, `CmfScore`, `DraftEditor`, `ConsistencyBanner` (banner shell exists; not yet wired to `narrative_check`)
 
 ---
 
@@ -221,25 +225,12 @@ Successful AI generations may include **`narrative_check`** in the JSON body (op
 
 If builds succeed but you see **404** or **configuration mismatch**:
 
-1. **Settings → Build and Deployment** → **Framework Preset** = **Next.js** (not “Other”). Save and redeploy.
+1. **Settings → Build and Deployment** → **Framework Preset** = **Next.js** (not "Other"). Save and redeploy.
 
 ### Database and TypeScript
 
 - **P3019:** Migration provider mismatch — regenerate Postgres migrations; see past notes in git history if needed.
 - **`next build` stricter than `next dev`:** Run `npx tsc --noEmit` and `npm run build` before pushing.
-
----
-
-## Next steps (ordered suggestions)
-
-See §“Last session — next steps” above for the current ordered list. Short form:
-
-1. **Design system migration** — 5 layers: CSS tokens/fonts → ThemeProvider → Sidebar → primitives → page components (see `todo.md`)
-2. Smoke-test `cursor/ai-positioning-onboarding-redesign` branch — onboarding flow + AI panel
-3. Merge to main
-4. Wire `ConsistencyBanner` to `narrative_check`
-5. Production smoke test (`ANTHROPIC_API_KEY` on Vercel)
-6. Phase 3: Outreach page, contact CRUD, `outreachDraft` prompt
 
 ---
 
@@ -263,7 +254,7 @@ See §“Last session — next steps” above for the current ordered list. Shor
 2. **Company Intelligence Center** — Company profiles, earnings signals, company positioning brief.
 3. **Opportunity Tracker** — Job pipeline, CMF (manual + AI), role brief, materials, comp snapshot.
 4. **Compensation Intelligence** — Levels.fyi embeds, benchmarking, negotiation context.
-5. **Outreach & Relationship Pipeline** — Phase 3.
+5. **Outreach & Relationship Pipeline** — Contacts, warmth tracking, outreach history, AI compose.
 6. **Activity Dashboard** — Funnel, metrics, priority queue.
 
 ---
@@ -280,7 +271,7 @@ See `prisma/schema.prisma` and table in earlier docs; `resume_parsed` and `cmf_b
 - **UI design system:** See [ui.md](ui.md) — that is the source of truth. Key conventions:
   - Light mode default; dark mode via `.dark` class on `<body>`.
   - Fonts: Inter (body/UI, `--font-body`) + JetBrains Mono (eyebrows/table headers, `--font-mono`) via `next/font/google`. No DM Sans, no Fraunces.
-  - Tokens: `--bg`, `--bg-elev`, `--bg-sub`, `--bg-mute`, `--ink`…`--ink-5`, `--line`, `--line-2`, `--accent`, `--accent-ink`, `--focus`. Never use old names (`--background`, `--surface`, `--border`, etc.).
+  - Tokens: `--bg`, `--bg-elev`, `--bg-sub`, `--bg-mute`, `--ink`...`--ink-5`, `--line`, `--line-2`, `--accent`, `--accent-ink`, `--focus`. Never use old names (`--background`, `--surface`, `--border`, etc.).
   - Icons: custom 16×16 / 1.5-stroke set (see `docs/design-reference/icons.jsx`). Do not import `lucide-react` in nav or new components.
   - Sidebar: icon rail (60px collapsed → 220px hover-expand). Active nav: `--bg-mute` bg, no accent color.
   - Onboarding: sidebar-step layout (7 steps) with step list replacing module nav during `/profile/setup`.
@@ -300,10 +291,10 @@ See `lib/ai/prompts/*` and [prd.md](prd.md) for full product intent. CMF, earnin
 
 ## Funnel ↔ Status Mapping
 
-- **Monitoring** = Watching or Preparing  
-- **Positioned** = Brief ready, not yet applied / outreach_sent  
-- **Applied/Outreach Sent** = Applied and/or outreach_sent  
-- **In Process** = In process  
-- **Outcome** = Closed  
+- **Monitoring** = Watching or Preparing
+- **Positioned** = Brief ready, not yet applied / outreach_sent
+- **Applied/Outreach Sent** = Applied and/or outreach_sent
+- **In Process** = In process
+- **Outcome** = Closed
 
 Reference: [prd.md](prd.md) for full product spec.

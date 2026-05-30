@@ -50,7 +50,8 @@ export default async function CompaniesPage() {
         actions={
           <Link
             href="/companies/new"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-[var(--accent)] text-[var(--accent-ink)] hover:bg-[color-mix(in_srgb,var(--accent)_88%,transparent)] text-sm font-medium transition-colors"
+            style={{ background: "var(--accent)", color: "var(--accent-ink)" }}
+            className="inline-flex items-center gap-2 h-[var(--field-h)] px-4 rounded-[var(--radius)] text-[13px] font-medium tracking-[-0.005em] hover:opacity-90 transition-opacity"
           >
             + Add company
           </Link>

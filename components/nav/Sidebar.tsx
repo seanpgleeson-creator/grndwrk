@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { NavItem } from "./NavItem";
+import { WhatIsGrndwrkModal } from "./WhatIsGrndwrkModal";
 
 // ── Inline icon set (16×16 viewBox, 1.5 stroke) ─────────────────────────
 function Icon({
@@ -72,6 +73,12 @@ const Icons = {
       <path d="M8 1.5v1.5M8 13v1.5M14.5 8H13M3 8H1.5M12.6 3.4l-1.05 1.05M4.45 11.55 3.4 12.6M12.6 12.6l-1.05-1.05M4.45 4.45 3.4 3.4" />
     </Icon>
   ),
+  HelpCircle: () => (
+    <Icon>
+      <circle cx="8" cy="8" r="6.5" />
+      <path d="M6 6.5c0-1 .8-1.75 2-1.75s2 .75 2 1.75c0 1.25-2 1.5-2 2.75M8 11.5v.25" />
+    </Icon>
+  ),
   Logo: () => (
     <Icon>
       <rect x="2" y="2" width="5" height="5" rx="1" fill="currentColor" stroke="none" />
@@ -98,6 +105,7 @@ const FULL_W = 220;
 // ── Sidebar ──────────────────────────────────────────────────────────────
 export function Sidebar() {
   const [hovered, setHovered] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const width = hovered ? FULL_W : RAIL_W;
   const collapsed = !hovered;
 
@@ -178,6 +186,12 @@ export function Sidebar() {
           {/* Footer */}
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
             <NavItem
+              label="What is grndwrk?"
+              icon={<Icons.HelpCircle />}
+              collapsed={collapsed}
+              onClick={() => setHelpOpen(true)}
+            />
+            <NavItem
               label="Settings"
               icon={<Icons.Settings />}
               collapsed={collapsed}
@@ -252,13 +266,16 @@ export function Sidebar() {
       </aside>
 
       {/* Mobile: top bar */}
-      <MobileNav />
+      <MobileNav onHelp={() => setHelpOpen(true)} />
+
+      {/* "What is grndwrk?" modal — shared by desktop and mobile triggers */}
+      <WhatIsGrndwrkModal open={helpOpen} onOpenChange={setHelpOpen} />
     </>
   );
 }
 
 // ── Mobile top bar + drawer ───────────────────────────────────────────────
-function MobileNav() {
+function MobileNav({ onHelp }: { onHelp: () => void }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -389,6 +406,12 @@ function MobileNav() {
         <div style={{ flex: 1 }} />
 
         <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <NavItem
+            label="What is grndwrk?"
+            icon={<Icons.HelpCircle />}
+            collapsed={false}
+            onClick={() => { setOpen(false); onHelp(); }}
+          />
           <NavItem label="Settings" icon={<Icons.Settings />} collapsed={false} />
         </div>
       </aside>

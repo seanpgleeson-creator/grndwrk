@@ -38,6 +38,13 @@ export default function NewOpportunityPage() {
   const [error, setError] = useState("");
   const [companies, setCompanies] = useState<{ value: string; label: string }[]>([]);
 
+  // URL extraction state
+  const [postingUrl, setPostingUrl] = useState("");
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractError, setExtractError] = useState("");
+  const [showManualPaste, setShowManualPaste] = useState(false);
+  const [extracted, setExtracted] = useState(false);
+
   const [form, setForm] = useState({
     company_id: searchParams.get("company_id") ?? "",
     role_title: "",
@@ -59,6 +66,47 @@ export default function NewOpportunityPage() {
 
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleExtract() {
+    if (!postingUrl.trim()) return;
+    setIsExtracting(true);
+    setExtractError("");
+    setExtracted(false);
+
+    try {
+      const res = await fetch("/api/opportunities/extract-jd", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: postingUrl.trim() }),
+      });
+      const json = await res.json();
+
+      if (!res.ok || json.error) {
+        setExtractError(
+          json.message ?? "Extraction failed. Try pasting the description manually.",
+        );
+        setShowManualPaste(true);
+        return;
+      }
+
+      const data = json.data;
+      // Only fill empty fields so user edits are not clobbered
+      setForm((prev) => ({
+        ...prev,
+        role_title: prev.role_title || data.role_title || prev.role_title,
+        level: prev.level || data.level || prev.level,
+        team: prev.team || data.team || prev.team,
+        jd_text: prev.jd_text || data.jd_text || prev.jd_text,
+      }));
+      setExtracted(true);
+      setShowManualPaste(true); // show the JD textarea for review
+    } catch {
+      setExtractError("Network error. Try pasting the description manually.");
+      setShowManualPaste(true);
+    } finally {
+      setIsExtracting(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -124,13 +172,114 @@ export default function NewOpportunityPage() {
             onChange={(e) => set("status", e.target.value)}
             options={STATUS_OPTIONS}
           />
-          <Textarea
-            label="Job description"
-            value={form.jd_text}
-            onChange={(e) => set("jd_text", e.target.value)}
-            placeholder="Paste the full job description here..."
-            rows={8}
-          />
+
+          {/* Job description — URL extraction or manual paste */}
+          <div className="space-y-3">
+            <div>
+              <label
+                style={{
+                  display: "block",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "var(--ink-2)",
+                  marginBottom: 6,
+                  letterSpacing: "-0.005em",
+                }}
+              >
+                Job description
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={postingUrl}
+                  onChange={(e) => {
+                    setPostingUrl(e.target.value);
+                    setExtractError("");
+                    setExtracted(false);
+                  }}
+                  placeholder="Paste the posting URL (Greenhouse, Lever, Ashby…)"
+                  style={{
+                    flex: 1,
+                    height: "var(--field-h)",
+                    padding: "0 12px",
+                    fontSize: 13,
+                    background: "var(--bg-elev)",
+                    border: "1px solid var(--line)",
+                    borderRadius: "var(--radius)",
+                    color: "var(--ink)",
+                    outline: "none",
+                    transition: "border-color 120ms ease",
+                  }}
+                  onFocus={(e) => (e.target.style.borderColor = "var(--ink-4)")}
+                  onBlur={(e) => (e.target.style.borderColor = "var(--line)")}
+                />
+                <Button
+                  type="button"
+                  variant="secondary"
+                  loading={isExtracting}
+                  disabled={!postingUrl.trim() || isExtracting}
+                  onClick={handleExtract}
+                >
+                  {isExtracting ? "Extracting…" : "Extract from link"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Extraction feedback */}
+            {extracted && !extractError && (
+              <p
+                style={{
+                  fontSize: 12.5,
+                  color: "var(--ink-3)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                }}
+              >
+                <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 8l4 4 6-7" />
+                </svg>
+                Description extracted — review and edit below before saving.
+              </p>
+            )}
+            {extractError && (
+              <p style={{ fontSize: 12.5, color: "var(--ink-3)" }}>
+                {extractError}
+              </p>
+            )}
+
+            {/* Toggle for manual paste */}
+            {!showManualPaste && (
+              <button
+                type="button"
+                onClick={() => setShowManualPaste(true)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  padding: 0,
+                  fontSize: 12.5,
+                  color: "var(--ink-3)",
+                  cursor: "pointer",
+                  textDecoration: "underline",
+                  textUnderlineOffset: 3,
+                }}
+              >
+                Paste manually instead
+              </button>
+            )}
+
+            {/* JD textarea — shown after extraction or manual toggle */}
+            {showManualPaste && (
+              <Textarea
+                label={extracted ? "Extracted description (editable)" : "Paste job description"}
+                value={form.jd_text}
+                onChange={(e) => set("jd_text", e.target.value)}
+                placeholder="Paste the full job description here…"
+                rows={8}
+              />
+            )}
+          </div>
+
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex items-center gap-3 pt-2">
             <Button type="submit" variant="primary" loading={isPending}>

@@ -319,7 +319,39 @@ function LogOutreachForm({
   const [channel, setChannel] = useState("linkedin");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [summary, setSummary] = useState("");
+  const [contextNote, setContextNote] = useState("");
+  const [showContext, setShowContext] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [draftError, setDraftError] = useState("");
   const [error, setError] = useState("");
+
+  async function handleDraft() {
+    setDraftError("");
+    setDrafting(true);
+    try {
+      const res = await fetch(`/api/contacts/${contactId}/outreach-draft`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          channel,
+          context_note: contextNote.trim() || undefined,
+        }),
+      });
+      const json = (await res.json()) as {
+        data?: { draft: string; subject?: string };
+        message?: string;
+      };
+      if (!res.ok) throw new Error(json.message ?? "Failed to generate draft");
+      const draft = json.data?.draft ?? "";
+      const subject = json.data?.subject;
+      const full = subject ? `Subject: ${subject}\n\n${draft}` : draft;
+      setSummary(full);
+    } catch (e) {
+      setDraftError(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setDrafting(false);
+    }
+  }
 
   function handleSubmit() {
     setError("");
@@ -392,13 +424,78 @@ function LogOutreachForm({
           />
         </div>
       </div>
+
+      {/* Draft with AI */}
+      <div style={{ marginBottom: 8 }}>
+        {showContext && (
+          <div style={{ marginBottom: 6 }}>
+            <label style={{ display: "block", fontSize: 11, color: "var(--ink-3)", marginBottom: 3 }}>
+              Context for AI (optional — e.g. specific role, angle, or ask)
+            </label>
+            <textarea
+              style={{ ...inputStyle, height: "auto", padding: "6px 10px", minHeight: 44, resize: "vertical", lineHeight: 1.5 } as React.CSSProperties}
+              value={contextNote}
+              onChange={(e) => setContextNote(e.target.value)}
+              placeholder="e.g. They're hiring a PM for their growth team — ask for an intro call"
+            />
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <button
+            onClick={handleDraft}
+            disabled={drafting}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+              padding: "4px 10px",
+              background: "var(--bg-mute)",
+              color: drafting ? "var(--ink-4)" : "var(--ink-2)",
+              border: "1px solid var(--line)",
+              borderRadius: 5,
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: drafting ? "wait" : "pointer",
+              transition: "all 120ms ease",
+            }}
+          >
+            {drafting ? (
+              <>
+                <svg width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" aria-hidden="true" style={{ animation: "spin 1s linear infinite" }}>
+                  <path d="M8 2a6 6 0 1 1-4.243 1.757" />
+                </svg>
+                Drafting…
+              </>
+            ) : (
+              <>
+                <svg width={10} height={10} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M13 2 3 9l3 1 1 3 6-10z" />
+                </svg>
+                Draft with AI
+              </>
+            )}
+          </button>
+          <button
+            onClick={() => setShowContext((v) => !v)}
+            style={{ fontSize: 11.5, color: "var(--ink-4)", background: "transparent", border: "none", cursor: "pointer" }}
+          >
+            {showContext ? "Hide context" : "Add context"}
+          </button>
+          {draftError && (
+            <span className="text-[11px] text-red-700 dark:text-red-400">{draftError}</span>
+          )}
+        </div>
+      </div>
+
       <div style={{ marginBottom: 10 }}>
-        <label style={{ display: "block", fontSize: 11, color: "var(--ink-3)", marginBottom: 3 }}>Message summary (optional)</label>
+        <label style={{ display: "block", fontSize: 11, color: "var(--ink-3)", marginBottom: 3 }}>
+          Message {summary ? "(edit before sending)" : "summary (optional)"}
+        </label>
         <textarea
-          style={{ ...inputStyle, height: "auto", padding: "7px 10px", minHeight: 56, resize: "vertical", lineHeight: 1.5 } as React.CSSProperties}
+          style={{ ...inputStyle, height: "auto", padding: "7px 10px", minHeight: 80, resize: "vertical", lineHeight: 1.5 } as React.CSSProperties}
           value={summary}
           onChange={(e) => setSummary(e.target.value)}
-          placeholder="Brief description of your message..."
+          placeholder="Draft your message or use AI to generate one above…"
         />
       </div>
       {error && <p className="text-[11.5px] text-red-700 dark:text-red-400 mb-2">{error}</p>}

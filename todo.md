@@ -114,7 +114,7 @@ _Activate AI endpoints one at a time. Each follows: implement prompt file → wi
 - [x] **[PARALLEL]** Implement `roleBrief` prompt + activate `POST /api/opportunities/[id]/brief` with `generate: true`; "Generate with AI" on Role Brief tab
 - [x] **[PARALLEL]** Implement `coverLetter` via `POST /api/opportunities/[id]/cover-letter`; Materials tab "Generate cover letter"
 - [x] Implement `narrativeCheck` — runs after generation (API returns `narrative_check`); `ConsistencyBanner` wired in `OpportunityDetailTabs` (CMF, brief, cover-letter tabs) and `CompanyDetailTabs` (brief tab)
-- [ ] Implement `outreachDraft` prompt (prep for Phase 3)
+- [x] Implement `outreachDraft` prompt (prep for Phase 3)
 - [x] Set `export const maxDuration = 60` on long-running AI routes
 - [ ] Activate Priority Action Queue full logic in `GET /api/dashboard` (6 urgency tiers using real Contact + EarningsSignal data)
 - [ ] Test all AI routes via Vercel prod (real Anthropic API key)
@@ -129,7 +129,7 @@ _Activate AI endpoints one at a time. Each follows: implement prompt file → wi
 - [x] Build contact detail view — inline row expansion with outreach history timeline, log-outreach form, connection degree, notes, last contact
 - [x] Add Contacts tab to `/companies/[id]` detail page — `ContactsPanel` scoped to company, tab shows count
 - [x] Sidebar nav Outreach item — removed `comingSoon` flag, fully live
-- [ ] Wire `outreachDraft` AI prompt to outreach compose flow (Phase 3 stretch)
+- [x] Wire `outreachDraft` AI prompt to outreach compose flow (Phase 3 stretch)
 - [ ] Deploy and test in production
 
 ---
@@ -187,6 +187,14 @@ _Source: [docs/design-audit.md](docs/design-audit.md). Ordered by severity._
 - [ ] [DESIGN] [P3] Normalize microcopy casing (sentence case vs uppercase) for section labels and metadata across all modules
 - [ ] [DESIGN] [P3] Pair opacity-based disabled/muted states with explicit tokenized color variants for stronger distinction
 - [x] [DESIGN] [P3] Standardize transition timing/easing utility mapping at component level for motion consistency
+
+---
+
+## May 26 2026 — small updates
+
+- [x] [UI] Fix dark-on-dark button text on Companies / Opportunities pages and empty states — moved `color` / `background` to inline `style` on all primary `<Link>` CTAs to ensure `--accent-ink` always wins over anchor color inheritance
+- [x] [AI] Replace JD paste textarea on `/opportunities/new` with posting URL input + AI extraction (`POST /api/opportunities/extract-jd`) — server fetches page, strips HTML, calls Claude with `jdExtract` prompt; manual paste fallback remains via disclosure toggle
+- [x] [UX] Add "What is grndwrk?" modal (`components/nav/WhatIsGrndwrkModal.tsx`) — three sections: what it accomplishes, what it requires, why it's different from job boards; triggered from new sidebar footer nav item (desktop + mobile)
 
 ---
 
