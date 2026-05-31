@@ -41,14 +41,10 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 ## Current status (pick up here)
 
 - **Phase 1:** Complete — Vercel + Neon, full app shell and CRUD.
-- **Phase 2 (AI):** Substantially complete. All core AI routes wired end-to-end. `outreachDraft` prompt + API route + `LogOutreachForm` UI compose flow shipped May 23 2026. `jdExtract` prompt + `POST /api/opportunities/extract-jd` shipped May 26 2026. Two items remain (see below).
+- **Phase 2 (AI):** **Complete** — All AI routes wired. Full 6-tier priority action queue shipped May 31 2026. `outreachDraft`, `jdExtract`, `extract-jd` all live. Production smoke test pending (see next steps).
 - **Phase 3 (Outreach):** Complete — `/outreach` page, `ContactsPanel` with full outreach history and log form, `outreachDraft` AI compose button all shipped and merged to `main`.
 - **Design system migration:** Complete — all 5 layers done and merged to `main`. Env: `ANTHROPIC_API_KEY` required for AI; optional `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-20250514`).
-- **May 26 2026 small updates:** Three items shipped — button text fix (Companies/Opportunities), JD extraction from URL, "What is grndwrk?" sidebar modal.
-
-**Two items remaining before calling Phase 2 fully done:**
-1. **Dashboard priority queue full logic** — upgrade `GET /api/dashboard` from rule-based to 6 urgency tiers using real `Contact` + `EarningsSignal` data (see `todo.md`).
-2. **Production smoke test** — deploy to Vercel, confirm `ANTHROPIC_API_KEY` is set, test all AI buttons end-to-end in prod (including `outreachDraft`, `extract-jd`).
+- **May 31 2026:** Dashboard priority queue upgraded to full 6-tier urgency logic using Contact + EarningsSignal data.
 
 **Optional polish (P3 design audit — non-blocking):**
 - Flatten card-heavy list/detail layouts to separator/row patterns where suitable
@@ -63,14 +59,31 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 
 Ordered by priority.
 
-1. **Dashboard priority queue full logic** — `GET /api/dashboard`: implement 6 urgency tiers using `Contact` + `EarningsSignal` data. Current rule-based Phase 1 logic is a stub.
-2. **Production smoke test** — push to `main`, confirm Vercel build passes, verify `ANTHROPIC_API_KEY` in Vercel env, test all AI routes end-to-end in prod (including `extract-jd` with a real Greenhouse/Lever URL).
-3. **P3 design polish** (optional) — see "Optional polish" above and `todo.md` P3 items.
-4. **Phase 4** — auth (Clerk or NextAuth), multi-user, `userId` on all models, council shared watchlists, `GET /api/export`.
+1. **Production smoke test** — confirm Vercel build passes, verify `ANTHROPIC_API_KEY` in Vercel env, test all AI routes end-to-end in prod (including `extract-jd` with a real Greenhouse/Lever URL, `outreachDraft`, CMF scoring, cover letter).
+2. **P3 design polish** (optional) — see "Optional polish" above and `todo.md` P3 items.
+3. **Phase 4** — auth (Clerk or NextAuth), multi-user, `userId` on all models, council shared watchlists, `GET /api/export`.
 
 ---
 
-## Last session (May 26 2026) — what was built
+## Last session (May 31 2026) — what was built
+
+### Dashboard priority queue — full 6-tier urgency logic
+
+Upgraded `GET /api/dashboard` and `app/(app)/dashboard/page.tsx` from the Phase 1 rule-based stub to the full urgency-tier system defined in `backend.md §7`.
+
+**Six tiers implemented (highest priority first):**
+1. EarningsSignal with `outreach_trigger_score >= 4`, no outreach to that company in 14 days → "Review signal"
+2. Opportunity InProcess with no OutreachRecord (by opportunity_id) in 7 days → "Log outreach"
+3. Contact at Tier 1 company with `last_contact` older than 30 days (or null) → "Reach out"
+4. Open opportunity with null `cmf_score` → "Score now"
+5. Tier 1 company with incomplete or missing positioning brief → "Write brief"
+6. Opportunity in Applied with no follow-up OutreachRecord in 14 days → "Follow up"
+
+**Implementation:** Added `DashboardContactRow`, `DashboardOutreachRow`, `DashboardSignalRow` types to `lib/prisma-types.ts`. Both the API route and Server Component query Contact, EarningsSignal, and OutreachRecord data in parallel and build Set-based lookup maps for O(1) outreach checks. `tsc --noEmit` and `next build` pass clean. Pushed to `main`.
+
+---
+
+## Session (May 26 2026) — what was built
 
 ### Three small updates
 

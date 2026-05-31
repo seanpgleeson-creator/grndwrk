@@ -116,7 +116,7 @@ _Activate AI endpoints one at a time. Each follows: implement prompt file → wi
 - [x] Implement `narrativeCheck` — runs after generation (API returns `narrative_check`); `ConsistencyBanner` wired in `OpportunityDetailTabs` (CMF, brief, cover-letter tabs) and `CompanyDetailTabs` (brief tab)
 - [x] Implement `outreachDraft` prompt (prep for Phase 3)
 - [x] Set `export const maxDuration = 60` on long-running AI routes
-- [ ] Activate Priority Action Queue full logic in `GET /api/dashboard` (6 urgency tiers using real Contact + EarningsSignal data)
+- [x] Activate Priority Action Queue full logic in `GET /api/dashboard` (6 urgency tiers using real Contact + EarningsSignal data)
 - [ ] Test all AI routes via Vercel prod (real Anthropic API key)
 
 ---
