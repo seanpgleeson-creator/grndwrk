@@ -37,6 +37,29 @@ export interface BriefCompletedRow {
   completed_at: Date | null;
 }
 
+export interface DashboardContactRow {
+  id: string;
+  name: string;
+  company_id: string | null;
+  last_contact: Date | null;
+  company: { id: string; name: string; tier: number | null } | null;
+}
+
+export interface DashboardOutreachRow {
+  contact_id: string;
+  opportunity_id: string | null;
+  date: Date;
+  contact: { company_id: string | null };
+}
+
+export interface DashboardSignalRow {
+  id: string;
+  company_id: string;
+  date: Date;
+  outreach_trigger_score: number | null;
+  company: { id: string; name: string };
+}
+
 export interface CompaniesApiRow {
   id: string;
   name: string;
