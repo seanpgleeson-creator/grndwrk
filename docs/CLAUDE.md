@@ -41,10 +41,28 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 ## Current status (pick up here)
 
 - **Phase 1:** Complete — Vercel + Neon, full app shell and CRUD.
-- **Phase 2 (AI):** **Complete** — All AI routes wired. Full 6-tier priority action queue shipped May 31 2026. `outreachDraft`, `jdExtract`, `extract-jd` all live. Production smoke test pending (see next steps).
-- **Phase 3 (Outreach):** Complete — `/outreach` page, `ContactsPanel` with full outreach history and log form, `outreachDraft` AI compose button all shipped and merged to `main`.
-- **Design system migration:** Complete — all 5 layers done and merged to `main`. Env: `ANTHROPIC_API_KEY` required for AI; optional `ANTHROPIC_MODEL` (defaults to `claude-sonnet-4-20250514`).
-- **May 31 2026:** Dashboard priority queue upgraded to full 6-tier urgency logic using Contact + EarningsSignal data.
+- **Phase 2 (AI):** Complete — All AI routes wired. Full 6-tier priority action queue live.
+- **Phase 3 (Outreach):** Complete — `/outreach`, `ContactsPanel`, `outreachDraft` all live.
+- **Design system migration:** Complete — all 5 layers done and merged to `main`.
+- **June 2026 page updates:** In progress — 18-item batch across 6 phases (see `todo.md`).
+
+**June 2026 changes (overview):**
+- "Earnings signals" renamed to "Market signals" in UI (broader scope: target co + competitors + industry news). Model name `EarningsSignal` unchanged.
+- Company brief "Generate with AI" removed.
+- Signals get AI-suggest feature (`POST /api/companies/[id]/signals/suggest`, new `marketSignals.ts` prompt).
+- Outreach compose renamed "Improve with AI" (user writes first, AI enhances); was "Draft with AI".
+- Outreach channels expanded: + "Live chat (virtual)", "Live chat (in person)".
+- Company detail edit now includes `size` field (was missing).
+- Opportunity: edit UI added; company dropdown has "+ Add a new company" with return-redirect flow.
+- CMF sliders: free-adjust (no auto-rebalance); Save blocked unless total = 100.
+- Positioning AI: new satisfaction question added to prompt + panel.
+- Comp target inputs: free text (was `type="number"` with arrow-only UX).
+- Resume: file upload (PDF/DOCX) added to Profile → Resume tab.
+- `preferred_geographies` (JSON array, max 5, ordered) added to `UserProfile` schema.
+- Comp page: full dropdown rework (curated list, saved companies pinned top, up to 3, geography param).
+- Comp targets: geography dropdown + right-panel CoL equivalence using static `lib/comp/costOfLiving.ts`.
+- AI company overview auto-fill (`POST /api/companies/suggest-overview`).
+- AI proactive role suggestions gated on complete profile (`POST /api/opportunities/role-suggestions`).
 
 **Optional polish (P3 design audit — non-blocking):**
 - Flatten card-heavy list/detail layouts to separator/row patterns where suitable
@@ -59,11 +77,32 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 
 Ordered by priority.
 
-1. **Production smoke test** — confirm Vercel build passes, verify `ANTHROPIC_API_KEY` in Vercel env, test all AI routes end-to-end in prod (including `extract-jd` with a real Greenhouse/Lever URL, `outreachDraft`, CMF scoring, cover letter).
-2. **P3 design polish** (optional) — see "Optional polish" above and `todo.md` P3 items.
-3. **Phase 4** — auth (Clerk or NextAuth), multi-user, `userId` on all models, council shared watchlists, `GET /api/export`.
+1. **Complete June 2026 batch** — all phases A–F in `todo.md`.
+2. **Production smoke test** — confirm Vercel build, `ANTHROPIC_API_KEY`, all AI routes end-to-end.
+3. **P3 design polish** (optional).
+4. **Phase 4** — auth (Clerk or NextAuth), multi-user, council watchlists, export.
 
 ---
+
+## June 2026 — schema additions
+
+New `UserProfile` field:
+- `preferred_geographies` — `String?` (JSON string array, up to 5 cities ordered by priority). Used by comp targets (geography dropdown, CoL equivalence) and AI role suggestions.
+
+New lib:
+- `lib/comp/costOfLiving.ts` — static CoL index for ~40 cities; exports `getColIndex(city)` and `convertComp(amount, fromCity, toCity)`.
+
+New AI prompts:
+- `lib/ai/prompts/marketSignals.ts` — suggests market signals (target company + competitors + industry) from company name/website/notes.
+- `lib/ai/prompts/companyOverview.ts` — infers stage/size/HQ/notes from company name + website.
+- `lib/ai/prompts/roleSuggestions.ts` — suggests interesting roles based on user profile (target roles, resume, pillars, geographies).
+- `positioningStatement.ts` updated: new `satisfaction` question field in `PositioningDraftInput.answers`.
+
+New API routes:
+- `POST /api/companies/[id]/signals/suggest` — AI-suggested market signals
+- `POST /api/companies/suggest-overview` — AI company overview fields
+- `POST /api/opportunities/role-suggestions` — AI proactive role ideas (gated: profile complete)
+- `POST /api/profile/resume/upload` — multipart file upload → `resume_raw`
 
 ## Last session (May 31 2026) — what was built
 

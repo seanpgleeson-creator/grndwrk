@@ -64,6 +64,15 @@ export default function NewOpportunityPage() {
       });
   }, []);
 
+  // Handle "add a new company" selection
+  function handleCompanyChange(value: string) {
+    if (value === "__add_new__") {
+      router.push(`/companies/new?return=/opportunities/new`);
+      return;
+    }
+    set("company_id", value);
+  }
+
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
@@ -141,8 +150,11 @@ export default function NewOpportunityPage() {
           <Select
             label="Company *"
             value={form.company_id}
-            onChange={(e) => set("company_id", e.target.value)}
-            options={companies}
+            onChange={(e) => handleCompanyChange(e.target.value)}
+            options={[
+              ...companies,
+              { value: "__add_new__", label: "+ Add a new company" },
+            ]}
             placeholder="Select a company"
           />
           <Input

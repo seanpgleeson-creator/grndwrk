@@ -3,8 +3,7 @@
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/Tabs";
-import { Card } from "@/components/ui/Card";
-import { Badge, statusToBadgeVariant } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -85,11 +84,35 @@ export function OpportunityDetailTabs({ opportunity, brief, cmfWeights, compTarg
   );
 }
 
+const LEVEL_OPTIONS = [
+  { value: "IC1", label: "IC1" },
+  { value: "IC2", label: "IC2" },
+  { value: "IC3", label: "IC3" },
+  { value: "IC4", label: "IC4" },
+  { value: "IC5", label: "IC5" },
+  { value: "IC6", label: "IC6" },
+  { value: "IC7", label: "IC7" },
+  { value: "Manager", label: "Manager" },
+  { value: "Director", label: "Director" },
+  { value: "VP", label: "VP" },
+  { value: "C-Suite", label: "C-Suite" },
+  { value: "Other", label: "Other" },
+];
+
 function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
+  const router = useRouter();
   const [status, setStatus] = useState(opportunity.status);
   const [outreachSent, setOutreachSent] = useState(opportunity.outreach_sent);
   const [isPending, startTransition] = useTransition();
   const [showJd, setShowJd] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({
+    role_title: opportunity.role_title,
+    level: opportunity.level ?? "",
+    team: opportunity.team ?? "",
+    jd_text: opportunity.jd_text ?? "",
+  });
+  const [editSaved, setEditSaved] = useState(false);
 
   function handleStatusChange(newStatus: string) {
     setStatus(newStatus);
@@ -103,6 +126,21 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
     setOutreachSent(newVal);
     startTransition(async () => {
       await updateOpportunity(opportunity.id, { outreach_sent: newVal });
+    });
+  }
+
+  function handleEditSave() {
+    startTransition(async () => {
+      await updateOpportunity(opportunity.id, {
+        role_title: editForm.role_title || undefined,
+        level: editForm.level || undefined,
+        team: editForm.team || undefined,
+        jd_text: editForm.jd_text || undefined,
+      });
+      setEditing(false);
+      setEditSaved(true);
+      setTimeout(() => setEditSaved(false), 2000);
+      router.refresh();
     });
   }
 
@@ -136,6 +174,76 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
         </div>
       </SectionCard>
 
+      {/* Role details — view or edit */}
+      <SectionCard
+        title="Role details"
+        action={
+          editing ? undefined : (
+            <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
+              Edit
+            </Button>
+          )
+        }
+      >
+        {editing ? (
+          <div className="space-y-4">
+            <Input
+              label="Role title"
+              value={editForm.role_title}
+              onChange={(e) => setEditForm({ ...editForm, role_title: e.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Select
+                label="Level"
+                value={editForm.level}
+                onChange={(e) => setEditForm({ ...editForm, level: e.target.value })}
+                options={LEVEL_OPTIONS}
+                placeholder="Select level"
+              />
+              <Input
+                label="Team / function"
+                value={editForm.team}
+                onChange={(e) => setEditForm({ ...editForm, team: e.target.value })}
+                placeholder="Marketplace, Growth"
+              />
+            </div>
+            <Textarea
+              label="Job description"
+              value={editForm.jd_text}
+              onChange={(e) => setEditForm({ ...editForm, jd_text: e.target.value })}
+              rows={8}
+              placeholder="Paste the full job description..."
+            />
+            <div className="flex items-center gap-3 pt-1">
+              <Button variant="primary" size="sm" onClick={handleEditSave} loading={isPending}>
+                Save changes
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                { label: "Role", value: opportunity.role_title },
+                { label: "Level", value: opportunity.level },
+                { label: "Team", value: opportunity.team },
+              ].map(({ label, value }) => (
+                <div key={label}>
+                  <p className="text-[12px] text-[var(--ink-3)] mb-0.5">{label}</p>
+                  <p className="text-sm text-[var(--ink)]">{value ?? "—"}</p>
+                </div>
+              ))}
+            </div>
+            {editSaved && (
+              <p className="text-[13px] text-green-700 dark:text-green-400">Saved</p>
+            )}
+          </div>
+        )}
+      </SectionCard>
+
       {opportunity.key_requirements.length > 0 && (
         <SectionCard title="Key requirements">
           <ul className="space-y-1.5">
@@ -149,7 +257,7 @@ function OverviewTab({ opportunity }: { opportunity: Opportunity }) {
         </SectionCard>
       )}
 
-      {opportunity.jd_text && (
+      {!editing && opportunity.jd_text && (
         <SectionCard
           title="Job description"
           action={

@@ -157,6 +157,49 @@ _Deferred — no auth in Phases 1–3. Plan separately when ready._
 
 ---
 
+## June 2026 — Page Updates
+
+_Source: plan `groundwork_page_updates_12e22d28`. 18 items across 6 phases._
+
+### Phase A — Quick UI / bug fixes (no schema changes)
+
+- [ ] [UI] Fix "Add opportunity" button color on company detail page (`OpportunitiesTab` addAction in `CompanyDetailTabs.tsx`) — switch from light outline to primary `--accent` / `--accent-ink` (white) style
+- [ ] [UI] Remove "Generate with AI" feature from company brief tab (`BriefTab` in `CompanyDetailTabs.tsx`) — delete `handleGenerateAi` and `generateAction`
+- [ ] [UX] Comp target fields — change `type="number"` inputs in `ProfileEditor.tsx` `CompTab` to text with numeric validation so typing is the primary input method
+- [ ] [AI] Positioning statement — add new question "Thinking about your career experiences, when were you the most satisfied? What brought you satisfaction and why?" to `positioningStatement.ts` prompt schema and `AiPositioningPanel.tsx`
+- [ ] [UX] CMF weight sliders — remove auto-rebalance logic; sliders move independently; block Save unless total === 100 (indicator already exists)
+- [ ] [UI] CMF weight sliders — fix label/description spacing (label and description are flush; add block layout or gap)
+- [ ] [BUG] Company edit form — add missing `Size` `<Select>` field (present in create form, absent in edit form in `CompanyDetailTabs.tsx`)
+- [ ] [UX] Outreach channels — add "Live chat (virtual)" and "Live chat (in person)" options to channel select in `ContactsPanel.tsx`
+
+### Phase B — Opportunity & company flow
+
+- [ ] [FEATURE] Edit opportunity — add edit UI on `/opportunities/[id]` using existing `updateOpportunity` action (role_title, level, team, jd_text, status)
+- [ ] [FEATURE] "Add a new company" option in opportunity company dropdown — routes to `/companies/new?return=/opportunities/new`; after company created, redirects back with `company_id` pre-selected
+
+### Phase C — Market Signals (rename + AI suggestions)
+
+- [ ] [UX] Rename "Earnings signals" → "Market signals" in UI copy (`CompanyDetailTabs.tsx` tab label + descriptions); keep `EarningsSignal` model name internally
+- [ ] [AI] AI-suggested market signals — new `lib/ai/prompts/marketSignals.ts` + `POST /api/companies/[id]/signals/suggest` route; "Suggest signals with AI" button in `SignalsTab` that lists proposals the user can add individually
+
+### Phase D — Profile additions (schema changes)
+
+- [ ] [FEATURE] Resume upload — add file upload (PDF/DOCX) to `ResumeTab`; new `POST /api/profile/resume/upload` route; parse server-side with `pdf-parse` / `mammoth`; populate `resume_raw` then auto-run Parse with AI
+- [ ] [SCHEMA] Add `preferred_geographies` (JSON string array, ordered, max 5) to `UserProfile` in `prisma/schema.prisma` + migration
+- [ ] [FEATURE] Preferred geographies — new profile section/UI with add/remove + priority ordering (drag or up/down arrows); surface in `ProfileEditor.tsx`
+
+### Phase E — Compensation intelligence rework
+
+- [ ] [FEATURE] Comp page full redesign — single set of up to 3 independent dropdowns backed by curated company list (saved companies pinned to top); remove old "select to pin then change inside box" pattern; keep `LevelsFyiEmbed`
+- [ ] [FEATURE] Comp targets + geography equivalence — add geography dropdown (from `preferred_geographies`, pre-selects highest-priority city); right-side panel showing equivalent salary in other geographies using static CoL index (`lib/comp/costOfLiving.ts`)
+
+### Phase F — AI enrichment (best-effort, no LinkedIn API)
+
+- [ ] [AI] Company overview auto-fill — "Suggest with AI" button on company create/edit; new `POST /api/companies/suggest-overview` route; Claude infers stage/size/HQ/notes from name + website; user reviews before saving
+- [ ] [AI] Proactive role suggestions — AI "Roles you might like" panel on Opportunities; gated until profile is complete (positioning + resume present); `POST /api/opportunities/role-suggestions`
+
+---
+
 ## Design Fixes (from audit)
 
 _Source: [docs/design-audit.md](docs/design-audit.md). Ordered by severity._

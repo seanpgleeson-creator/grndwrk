@@ -60,6 +60,23 @@ export interface DashboardSignalRow {
   company: { id: string; name: string };
 }
 
+export interface UserProfileRow {
+  id: string;
+  positioning_statement: string | null;
+  narrative_pillars: string;
+  target_roles: string;
+  target_stages: string;
+  geography: string | null;
+  remote_preference: string | null;
+  resume_raw: string | null;
+  resume_parsed: string | null;
+  cmf_weights: string;
+  comp_target: string | null;
+  preferred_geographies: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface CompaniesApiRow {
   id: string;
   name: string;

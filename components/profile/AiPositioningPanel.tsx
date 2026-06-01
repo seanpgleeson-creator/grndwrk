@@ -34,6 +34,11 @@ const PROMPTS = [
     label: "What's one thing most resumes miss about you?",
     placeholder: "e.g. I've shipped code, not just managed engineers — or I've built the business case, not just the product",
   },
+  {
+    id: "satisfaction" as const,
+    label: "Thinking about your career experiences, when were you the most satisfied? What brought you satisfaction in this experience and why?",
+    placeholder: "e.g. Leading the redesign of our onboarding flow — I owned the full problem end-to-end and could see the direct impact on activation rates",
+  },
 ];
 
 export function AiPositioningPanel({
@@ -51,6 +56,7 @@ export function AiPositioningPanel({
     distinctly_good_at: "",
     problems: "",
     missed: "",
+    satisfaction: "",
   });
   const [draft, setDraft] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
@@ -80,6 +86,7 @@ export function AiPositioningPanel({
     answers.distinctly_good_at.trim() ||
     answers.problems.trim() ||
     answers.missed.trim() ||
+    answers.satisfaction.trim() ||
     resumeRaw?.trim();
 
   const callDraft = useCallback(async () => {
@@ -95,6 +102,7 @@ export function AiPositioningPanel({
             distinctly_good_at: answers.distinctly_good_at || undefined,
             problems: answers.problems || undefined,
             missed: answers.missed || undefined,
+            satisfaction: answers.satisfaction || undefined,
           },
           resume_raw: resumeRaw || undefined,
           target_roles: targetRoles?.length ? targetRoles : undefined,

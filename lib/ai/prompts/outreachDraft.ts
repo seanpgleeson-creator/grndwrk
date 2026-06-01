@@ -16,6 +16,7 @@ export function buildOutreachDraftPrompt(input: {
   opportunityTitle: string | null;
   contextNote: string | null;
   priorOutreachSummaries: string[];
+  existingDraft?: string | null;
 }): string {
   const {
     contactName,
@@ -26,6 +27,7 @@ export function buildOutreachDraftPrompt(input: {
     opportunityTitle,
     contextNote,
     priorOutreachSummaries,
+    existingDraft,
   } = input;
 
   const isEmail = channel === "email";
@@ -57,17 +59,26 @@ export function buildOutreachDraftPrompt(input: {
 
   const extraContext = contextNote ? `Additional context from the user:\n${contextNote}` : "";
 
+  const improveContext = existingDraft?.trim()
+    ? `The candidate has already written a draft. Improve it — sharpen the language, improve clarity, tighten length, and make it more compelling. Preserve their intent and voice. Do not change the core message or facts.\n\nTheir draft:\n${existingDraft.trim()}`
+    : "";
+
   const schemaInstruction = isEmail
     ? `Return ONLY valid JSON:\n{ "draft": string, "subject": string }`
     : `Return ONLY valid JSON:\n{ "draft": string }`;
 
-  return `Write an outreach message draft for the candidate to send to a professional contact.
+  const task = existingDraft?.trim()
+    ? "Improve the outreach message draft written by the candidate."
+    : "Write an outreach message draft for the candidate to send to a professional contact.";
+
+  return `${task}
 
 Recipient: ${contactName}${contactTitle ? `, ${contactTitle}` : ""}${companyName ? ` at ${companyName}` : ""}
 ${connectionContext}
 ${purposeContext}
 ${channelInstruction}
 ${historyContext ? `\n${historyContext}` : ""}
+${improveContext ? `\n${improveContext}` : ""}
 ${extraContext ? `\n${extraContext}` : ""}
 
 Rules:

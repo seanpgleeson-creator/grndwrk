@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -36,8 +36,12 @@ const TIER_OPTIONS = [
 
 export default function NewCompanyPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("return");
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState("");
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestError, setSuggestError] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -52,6 +56,36 @@ export default function NewCompanyPage() {
 
   function set(field: string, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
+  }
+
+  async function handleSuggest() {
+    if (!form.name.trim()) return;
+    setSuggesting(true);
+    setSuggestError("");
+    try {
+      const res = await fetch("/api/companies/suggest-overview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, website: form.website || undefined }),
+      });
+      const json = (await res.json()) as {
+        data?: { stage?: string; size?: string; hq?: string; notes?: string };
+        message?: string;
+      };
+      if (!res.ok) throw new Error(json.message || "Suggestion failed");
+      const d = json.data ?? {};
+      setForm((prev) => ({
+        ...prev,
+        stage: d.stage || prev.stage,
+        size: d.size || prev.size,
+        hq: d.hq || prev.hq,
+        notes: d.notes || prev.notes,
+      }));
+    } catch (e) {
+      setSuggestError(e instanceof Error ? e.message : "Failed to suggest overview");
+    } finally {
+      setSuggesting(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -73,7 +107,11 @@ export default function NewCompanyPage() {
           tier: form.tier ? Number(form.tier) : undefined,
           notes: form.notes || undefined,
         });
-        router.push(`/companies/${company.id}`);
+        if (returnTo) {
+          router.push(`${returnTo}?company_id=${company.id}`);
+        } else {
+          router.push(`/companies/${company.id}`);
+        }
       } catch {
         setError("Failed to create company. Please try again.");
       }
@@ -142,6 +180,26 @@ export default function NewCompanyPage() {
             placeholder="Why this company? What excites you about them?"
             rows={3}
           />
+
+          {/* Suggest with AI */}
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              loading={suggesting}
+              disabled={!form.name.trim() || suggesting}
+              onClick={handleSuggest}
+            >
+              Suggest overview with AI
+            </Button>
+            {suggestError && (
+              <p className="text-[12.5px] text-red-400">{suggestError}</p>
+            )}
+          </div>
+          <p className="text-[12px] text-[var(--ink-4)]">
+            AI will pre-fill stage, size, HQ, and notes — review before saving.
+          </p>
+
           {error && <p className="text-sm text-red-400">{error}</p>}
           <div className="flex items-center gap-3 pt-2">
             <Button type="submit" variant="primary" loading={isPending}>

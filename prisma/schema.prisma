@@ -24,6 +24,7 @@ model UserProfile {
   remote_preference     String?
   cmf_weights           String   @default("{\"domain\":30,\"stage\":20,\"scope\":20,\"strategic\":20,\"narrative\":10}") // JSON
   comp_target           String?  // JSON: { base_target, total_target, minimum, level }
+  preferred_geographies String   @default("[]") // JSON array of up to 5 cities, ordered by priority
   created_at            DateTime @default(now())
   updated_at            DateTime @updatedAt
 }

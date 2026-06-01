@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/Tabs";
 import { Card } from "@/components/ui/Card";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { Badge, statusToBadgeVariant, tierToBadgeVariant } from "@/components/ui/Badge";
+import { Badge, statusToBadgeVariant } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
@@ -13,7 +13,6 @@ import { Select } from "@/components/ui/Select";
 import { CmfScore } from "@/components/ui/CmfScore";
 import { LevelsFyiEmbed } from "@/components/comp/LevelsFyiEmbed";
 import { updateCompany, createEarningsSignal, deleteEarningsSignal, upsertCompanyBrief, deleteCompany } from "@/app/actions/companies";
-import { ConsistencyBanner } from "@/components/ui/ConsistencyBanner";
 import { ContactsPanel, type Contact } from "@/components/contacts/ContactsPanel";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
@@ -84,11 +83,18 @@ const TIER_OPTIONS = [
   { value: "3", label: "Tier 3" },
 ];
 
+const SIZE_OPTIONS = [
+  { value: "1-50", label: "1–50" },
+  { value: "51-200", label: "51–200" },
+  { value: "201-1000", label: "201–1000" },
+  { value: "1000+", label: "1000+" },
+];
+
 export function CompanyDetailTabs({ company, brief, signals, opportunities, contacts }: CompanyDetailTabsProps) {
   const tabs = [
     { id: "overview", label: "Overview" },
     { id: "brief", label: "Brief" },
-    { id: "signals", label: `Signals (${signals.length})` },
+    { id: "signals", label: `Market Signals (${signals.length})` },
     { id: "opportunities", label: `Opportunities (${opportunities.length})` },
     { id: "contacts", label: `Contacts (${contacts.length})` },
     { id: "comp", label: "Comp" },
@@ -116,6 +122,7 @@ function OverviewTab({ company }: { company: Company }) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [suggesting, setSuggesting] = useState(false);
   const [form, setForm] = useState({
     name: company.name,
     website: company.website ?? "",
@@ -143,6 +150,34 @@ function OverviewTab({ company }: { company: Company }) {
       });
       setEditing(false);
     });
+  }
+
+  async function handleSuggest() {
+    setSuggesting(true);
+    try {
+      const res = await fetch("/api/companies/suggest-overview", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, website: form.website || undefined }),
+      });
+      const json = (await res.json()) as {
+        data?: { stage?: string; size?: string; hq?: string; notes?: string };
+        message?: string;
+      };
+      if (!res.ok) throw new Error(json.message || "Failed");
+      const d = json.data ?? {};
+      setForm((prev) => ({
+        ...prev,
+        stage: d.stage || prev.stage,
+        size: d.size || prev.size,
+        hq: d.hq || prev.hq,
+        notes: d.notes || prev.notes,
+      }));
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Failed to suggest overview");
+    } finally {
+      setSuggesting(false);
+    }
   }
 
   function handleDelete() {
@@ -175,10 +210,17 @@ function OverviewTab({ company }: { company: Company }) {
             <Input label="HQ" value={form.hq} onChange={(e) => setForm({ ...form, hq: e.target.value })} />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <Select label="Stage" value={form.stage} onChange={(e) => setForm({ ...form, stage: e.target.value })} options={STAGE_OPTIONS} placeholder="Stage" />
+              <Select label="Size" value={form.size} onChange={(e) => setForm({ ...form, size: e.target.value })} options={SIZE_OPTIONS} placeholder="Size" />
               <Select label="Tier" value={form.tier} onChange={(e) => setForm({ ...form, tier: e.target.value })} options={TIER_OPTIONS} placeholder="Tier" />
             </div>
             <Textarea label="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={3} />
             <Textarea label="Role alert criteria" value={form.role_alert_criteria} onChange={(e) => setForm({ ...form, role_alert_criteria: e.target.value })} rows={2} hint="What roles should trigger your attention?" />
+            <div>
+              <Button type="button" variant="secondary" size="sm" loading={suggesting} onClick={handleSuggest}>
+                Suggest overview with AI
+              </Button>
+              <p className="mt-1.5 text-[12px] text-[var(--ink-4)]">AI will suggest stage, size, HQ, and notes — review before saving.</p>
+            </div>
           </div>
         </SectionCard>
       </div>
@@ -248,8 +290,6 @@ function OverviewTab({ company }: { company: Company }) {
 }
 
 function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null }) {
-  const router = useRouter();
-  const [genLoading, setGenLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [form, setForm] = useState({
     why_company: brief?.why_company ?? "",
@@ -259,11 +299,10 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
     proof_points: brief?.proof_points ?? [""],
   });
   const [saved, setSaved] = useState(false);
-  const [narrativeCheck, setNarrativeCheck] = useState<{ consistency_score: number; explanation: string } | null>(null);
 
   useEffect(() => {
     if (!brief) return;
-    setForm({
+    setForm({ // eslint-disable-line react-hooks/set-state-in-effect
       why_company: brief.why_company ?? "",
       why_now: brief.why_now ?? "",
       value_proposition: brief.value_proposition ?? "",
@@ -271,29 +310,6 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
       proof_points: brief.proof_points.length ? brief.proof_points : [""],
     });
   }, [brief]);
-
-  async function handleGenerateAi() {
-    setGenLoading(true);
-    setNarrativeCheck(null);
-    try {
-      const res = await fetch(`/api/companies/${companyId}/brief`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ generate: true }),
-      });
-      const json = (await res.json()) as {
-        message?: string;
-        narrative_check?: { consistency_score: number; explanation: string };
-      };
-      if (!res.ok) throw new Error(json.message || "Generation failed");
-      if (json.narrative_check) setNarrativeCheck(json.narrative_check);
-      router.refresh();
-    } catch (e) {
-      alert(e instanceof Error ? e.message : "Failed");
-    } finally {
-      setGenLoading(false);
-    }
-  }
 
   function handleSave(completed?: boolean) {
     startTransition(async () => {
@@ -306,18 +322,6 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
       setTimeout(() => setSaved(false), 2000);
     });
   }
-
-  const generateAction = (
-    <Button
-      type="button"
-      variant="secondary"
-      size="sm"
-      loading={genLoading}
-      onClick={handleGenerateAi}
-    >
-      Generate with AI
-    </Button>
-  );
 
   const briefFooter = (
     <>
@@ -338,13 +342,6 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
 
   return (
     <div className="space-y-6 max-w-2xl">
-      {narrativeCheck && (
-        <ConsistencyBanner
-          score={narrativeCheck.consistency_score}
-          explanation={narrativeCheck.explanation}
-        />
-      )}
-
       {brief?.completed_at && (
         <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
           <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -356,8 +353,7 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
 
       <SectionCard
         title="Positioning brief"
-        description="Draft a positioning brief with AI, or edit sections manually."
-        action={generateAction}
+        description="Write your positioning brief for this company — why you, why them, why now."
         footer={briefFooter}
       >
         <div className="space-y-5">
@@ -420,12 +416,22 @@ function BriefTab({ companyId, brief }: { companyId: string; brief: Brief | null
   );
 }
 
+interface SuggestedSignal {
+  title: string;
+  summary: string;
+  source_type: string;
+}
+
 function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal[] }) {
   const router = useRouter();
   const [showForm, setShowForm] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [analyzingId, setAnalyzingId] = useState<string | null>(null);
   const [form, setForm] = useState({ transcript: "", source_url: "", date: new Date().toISOString().split("T")[0] });
+  const [suggesting, setSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<SuggestedSignal[]>([]);
+  const [suggestError, setSuggestError] = useState("");
+  const [addingIdx, setAddingIdx] = useState<number | null>(null);
 
   function handleAdd() {
     startTransition(async () => {
@@ -460,33 +466,102 @@ function SignalsTab({ companyId, signals }: { companyId: string; signals: Signal
     }
   }
 
+  async function handleSuggest() {
+    setSuggesting(true);
+    setSuggestError("");
+    setSuggestions([]);
+    try {
+      const res = await fetch(`/api/companies/${companyId}/signals/suggest`, { method: "POST" });
+      const json = (await res.json()) as { data?: { signals: SuggestedSignal[] }; message?: string };
+      if (!res.ok) throw new Error(json.message || "Suggestion failed");
+      setSuggestions(json.data?.signals ?? []);
+    } catch (e) {
+      setSuggestError(e instanceof Error ? e.message : "Failed to suggest signals");
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  async function handleAddSuggestion(idx: number) {
+    const s = suggestions[idx];
+    setAddingIdx(idx);
+    startTransition(async () => {
+      await createEarningsSignal(companyId, {
+        transcript: `${s.title}\n\n${s.summary}`,
+        source_url: "",
+        date: new Date().toISOString().split("T")[0],
+      });
+      setSuggestions((prev) => prev.filter((_, i) => i !== idx));
+      setAddingIdx(null);
+      router.refresh();
+    });
+  }
+
   const addAction = (
-    <Button size="sm" onClick={() => setShowForm(!showForm)}>
-      {showForm ? "Cancel" : "+ Add signal"}
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button size="sm" variant="secondary" loading={suggesting} onClick={handleSuggest}>
+        Suggest with AI
+      </Button>
+      <Button size="sm" onClick={() => setShowForm(!showForm)}>
+        {showForm ? "Cancel" : "+ Add signal"}
+      </Button>
+    </div>
   );
 
   return (
     <div className="space-y-6 max-w-2xl">
       <SectionCard
-        title="Earnings signals"
-        description="Earnings calls, press releases, and market signals — add them here to unlock AI-driven outreach triggers."
+        title="Market signals"
+        description="Earnings calls, competitor news, industry press releases, and market developments &#8212; track signals that create outreach opportunities."
         action={addAction}
       >
         {showForm && (
           <div className="mb-5 space-y-4 rounded-md border border-[var(--line)] bg-[var(--bg-elev)] p-4">
             <Input label="Date" type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
             <Input label="Source URL (optional)" value={form.source_url} onChange={(e) => setForm({ ...form, source_url: e.target.value })} placeholder="https://..." />
-            <Textarea label="Transcript / notes *" value={form.transcript} onChange={(e) => setForm({ ...form, transcript: e.target.value })} rows={6} placeholder="Paste earnings call transcript or key notes..." />
+            <Textarea label="Transcript / notes *" value={form.transcript} onChange={(e) => setForm({ ...form, transcript: e.target.value })} rows={6} placeholder="Paste earnings call transcript, press release, or notes..." />
             <Button variant="primary" onClick={handleAdd} loading={isPending} disabled={!form.transcript.trim()}>
               Save signal
             </Button>
           </div>
         )}
 
-        {signals.length === 0 && !showForm ? (
+        {/* AI-suggested signals */}
+        {suggestions.length > 0 && (
+          <div className="mb-5 space-y-3">
+            <p className="text-[12px] font-medium text-[var(--ink-3)] uppercase tracking-[0.06em]" style={{ fontFamily: "var(--font-mono)" }}>
+              AI suggestions — click to add
+            </p>
+            {suggestions.map((s, idx) => (
+              <div
+                key={idx}
+                className="flex items-start justify-between gap-3 p-3 rounded-md border border-[var(--line)] bg-[var(--bg-sub)]"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--ink)] mb-0.5">{s.title}</p>
+                  <p className="text-xs text-[var(--ink-3)] line-clamp-2">{s.summary}</p>
+                  <p className="text-[11px] text-[var(--ink-4)] mt-1 uppercase tracking-[0.04em]">{s.source_type}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  loading={addingIdx === idx}
+                  onClick={() => handleAddSuggestion(idx)}
+                >
+                  Add
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {suggestError && (
+          <p className="mb-4 text-[12.5px] text-red-700 dark:text-red-400">{suggestError}</p>
+        )}
+
+        {signals.length === 0 && !showForm && suggestions.length === 0 ? (
           <div className="text-center py-8 text-[var(--ink-3)]">
-            <p className="text-sm">No signals yet. Add earnings calls or market signals to track company momentum.</p>
+            <p className="text-sm">No signals yet. Use &ldquo;Suggest with AI&rdquo; to get ideas, or add your own.</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -542,7 +617,8 @@ function OpportunitiesTab({ opportunities, companyId }: { opportunities: Opportu
   const addAction = (
     <Link
       href={`/opportunities/new?company_id=${companyId}`}
-      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[var(--bg-elev)] border border-[var(--line)] text-sm font-medium text-[var(--ink)] hover:border-[var(--ink-4)] hover:bg-[var(--bg-sub)] transition-colors"
+      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors"
+      style={{ background: "var(--accent)", color: "var(--accent-ink)" }}
     >
       + Add opportunity
     </Link>

@@ -31,6 +31,7 @@ export async function POST(
     channel?: string;
     opportunity_id?: string;
     context_note?: string;
+    existing_draft?: string;
   };
 
   const channel = body.channel ?? "linkedin";
@@ -66,6 +67,7 @@ export async function POST(
       opportunityTitle,
       contextNote: body.context_note ?? null,
       priorOutreachSummaries: priorSummaries,
+      existingDraft: body.existing_draft ?? null,
     });
 
     const raw = await callClaudeWithProfile({

@@ -36,37 +36,7 @@ export function CmfWeightSliders({ value, onChange }: CmfWeightSlidersProps) {
 
   function handleChange(key: keyof CmfWeights, newVal: number) {
     const clamped = Math.max(5, Math.min(60, newVal));
-    const delta = clamped - value[key];
-    if (delta === 0) return;
-
-    const others = DIMENSIONS.map((d: (typeof DIMENSIONS)[number]) => d.key).filter((k) => k !== key);
-    const othersTotal = others.reduce((s, k) => s + value[k], 0);
-
-    const newWeights = { ...value, [key]: clamped };
-
-    if (othersTotal > 0) {
-      let remaining = -delta;
-      for (let i = 0; i < others.length; i++) {
-        const k = others[i];
-        const proportion = value[k] / othersTotal;
-        const adj = i === others.length - 1
-          ? remaining
-          : Math.round(proportion * -delta);
-        const newV = Math.max(5, value[k] + adj);
-        remaining -= newV - value[k];
-        newWeights[k] = newV;
-      }
-    }
-
-    // Ensure sum is exactly 100
-    const newSum = Object.values(newWeights).reduce((a, b) => a + b, 0);
-    if (newSum !== 100) {
-      const diff = 100 - newSum;
-      const adjustKey = others.find((k) => newWeights[k] + diff >= 5) ?? others[0];
-      newWeights[adjustKey] = Math.max(5, newWeights[adjustKey] + diff);
-    }
-
-    onChange(newWeights);
+    onChange({ ...value, [key]: clamped });
   }
 
   return (
@@ -75,8 +45,8 @@ export function CmfWeightSliders({ value, onChange }: CmfWeightSlidersProps) {
         <div key={dim.key} className="space-y-1.5">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-sm font-medium text-[var(--ink)]">{dim.label}</span>
-              <span className="ml-2 text-xs text-[var(--ink-3)]">{dim.description}</span>
+              <div className="text-sm font-medium text-[var(--ink)]">{dim.label}</div>
+              <div className="text-xs text-[var(--ink-3)] mt-0.5">{dim.description}</div>
             </div>
             <span className="text-sm font-semibold text-[var(--ink)] w-8 text-right tabular-nums">
               {value[dim.key]}%

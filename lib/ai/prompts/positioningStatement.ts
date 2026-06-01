@@ -11,6 +11,7 @@ export interface PositioningDraftInput {
     distinctly_good_at?: string;
     problems?: string;
     missed?: string;
+    satisfaction?: string;
   };
   resume_raw?: string;
   target_roles?: string[];
@@ -31,6 +32,9 @@ export function buildPositioningDraftPrompt(input: PositioningDraftInput): strin
   }
   if (answers.missed?.trim()) {
     contextParts.push(`What most resumes miss about them: ${answers.missed.trim()}`);
+  }
+  if (answers.satisfaction?.trim()) {
+    contextParts.push(`When they were most satisfied in their career and why: ${answers.satisfaction.trim()}`);
   }
   if (target_roles && target_roles.length > 0) {
     contextParts.push(`Target roles: ${target_roles.join(", ")}`);

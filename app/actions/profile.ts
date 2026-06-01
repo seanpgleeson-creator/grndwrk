@@ -139,3 +139,19 @@ export async function updateCompTargets(data: {
   });
   revalidatePath("/profile");
 }
+
+export async function updatePreferredGeographies(geographies: string[]) {
+  const clamped = geographies.slice(0, 5).map((g) => g.trim()).filter(Boolean);
+  await prisma.userProfile.upsert({
+    where: { id: "singleton" },
+    update: { preferred_geographies: JSON.stringify(clamped) },
+    create: {
+      id: "singleton",
+      narrative_pillars: "[]",
+      target_roles: "[]",
+      target_stages: "[]",
+      preferred_geographies: JSON.stringify(clamped),
+    },
+  });
+  revalidatePath("/profile");
+}

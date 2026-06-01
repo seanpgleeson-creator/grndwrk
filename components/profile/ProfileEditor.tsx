@@ -8,7 +8,8 @@ import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { CmfWeightSliders, type CmfWeights } from "./CmfWeightSliders";
 import { AiPositioningPanel } from "./AiPositioningPanel";
-import { updateProfile, updateCmfWeights, updateCompTargets } from "@/app/actions/profile";
+import { updateProfile, updateCmfWeights, updateCompTargets, updatePreferredGeographies } from "@/app/actions/profile";
+import { convertComp, formatCompact } from "@/lib/comp/costOfLiving";
 
 interface ProfileData {
   positioning_statement: string;
@@ -26,6 +27,7 @@ interface ProfileData {
     minimum?: number;
     level?: string;
   };
+  preferred_geographies: string[];
 }
 
 interface ProfileEditorProps {
@@ -107,6 +109,7 @@ export function ProfileEditor({ data }: ProfileEditorProps) {
     { id: "pillars", label: "Narrative Pillars" },
     { id: "cmf", label: "CMF Weights" },
     { id: "comp", label: "Comp Targets" },
+    { id: "geo", label: "Preferred Geographies" },
   ];
 
   return (
@@ -118,6 +121,7 @@ export function ProfileEditor({ data }: ProfileEditorProps) {
           {activeTab === "pillars" && <PillarsTab data={data} />}
           {activeTab === "cmf" && <CmfTab data={data} />}
           {activeTab === "comp" && <CompTab data={data} />}
+          {activeTab === "geo" && <GeoTab data={data} />}
         </>
       )}
     </Tabs>
@@ -299,6 +303,8 @@ function ResumeTab({ data }: { data: ProfileData }) {
   const [resume, setResume] = useState(data.resume_raw);
   const [isPending, startTransition] = useTransition();
   const [parseLoading, setParseLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [saved, setSaved] = useState(false);
 
   function handleSave() {
@@ -327,6 +333,27 @@ function ResumeTab({ data }: { data: ProfileData }) {
     }
   }
 
+  async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadLoading(true);
+    setUploadError("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const res = await fetch("/api/profile/resume/upload", { method: "POST", body: form });
+      const json = (await res.json()) as { data?: { resume_raw: string }; message?: string };
+      if (!res.ok) throw new Error(json.message || "Upload failed");
+      setResume(json.data?.resume_raw ?? "");
+    } catch (err) {
+      setUploadError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploadLoading(false);
+      // Reset input so same file can be re-uploaded
+      e.target.value = "";
+    }
+  }
+
   let parsedPreview: unknown = null;
   if (data.resume_parsed) {
     try {
@@ -339,8 +366,49 @@ function ResumeTab({ data }: { data: ProfileData }) {
   return (
     <div style={{ maxWidth: 920 }}>
       <FieldRow
+        label="Upload resume"
+        help="Upload a PDF, DOCX, or TXT file to automatically populate the text field below."
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <label
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "6px 12px",
+              borderRadius: "var(--radius)",
+              border: "1px solid var(--line)",
+              background: "var(--bg-elev)",
+              fontSize: 13,
+              fontWeight: 500,
+              color: uploadLoading ? "var(--ink-4)" : "var(--ink-2)",
+              cursor: uploadLoading ? "wait" : "pointer",
+              transition: "border-color 120ms ease",
+            }}
+            className="hover:border-[var(--ink-4)] hover:text-[var(--ink)]"
+          >
+            <svg width={13} height={13} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M8 2v8M5 5l3-3 3 3M2 12h12" />
+            </svg>
+            {uploadLoading ? "Uploading…" : "Upload file"}
+            <input
+              type="file"
+              accept=".pdf,.docx,.txt"
+              onChange={handleFileUpload}
+              disabled={uploadLoading}
+              style={{ display: "none" }}
+            />
+          </label>
+          <span style={{ fontSize: 12, color: "var(--ink-4)" }}>PDF, DOCX, or TXT</span>
+        </div>
+        {uploadError && (
+          <p style={{ fontSize: 12.5, color: "var(--ink-3)", marginTop: 6 }}>{uploadError}</p>
+        )}
+      </FieldRow>
+
+      <FieldRow
         label="Resume text"
-        help="Paste your resume. Save first, then run Parse with AI to extract experience and skills for CMF scoring."
+        help="Paste your resume or upload a file above. Save first, then run Parse with AI to extract experience and skills for CMF scoring."
         last={parsedPreview == null}
       >
         <Textarea
@@ -382,7 +450,7 @@ function ResumeTab({ data }: { data: ProfileData }) {
         <Button variant="primary" onClick={handleSave} loading={isPending}>
           Save resume
         </Button>
-        <Button variant="secondary" onClick={handleParse} loading={parseLoading}>
+        <Button variant="secondary" onClick={handleParse} loading={parseLoading} disabled={!resume?.trim()}>
           Parse with AI
         </Button>
         {saved && (
@@ -484,7 +552,11 @@ function CmfTab({ data }: { data: ProfileData }) {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
 
+  const sum = Object.values(weights).reduce((a, b) => a + b, 0);
+  const sumOk = sum === 100;
+
   function handleSave() {
+    if (!sumOk) return;
     setError("");
     startTransition(async () => {
       try {
@@ -501,19 +573,24 @@ function CmfTab({ data }: { data: ProfileData }) {
     <div style={{ maxWidth: 920 }}>
       <FieldRow
         label="CMF weights"
-        help="How much each dimension matters in your Candidate Market Fit score. Weights must sum to 100."
+        help="Adjust each dimension freely. Weights must total exactly 100 before saving."
         last
       >
         <div>
           <CmfWeightSliders value={weights} onChange={setWeights} />
+          {!sumOk && (
+            <p className="mt-3 text-[13px] text-amber-700 dark:text-amber-400">
+              Total is {sum} — adjust to reach exactly 100 before saving.
+            </p>
+          )}
           {error && (
-            <p className="mt-4 text-[13px] text-red-700 dark:text-red-400">{error}</p>
+            <p className="mt-2 text-[13px] text-red-700 dark:text-red-400">{error}</p>
           )}
         </div>
       </FieldRow>
 
       <SaveRow>
-        <Button variant="primary" onClick={handleSave} loading={isPending}>
+        <Button variant="primary" onClick={handleSave} loading={isPending} disabled={!sumOk}>
           Save weights
         </Button>
         {saved && (
@@ -522,6 +599,178 @@ function CmfTab({ data }: { data: ProfileData }) {
       </SaveRow>
     </div>
   );
+}
+
+// ── GeoTab ────────────────────────────────────────────────────────────────────
+function GeoTab({ data }: { data: ProfileData }) {
+  const [geos, setGeos] = useState<string[]>(
+    data.preferred_geographies.length > 0 ? data.preferred_geographies : [""],
+  );
+  const [isPending, startTransition] = useTransition();
+  const [saved, setSaved] = useState(false);
+
+  function handleSave() {
+    startTransition(async () => {
+      await updatePreferredGeographies(geos.filter((g) => g.trim()));
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    });
+  }
+
+  function moveUp(i: number) {
+    if (i === 0) return;
+    const updated = [...geos];
+    [updated[i - 1], updated[i]] = [updated[i], updated[i - 1]];
+    setGeos(updated);
+  }
+
+  function moveDown(i: number) {
+    if (i === geos.length - 1) return;
+    const updated = [...geos];
+    [updated[i], updated[i + 1]] = [updated[i + 1], updated[i]];
+    setGeos(updated);
+  }
+
+  return (
+    <div style={{ maxWidth: 920 }}>
+      <FieldRow
+        label="Preferred geographies"
+        help="Up to 5 cities where you'd be willing to relocate or work. The first entry is your highest priority and is used as the baseline for comp equivalence calculations."
+        last
+      >
+        <div className="space-y-3">
+          {geos.map((geo, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  flexShrink: 0,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => moveUp(i)}
+                  disabled={i === 0}
+                  aria-label="Move up"
+                  style={{
+                    padding: "1px 4px",
+                    fontSize: 10,
+                    color: i === 0 ? "var(--ink-5)" : "var(--ink-3)",
+                    background: "none",
+                    border: "none",
+                    cursor: i === 0 ? "default" : "pointer",
+                    lineHeight: 1,
+                  }}
+                >
+                  ▲
+                </button>
+                <button
+                  type="button"
+                  onClick={() => moveDown(i)}
+                  disabled={i === geos.length - 1}
+                  aria-label="Move down"
+                  style={{
+                    padding: "1px 4px",
+                    fontSize: 10,
+                    color: i === geos.length - 1 ? "var(--ink-5)" : "var(--ink-3)",
+                    background: "none",
+                    border: "none",
+                    cursor: i === geos.length - 1 ? "default" : "pointer",
+                    lineHeight: 1,
+                  }}
+                >
+                  ▼
+                </button>
+              </div>
+              <div className="flex-1">
+                <Input
+                  value={geo}
+                  onChange={(e) => {
+                    const updated = [...geos];
+                    updated[i] = e.target.value;
+                    setGeos(updated);
+                  }}
+                  placeholder={i === 0 ? "e.g. San Francisco, CA (highest priority)" : `City ${i + 1}`}
+                />
+              </div>
+              {i === 0 && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontFamily: "var(--font-mono)",
+                    color: "var(--ink-3)",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    flexShrink: 0,
+                    paddingRight: 4,
+                  }}
+                >
+                  #1
+                </span>
+              )}
+              {geos.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => setGeos(geos.filter((_, idx) => idx !== i))}
+                  aria-label={`Remove city ${i + 1}`}
+                  style={{
+                    color: "var(--ink-3)",
+                    padding: 4,
+                    transition: "color 120ms ease",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    flexShrink: 0,
+                  }}
+                  className="hover:text-red-600 dark:hover:text-red-400"
+                >
+                  <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          ))}
+          {geos.length < 5 && (
+            <button
+              type="button"
+              onClick={() => setGeos([...geos, ""])}
+              style={{
+                fontSize: 13,
+                fontWeight: 500,
+                color: "var(--ink-3)",
+                transition: "color 120ms ease",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                padding: 0,
+              }}
+              className="hover:text-[var(--ink)]"
+            >
+              + Add city
+            </button>
+          )}
+        </div>
+      </FieldRow>
+
+      <SaveRow>
+        <Button variant="primary" onClick={handleSave} loading={isPending}>
+          Save geographies
+        </Button>
+        {saved && (
+          <span className="text-[13px] text-green-700 dark:text-green-400">Saved</span>
+        )}
+      </SaveRow>
+    </div>
+  );
+}
+
+function parseCompNumber(raw: string): number | undefined {
+  const stripped = raw.replace(/[^0-9]/g, "");
+  const n = Number(stripped);
+  return stripped && !isNaN(n) ? n : undefined;
 }
 
 // ── CompTab ────────────────────────────────────────────────────────────────────
@@ -533,18 +782,26 @@ function CompTab({ data }: { data: ProfileData }) {
   const [isPending, startTransition] = useTransition();
   const [saved, setSaved] = useState(false);
 
+  // Geography equivalence
+  const geos = data.preferred_geographies;
+  const [baseGeo, setBaseGeo] = useState(geos[0] ?? "");
+
+  const baseTotal = parseCompNumber(total) ?? parseCompNumber(base);
+
   function handleSave() {
     startTransition(async () => {
       await updateCompTargets({
-        base_target: base ? Number(base) : undefined,
-        total_target: total ? Number(total) : undefined,
-        minimum: minimum ? Number(minimum) : undefined,
+        base_target: parseCompNumber(base),
+        total_target: parseCompNumber(total),
+        minimum: parseCompNumber(minimum),
         level: level || undefined,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     });
   }
+
+  const otherGeos = geos.filter((g) => g !== baseGeo);
 
   return (
     <div style={{ maxWidth: 920 }}>
@@ -553,10 +810,10 @@ function CompTab({ data }: { data: ProfileData }) {
         help="Your target base compensation in USD."
       >
         <Input
-          type="number"
           value={base}
           onChange={(e) => setBase(e.target.value)}
           placeholder="200000"
+          hint="Numbers only, e.g. 200000"
         />
       </FieldRow>
 
@@ -565,10 +822,10 @@ function CompTab({ data }: { data: ProfileData }) {
         help="Base + equity + bonus target, in USD."
       >
         <Input
-          type="number"
           value={total}
           onChange={(e) => setTotal(e.target.value)}
           placeholder="300000"
+          hint="Numbers only, e.g. 300000"
         />
       </FieldRow>
 
@@ -577,17 +834,17 @@ function CompTab({ data }: { data: ProfileData }) {
         help="The floor you won't go below."
       >
         <Input
-          type="number"
           value={minimum}
           onChange={(e) => setMinimum(e.target.value)}
           placeholder="250000"
+          hint="Numbers only, e.g. 250000"
         />
       </FieldRow>
 
       <FieldRow
         label="Target level"
         help="Title or level band, e.g. L6, Staff, Director."
-        last
+        last={geos.length === 0}
       >
         <Input
           value={level}
@@ -595,6 +852,86 @@ function CompTab({ data }: { data: ProfileData }) {
           placeholder="L6, Staff, Director"
         />
       </FieldRow>
+
+      {geos.length > 0 && (
+        <FieldRow
+          label="Geography equivalence"
+          help="Select your reference city — see what equivalent comp looks like in your other preferred geographies."
+          last
+        >
+          <div className="space-y-4">
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 500, color: "var(--ink-3)", marginBottom: 5 }}>
+                Reference city
+              </label>
+              <select
+                value={baseGeo}
+                onChange={(e) => setBaseGeo(e.target.value)}
+                style={{
+                  height: "var(--field-h)",
+                  padding: "0 28px 0 10px",
+                  fontSize: 13,
+                  background: "var(--bg-elev)",
+                  border: "1px solid var(--line)",
+                  borderRadius: "var(--radius)",
+                  color: "var(--ink)",
+                  outline: "none",
+                  transition: "border-color 120ms ease",
+                  appearance: "none",
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23737373'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition: "right 8px center",
+                  minWidth: 200,
+                  cursor: "pointer",
+                } as React.CSSProperties}
+              >
+                {geos.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+
+            {baseTotal && otherGeos.length > 0 && (
+              <div className="space-y-2">
+                <p style={{ fontSize: 12, fontWeight: 500, color: "var(--ink-3)" }}>
+                  To match {formatCompact(baseTotal)} in {baseGeo || "your reference city"}:
+                </p>
+                {otherGeos.map((city) => {
+                  const equiv = convertComp(baseTotal, baseGeo || geos[0], city);
+                  return (
+                    <div
+                      key={city}
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "8px 12px",
+                        background: "var(--bg-sub)",
+                        border: "1px solid var(--line-2)",
+                        borderRadius: "var(--radius)",
+                      }}
+                    >
+                      <span style={{ fontSize: 13, color: "var(--ink)" }}>{city}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-mono)" }}>
+                        {formatCompact(equiv)}
+                      </span>
+                    </div>
+                  );
+                })}
+                <p style={{ fontSize: 11.5, color: "var(--ink-4)", lineHeight: 1.5 }}>
+                  Estimates based on relative cost-of-living indices. Actual offers vary.
+                </p>
+              </div>
+            )}
+
+            {geos.length <= 1 && (
+              <p style={{ fontSize: 12.5, color: "var(--ink-4)" }}>
+                Add more cities in the Preferred Geographies tab to see equivalence calculations.
+              </p>
+            )}
+          </div>
+        </FieldRow>
+      )}
 
       <SaveRow>
         <Button variant="primary" onClick={handleSave} loading={isPending}>

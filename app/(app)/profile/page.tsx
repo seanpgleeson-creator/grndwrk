@@ -26,6 +26,7 @@ export default async function ProfilePage() {
       minimum?: number;
       level?: string;
     }>(profile?.comp_target, {}),
+    preferred_geographies: parseJsonField<string[]>(profile?.preferred_geographies, []),
   };
 
   return (
