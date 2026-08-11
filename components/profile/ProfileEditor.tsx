@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Tabs } from "@/components/ui/Tabs";
 import { Textarea } from "@/components/ui/Textarea";
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { CmfWeightSliders, type CmfWeights } from "./CmfWeightSliders";
 import { AiPositioningPanel } from "./AiPositioningPanel";
 import { updateProfile, updateCmfWeights, updateCompTargets, updatePreferredGeographies } from "@/app/actions/profile";
-import { convertComp, formatCompact } from "@/lib/comp/costOfLiving";
+import { formatCompact } from "@/lib/comp/costOfLiving";
 
 interface ProfileData {
   positioning_statement: string;
@@ -773,6 +773,13 @@ function parseCompNumber(raw: string): number | undefined {
   return stripped && !isNaN(n) ? n : undefined;
 }
 
+interface EquivResult {
+  ratio: number;
+  source: "static" | "apiverve" | "default";
+  regionFrom?: string;
+  regionTo?: string;
+}
+
 // ── CompTab ────────────────────────────────────────────────────────────────────
 function CompTab({ data }: { data: ProfileData }) {
   const [base, setBase] = useState(String(data.comp_target.base_target ?? ""));
@@ -785,8 +792,46 @@ function CompTab({ data }: { data: ProfileData }) {
   // Geography equivalence
   const geos = data.preferred_geographies;
   const [baseGeo, setBaseGeo] = useState(geos[0] ?? "");
+  const [ratios, setRatios] = useState<Record<string, EquivResult>>({});
+  const [ratiosLoading, setRatiosLoading] = useState(false);
+  const [ratiosError, setRatiosError] = useState(false);
+  const fetchRef = useRef(0);
 
   const baseTotal = parseCompNumber(total) ?? parseCompNumber(base);
+  const otherGeos = geos.filter((g) => g !== baseGeo);
+
+  // Fetch ratios whenever the reference city or the list of cities changes
+  useEffect(() => {
+    if (!baseGeo || otherGeos.length === 0) {
+      setRatios({});
+      return;
+    }
+
+    const id = ++fetchRef.current;
+    setRatiosLoading(true);
+    setRatiosError(false);
+
+    Promise.all(
+      otherGeos.map(async (city) => {
+        const res = await fetch(
+          `/api/comp/equivalence?from=${encodeURIComponent(baseGeo)}&to=${encodeURIComponent(city)}`,
+        );
+        if (!res.ok) throw new Error("fetch failed");
+        const json = (await res.json()) as EquivResult;
+        return [city, json] as const;
+      }),
+    )
+      .then((pairs) => {
+        if (id !== fetchRef.current) return;
+        setRatios(Object.fromEntries(pairs));
+        setRatiosLoading(false);
+      })
+      .catch(() => {
+        if (id !== fetchRef.current) return;
+        setRatiosError(true);
+        setRatiosLoading(false);
+      });
+  }, [baseGeo, otherGeos.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleSave() {
     startTransition(async () => {
@@ -801,7 +846,13 @@ function CompTab({ data }: { data: ProfileData }) {
     });
   }
 
-  const otherGeos = geos.filter((g) => g !== baseGeo);
+  // Determine attribution label shown below the table
+  const sources = new Set(Object.values(ratios).map((r) => r.source));
+  function sourceAttribution(): string {
+    if (sources.has("apiverve")) return "Estimates powered by APIVerve cost-of-living data. Actual offers vary.";
+    if (sources.has("static")) return "Estimates based on curated cost-of-living indices. Actual offers vary.";
+    return "Estimates based on approximate cost-of-living data. Actual offers vary.";
+  }
 
   return (
     <div style={{ maxWidth: 920 }}>
@@ -896,8 +947,20 @@ function CompTab({ data }: { data: ProfileData }) {
                 <p style={{ fontSize: 12, fontWeight: 500, color: "var(--ink-3)" }}>
                   To match {formatCompact(baseTotal)} in {baseGeo || "your reference city"}:
                 </p>
-                {otherGeos.map((city) => {
-                  const equiv = convertComp(baseTotal, baseGeo || geos[0], city);
+
+                {ratiosLoading && (
+                  <p style={{ fontSize: 13, color: "var(--ink-4)" }}>Loading…</p>
+                )}
+
+                {ratiosError && (
+                  <p style={{ fontSize: 13, color: "var(--ink-3)" }}>
+                    Could not load equivalence data. Try refreshing.
+                  </p>
+                )}
+
+                {!ratiosLoading && !ratiosError && otherGeos.map((city) => {
+                  const result = ratios[city];
+                  const equiv = result ? Math.round(baseTotal * result.ratio) : null;
                   return (
                     <div
                       key={city}
@@ -913,14 +976,17 @@ function CompTab({ data }: { data: ProfileData }) {
                     >
                       <span style={{ fontSize: 13, color: "var(--ink)" }}>{city}</span>
                       <span style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)", fontFamily: "var(--font-mono)" }}>
-                        {formatCompact(equiv)}
+                        {equiv != null ? formatCompact(equiv) : "—"}
                       </span>
                     </div>
                   );
                 })}
-                <p style={{ fontSize: 11.5, color: "var(--ink-4)", lineHeight: 1.5 }}>
-                  Estimates based on relative cost-of-living indices. Actual offers vary.
-                </p>
+
+                {!ratiosLoading && !ratiosError && Object.keys(ratios).length > 0 && (
+                  <p style={{ fontSize: 11.5, color: "var(--ink-4)", lineHeight: 1.5 }}>
+                    {sourceAttribution()}
+                  </p>
+                )}
               </div>
             )}
 

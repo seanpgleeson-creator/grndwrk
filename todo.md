@@ -191,7 +191,7 @@ _Source: plan `groundwork_page_updates_12e22d28`. 18 items across 6 phases._
 ### Phase E — Compensation intelligence rework
 
 - [ ] [FEATURE] Comp page full redesign — single set of up to 3 independent dropdowns backed by curated company list (saved companies pinned to top); remove old "select to pin then change inside box" pattern; keep `LevelsFyiEmbed`
-- [ ] [FEATURE] Comp targets + geography equivalence — add geography dropdown (from `preferred_geographies`, pre-selects highest-priority city); right-side panel showing equivalent salary in other geographies using static CoL index (`lib/comp/costOfLiving.ts`)
+- [x] [FEATURE] Comp targets + geography equivalence — geography dropdown + async equivalence panel backed by APIVerve (`GET /api/comp/equivalence`); ratios cached in `ColRatioCache` DB table (90-day TTL); falls back to static index or default. Env var: `APIVERVE_API_KEY`.
 
 ### Phase F — AI enrichment (best-effort, no LinkedIn API)
 

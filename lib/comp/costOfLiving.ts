@@ -74,6 +74,20 @@ const COL_INDEX: Record<string, number> = {
 const DEFAULT_INDEX = 75; // fallback for unknown cities
 
 /**
+ * Returns true if the city has an entry in the static index table.
+ * Used by the equivalence route to decide whether to call the external API.
+ */
+export function hasStaticCity(city: string): boolean {
+  const key = city.trim();
+  if (COL_INDEX[key] !== undefined) return true;
+  const lower = key.toLowerCase();
+  if (Object.keys(COL_INDEX).some((k) => k.toLowerCase() === lower)) return true;
+  return Object.keys(COL_INDEX).some(
+    (k) => lower.startsWith(k.toLowerCase()) || k.toLowerCase().startsWith(lower),
+  );
+}
+
+/**
  * Returns the CoL index for a city (case-insensitive fuzzy match).
  * Falls back to DEFAULT_INDEX if city is unknown.
  */

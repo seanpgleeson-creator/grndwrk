@@ -152,6 +152,19 @@ model OutreachRecord {
   opportunity Opportunity? @relation(fields: [opportunity_id], references: [id], onDelete: SetNull)
 }
 
+model ColRatioCache {
+  id         String   @id @default(cuid())
+  from_city  String
+  to_city    String
+  ratio      Float
+  source     String   // static | apiverve | default
+  region_from String?
+  region_to   String?
+  fetched_at DateTime @default(now())
+
+  @@unique([from_city, to_city])
+}
+
 model CompBenchmark {
   id          String   @id @default(cuid())
   company_id  String

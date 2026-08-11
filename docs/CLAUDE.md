@@ -60,7 +60,7 @@ Premium, focused, editorial, and a little serious — closer to Linear or Notion
 - Resume: file upload (PDF/DOCX) added to Profile → Resume tab.
 - `preferred_geographies` (JSON array, max 5, ordered) added to `UserProfile` schema.
 - Comp page: full dropdown rework (curated list, saved companies pinned top, up to 3, geography param).
-- Comp targets: geography dropdown + right-panel CoL equivalence using static `lib/comp/costOfLiving.ts`.
+- Comp targets: geography dropdown + right-panel CoL equivalence. Backed by APIVerve (`GET /api/comp/equivalence`); falls back to static `lib/comp/costOfLiving.ts` for known cities and default index for unknowns. Ratios cached in `ColRatioCache` DB table (90-day TTL).
 - AI company overview auto-fill (`POST /api/companies/suggest-overview`).
 - AI proactive role suggestions gated on complete profile (`POST /api/opportunities/role-suggestions`).
 
@@ -90,7 +90,14 @@ New `UserProfile` field:
 - `preferred_geographies` — `String?` (JSON string array, up to 5 cities ordered by priority). Used by comp targets (geography dropdown, CoL equivalence) and AI role suggestions.
 
 New lib:
-- `lib/comp/costOfLiving.ts` — static CoL index for ~40 cities; exports `getColIndex(city)` and `convertComp(amount, fromCity, toCity)`.
+- `lib/comp/costOfLiving.ts` — static CoL index for ~40 cities; exports `getColIndex(city)`, `convertComp(amount, fromCity, toCity)`, `hasStaticCity(city)`, and `formatCompact(n)`.
+- `lib/comp/apiverve.ts` — APIVerve Cost of Living API client; exports `fetchEquivalenceRatio(from, to)`. Requires `APIVERVE_API_KEY` env var. Returns `null` gracefully on missing key or API error.
+
+New API route:
+- `GET /api/comp/equivalence?from=<city>&to=<city>` — returns `{ ratio, source, regionFrom?, regionTo? }`. Priority: DB cache (90-day TTL) → static (if both cities known) → APIVerve → fallback static default.
+
+New Prisma model:
+- `ColRatioCache` — caches computed equivalence ratios per `(from_city, to_city)` pair with `source` and `fetched_at`.
 
 New AI prompts:
 - `lib/ai/prompts/marketSignals.ts` — suggests market signals (target company + competitors + industry) from company name/website/notes.
